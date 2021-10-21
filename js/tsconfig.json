@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "noImplicitAny": false,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictBindCallApply": true,
+    "strictNullChecks": false,
+    "strictFunctionTypes": true,
+    "strictPropertyInitialization": false,
+    "lib": ["es2017", "dom"],
+    "target": "es2017",
+    "module": "commonjs",
+    "jsx": "react",
+    "skipLibCheck": true,
+    "outDir": "lib"
+  },
+  "include": [
+    "src",
+    "src/react-api",
+  ]
+}
