@@ -43,6 +43,8 @@ export class Composition {
       this.nodes.push(node);
     }
 
+    node.commit(this, {}, props);
+
     return node;
   }
 
@@ -68,17 +70,59 @@ export class Composition {
   }
 
   reactFinishedCommits() {
+    this._performLayout();
+
     if (this.commitFinishedCb) {
       this.commitFinishedCb(this);
     }
   }
 
-  serialize() {
-    if (this.rootNode) {
-      return this.rootNode.serialize();
+  _performLayout() {
+    if (!this.rootNode) return;
+
+    const viewport = {x: 0, y: 0, w: 1280, h: 720};
+
+    function recurseLayout(node, parentFrame) {
+      let frame = {...parentFrame};
+      if (node.layoutFunc) {
+        frame = node.layoutFunc(frame, viewport, node.layoutParams);
+      }
+      node.layoutFrame = frame;
+      console.log("frame for node '%s': ", node.userGivenId, JSON.stringify(node.layoutFrame));
+
+      for (const c of node.children) {
+        recurseLayout(c, frame);
+      }
     }
-    return {};
+
+    recurseLayout(this.rootNode, viewport);
+
   }
+
+  serialize() {
+    if (!this.rootNode) return {};
+
+    return this.rootNode.serialize();
+  }
+}
+
+
+function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
+  if (!oldFn && !newFn) return true;
+
+  if (oldFn !== newFn) return false;
+
+  if (newParams && !oldParams) return false;
+  if (oldParams && !newParams) return false;
+
+  for (const k in oldParams) {
+    if (oldParams[k] !== newParams[k]) return false;
+  }
+  for (const k in newParams) {
+    if (oldParams[k] !== newParams[k]) return false;
+  }
+
+  return true;
 }
 
 class NodeBase {
@@ -86,20 +130,50 @@ class NodeBase {
 
   constructor() {
     this.uuid = uuidv4();
+    this.userGivenId = '';
+
     this.parent = null;
     this.children = [];
     this.container = null;
+
+    this.layoutFunc = null;
+    this.layoutParams = {};
   }
 
   shouldUpdate(container, oldProps, newProps) {
     // should return true only if the newProps represent a change that requires a commit
-    return newProps != null;
+
+    //console.log("shouldupdate %s, '%s'", this.uuid, newProps.id);
+
+    let newLayout = [];
+    if (newProps.layout) {
+      if (!Array.isArray(newProps.layout)) {
+        console.warn("invalid layout prop passed to node: ", newProps.layout);
+      } else {
+        newLayout = newProps.layout;
+      }
+    }
+    if (!isEqualLayoutProps(this.layoutFunc, this.layoutParams, newLayout[0], newLayout[1])) {
+      console.log("layout props will be updated for '%s'", newProps.id || '');
+      return true;
+    }
+
+    return false;
   }
 
   commit(container, oldProps, newProps) {    
-    //console.log("commit %s: ", this.uuid, newProps)
+    //console.log("commit %s, %s", this.uuid, newProps.id)
 
     if (newProps.id) this.userGivenId = newProps.id;
+
+    if (Array.isArray(newProps.layout)) {
+      this.layoutFunc = newProps.layout[0];
+      this.layoutParams = newProps.layout[1] || {};
+      //console.log("new layout for '%s': ", this.userGivenId, this.layoutFunc, JSON.stringify(this.layoutParams));
+    } else {
+      this.layoutFunc = null;
+      this.layoutParams = {};
+    }
   }
 
   delete() {
@@ -146,15 +220,5 @@ class VideoNode extends NodeBase {
 
 class ImageNode extends NodeBase {
   static nodeType = IntrinsicNodeType.IMAGE;
-
-  shouldUpdate(container, oldProps, newProps) {
-    if (newProps.layoutFn !== oldProps.layoutFn) {
-      console.log("image layoutFn updated");
-    }
-  }
-
-  commit(container, oldProps, newProps) {
-    this.layoutFn = newProps.layoutFn;
-  }
 
 }
