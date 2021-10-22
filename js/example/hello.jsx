@@ -1,6 +1,6 @@
 import * as React from 'react';
-import {Box, Image, Video} from '../src/react-api/component';
-import {useVideoTime} from '../src/react-api/hook';
+import {Box, Image, Video} from '../src/react/components';
+import {useVideoTime} from '../src/react/hooks';
 
 
 // the root component of this composition

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Composition, render } from '../src';
-import * as ViewContexts from '../src/react-api/context';
+import * as ViewContexts from '../src/react/contexts';
 import RootView from '../example/hello.jsx';
 
 

@@ -3,8 +3,8 @@ import * as Path from 'path';
 import * as React from 'react';
 
 import { Composition, render } from './src';
-import * as ViewComponents from './src/react-api/component';
-import * as ViewContexts from './src/react-api/context';
+import * as ViewComponents from './src/react/components';
+import * as ViewContexts from './src/react/contexts';
 
 
 // CLI arguments.
