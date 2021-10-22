@@ -7,6 +7,8 @@ import {useVideoTime} from '../src/react/hooks';
 export default function HelloDailyVCS() {
   const t = useVideoTime();
 
+  console.log("rendering hello comp at t = %s", t)
+
   let imageLayoutFn = layoutFuncs.cornerBug_topRight;
   if (t % 6 >= 3) {
     imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;    

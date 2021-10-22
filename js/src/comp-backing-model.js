@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)
-const IntrinsicNodeType = {
+export const IntrinsicNodeType = {
   ROOT: 'root',
   BOX: 'box',
   VIDEO: 'video',
@@ -16,8 +16,9 @@ export class Composition {
     this.rootNode = null;
 
     this.uncommitted = true;
-
     this.commitFinishedCb = cb;
+
+    this.viewportSize = {w: 1280, h: 720};
   }
 
   createNode(type, props) {
@@ -80,7 +81,7 @@ export class Composition {
   _performLayout() {
     if (!this.rootNode) return;
 
-    const viewport = {x: 0, y: 0, w: 1280, h: 720};
+    const viewport = {x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h};
 
     function recurseLayout(node, parentFrame) {
       let frame = {...parentFrame};
@@ -112,14 +113,16 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
 
   if (oldFn !== newFn) return false;
 
-  if (newParams && !oldParams) return false;
-  if (oldParams && !newParams) return false;
-
-  for (const k in oldParams) {
-    if (oldParams[k] !== newParams[k]) return false;
-  }
-  for (const k in newParams) {
-    if (oldParams[k] !== newParams[k]) return false;
+  if (newParams || oldParams) {
+    if (newParams && !oldParams) return false;
+    if (oldParams && !newParams) return false;
+  
+    for (const k in oldParams) {
+      if (oldParams[k] !== newParams[k]) return false;
+    }
+    for (const k in newParams) {
+      if (oldParams[k] !== newParams[k]) return false;
+    }  
   }
 
   return true;
@@ -153,7 +156,7 @@ class NodeBase {
         newLayout = newProps.layout;
       }
     }
-    if (!isEqualLayoutProps(this.layoutFunc, this.layoutParams, newLayout[0], newLayout[1])) {
+    if (!isEqualLayoutProps(this.layoutFunc, this.layoutParams, newLayout[0], newLayout[1] || {})) {
       console.log("layout props will be updated for '%s'", newProps.id || '');
       return true;
     }
