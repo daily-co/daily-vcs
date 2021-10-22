@@ -146,4 +146,15 @@ class VideoNode extends NodeBase {
 
 class ImageNode extends NodeBase {
   static nodeType = IntrinsicNodeType.IMAGE;
+
+  shouldUpdate(container, oldProps, newProps) {
+    if (newProps.layoutFn !== oldProps.layoutFn) {
+      console.log("image layoutFn updated");
+    }
+  }
+
+  commit(container, oldProps, newProps) {
+    this.layoutFn = newProps.layoutFn;
+  }
+
 }

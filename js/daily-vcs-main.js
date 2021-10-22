@@ -18,8 +18,7 @@ if (!srcCompPath?.length) {
   process.exit(1);
 }
 
-const RootView = require(Path.resolve('.', srcCompPath)).default;
-console.log("Loaded root view: ", RootView);
+const ContentRoot = require(Path.resolve('.', srcCompPath)).default;
 
 
 // a root component that wraps the view we loaded from the external JSX source,
@@ -29,7 +28,10 @@ class RootContainer extends React.Component {
     super();
 
     this.state = {
-      externalData: {}
+      externalData: {},
+      time: {
+        currentTime: 0,
+      }
     };
   }
 
@@ -46,12 +48,22 @@ class RootContainer extends React.Component {
     });
   }
 
+  setVideoTime(t) {
+    const newT = {
+      ...this.state.time,
+      currentTime: t
+    };
+    this.setState({time: newT});
+  }
+
   render() {
     return (
     <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
+    <ViewContexts.TimeContext.Provider value={this.state.time}>
       <root>
-        <RootView />
+        <ContentRoot />
       </root>
+    </ViewContexts.TimeContext.Provider>
     </ViewContexts.ExternalDataContext.Provider>
     )
   }
@@ -60,42 +72,21 @@ class RootContainer extends React.Component {
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
 
-/*
-// read input data from the provided path and apply to the root container
-function readInputJSON() {
-  try {
-    const json = fs.readFileSync(srcDataPath, {encoding: 'utf8'});
-    const data = JSON.parse(json);
-
-    rootContainerRef.current.setExternalData(data);
-  } catch (e) {
-    console.error("** Error reading input JSON: ", e);
-  }
-}
-
-try {
-  fs.watch(srcDataPath, function() {
-    readInputJSON();
-  });  
-
-  console.log("Watching JSON input data from path: ", srcDataPath);
-  console.log("You can edit that file while this program is running, and updates will be reflected here.\n");
-} catch (e) {
-  console.error("** Couldn't watch input JSON at: ", srcDataPath);
-  process.exit(4);
-}
-*/
-
 // the backing model for our views.
 // the callback passed here will be called every time React has finished an update.
 const composition = new Composition(function(comp) {
-  const json = comp.serialize();
-  console.log("update complete, view structure now: ", JSON.stringify(json, null, '  '));
+  //const json = comp.serialize();
+  //console.log("update complete, view structure now: ", JSON.stringify(json, null, '  '));
 });
 
 // bind our React reconciler with the container component and the composition model.
 // when the root container receives a state update, React will reconcile it into composition.
 render(<RootContainer ref={rootContainerRef} />, composition);
 
-// read once now
-//readInputJSON();
+let g_startT = Date.now() / 1000;
+
+function updateVideoTime() {
+  const t = Date.now() / 1000 - g_startT;
+  rootContainerRef.current.setVideoTime(t);
+}
+setInterval(updateVideoTime, 1000);
