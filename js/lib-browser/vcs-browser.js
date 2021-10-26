@@ -4,7 +4,7 @@ import * as ViewContexts from '../src/react/contexts';
 import { renderCompInCanvas } from '../src/render/canvas';
 
 // the example composition
-import ContentRoot from '../example/hello.jsx';
+import * as VCSComp from '../example/hello.jsx';
 
 
 // a root component that wraps the view we loaded from the external JSX source,
@@ -52,6 +52,8 @@ class RootContainer extends React.Component {
   }
 
   render() {
+    const ContentRoot = VCSComp.default;
+
     return (
       <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
       <ViewContexts.TimeContext.Provider value={this.state.time}>
@@ -94,7 +96,7 @@ export function init(canvas, imageSources) {
 
   requestAnimationFrame(renderFrame);
 
-  return new DailyVCSCommandAPI();
+  return new DailyVCSCommandAPI(VCSComp.compositionInterface);
 }
 
 function compUpdated(comp) {
@@ -129,6 +131,13 @@ function renderFrame() {
 // --- command API ---
 
 class DailyVCSCommandAPI {
+  constructor(compInterface) {
+    this.compositionInterface = compInterface;
+  }
+
+  getCompositionInterface() {
+    return {...this.compositionInterface};
+  }
 
   setActiveParticipants(arr) {
     if (!Array.isArray(arr)) {

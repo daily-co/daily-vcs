@@ -81,12 +81,20 @@ export class Composition {
   _performLayout() {
     if (!this.rootNode) return;
 
-    const viewport = {x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h};
+    const layoutCtxBase = {
+      viewport: {x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h},
+    };
 
     function recurseLayout(node, parentFrame) {
       let frame = {...parentFrame};
       if (node.layoutFunc) {
-        frame = node.layoutFunc(frame, viewport, node.layoutParams);
+        frame = node.layoutFunc(
+                  frame,
+                  node.layoutParams,
+                  { ...layoutCtxBase,
+                    node,
+                  }
+                );
       }
       node.layoutFrame = frame;
       console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
@@ -96,8 +104,7 @@ export class Composition {
       }
     }
 
-    recurseLayout(this.rootNode, viewport);
-
+    recurseLayout(this.rootNode, layoutCtxBase.viewport);
   }
 
   serialize() {

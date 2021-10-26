@@ -16,11 +16,24 @@ export default function HelloDailyVCS() {
 // the control interface exposed by this composition.
 // these values can be set at runtime and become available in the externalData context.
 export const compositionInterface = {
+  displayMeta: {
+    name: "Hello Daily",
+    description: "An example composition in a single file",
+  },
   modes: [
     "grid",
-    "dominant"
   ],
   params: [
+    {
+      id: "showGraphics",
+      type: "boolean",
+      defaultValue: true,
+    },
+    {
+      id: "demoAnimation",
+      type: "boolean",
+      defaultValue: false,
+    },
   ]
 };
 
@@ -79,15 +92,15 @@ function TimedExampleGraphics() {
 
 // --- layout utils ---
 
-function cornerBugSize(viewport, params) {
+function cornerBugSize(params, layoutCtx) {
   // 'size' param is in proportion to viewport height
-  const h = viewport.h * params.size;
+  const h = layoutCtx.viewport.h * params.size;
   const w = h;
   return {w, h};
 }
 
-function cornerBugMargin(viewport) {
-  return viewport.h * 0.05;
+function cornerBugMargin(layoutCtx) {
+  return layoutCtx.viewport.h * 0.05;
 }
 
 const layoutFuncs = {
@@ -98,9 +111,9 @@ const layoutFuncs = {
     return frame;
   },
 
-  cornerBug_topRight: (parentFrame, viewport, params) => {
-    const margin = cornerBugMargin(viewport);
-    const {w, h} = cornerBugSize(viewport, params);
+  cornerBug_topRight: (parentFrame, params, layoutCtx) => {
+    const margin = cornerBugMargin(layoutCtx);
+    const {w, h} = cornerBugSize(params, layoutCtx);
 
     let {x, y} = parentFrame;
     x += parentFrame.w - w - margin;
@@ -109,9 +122,9 @@ const layoutFuncs = {
     return {x, y, w, h};
   },
 
-  cornerBug_bottomLeft: (parentFrame, viewport, params) => {
-    const margin = cornerBugMargin(viewport);
-    const {w, h} = cornerBugSize(viewport, params);
+  cornerBug_bottomLeft: (parentFrame, params, layoutCtx) => {
+    const margin = cornerBugMargin(layoutCtx);
+    const {w, h} = cornerBugSize(params, layoutCtx);
 
     let {x, y} = parentFrame;
     x += margin;
@@ -120,8 +133,9 @@ const layoutFuncs = {
     return {x, y, w, h};
   },
 
-  grid: (parentFrame, viewport, params) => {
+  grid: (parentFrame, params, layoutCtx) => {
     const {index, total} = params;
+    const {viewport} = layoutCtx;
 
     if (total < 1 || !isFinite(total)) {
       return {...parentFrame};
@@ -143,7 +157,7 @@ const layoutFuncs = {
 
     x += outerMargin;
 
-    // center in y
+    // center grid vertically
     y += (parentFrame.h - (numRows*itemH + innerMargin*(numRows - 1))) / 2;
 
     const col = index % numCols;
