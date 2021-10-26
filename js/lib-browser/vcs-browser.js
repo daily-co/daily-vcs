@@ -14,7 +14,9 @@ class RootContainer extends React.Component {
     super();
 
     this.state = {
-      externalData: {},
+      externalData: {
+        params: {},
+      },
       time: {
         currentTime: 0,
       },
@@ -49,6 +51,15 @@ class RootContainer extends React.Component {
       activeParticipants: arr
     }
     this.setState({videoCall: newVideoCall});
+  }
+
+  setParamValue(id, value) {
+    const newExtData = {...this.state.externalData};
+    newExtData.params = {...newExtData.params};
+
+    newExtData.params[id] = value;
+
+    this.setState({externalData: newExtData});
   }
 
   render() {
@@ -133,6 +144,16 @@ function renderFrame() {
 class DailyVCSCommandAPI {
   constructor(compInterface) {
     this.compositionInterface = compInterface;
+
+    // set default values for params now
+    for (const paramDesc of this.compositionInterface.params) {
+      const {id, type, defaultValue} = paramDesc;
+      if (!id || id.length < 1) continue;
+
+      if (type === 'boolean' && defaultValue) {
+        this.setParamValue(id, true);
+      }
+    }
   }
 
   getCompositionInterface() {
@@ -145,5 +166,9 @@ class DailyVCSCommandAPI {
       return;
     }
     rootContainerRef.current.setActiveParticipants(arr);
+  }
+
+  setParamValue(id, value) {
+    rootContainerRef.current.setParamValue(id, value);
   }
 }

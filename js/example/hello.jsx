@@ -1,20 +1,26 @@
 import * as React from 'react';
 import {Box, Image, Video} from '../src/react/components';
-import {useVideoTime, useVideoCall} from '../src/react/hooks';
+import {useParams, useVideoTime, useVideoCall} from '../src/react/hooks';
 
 
 // the root component of this composition
 export default function HelloDailyVCS() {
+  // this comp's params are defined in compositionInterface below
+  const params = useParams();
+  
   return (
     <Box id="main">
       <VideoGrid />
-      <TimedExampleGraphics />
+      {params.showGraphics ?
+        <TimedExampleGraphics
+          onSide={params.graphicsOnSide}
+          demoAnim={params.demoAnimation}
+        /> : null}
     </Box>
   )
 }
 
-// the control interface exposed by this composition.
-// these values can be set at runtime and become available in the externalData context.
+// the control interface exposed by this composition
 export const compositionInterface = {
   displayMeta: {
     name: "Hello Daily",
@@ -28,6 +34,11 @@ export const compositionInterface = {
       id: "showGraphics",
       type: "boolean",
       defaultValue: true,
+    },
+    {
+      id: "graphicsOnSide",
+      type: "boolean",
+      defaultValue: false,
     },
     {
       id: "demoAnimation",
@@ -66,8 +77,11 @@ function VideoGrid() {
   );
 }
 
-function TimedExampleGraphics() {
+function TimedExampleGraphics({onSide, demoAnim}) {
   const t = useVideoTime();
+
+  // choose layout based on prop
+  const baseLayoutFn = (onSide) ? layoutFuncs.sidebar : layoutFuncs.lowerThird;
 
   // change some properties based on time
   let imageSize = 0.1;
@@ -83,7 +97,7 @@ function TimedExampleGraphics() {
   }
 
   return (
-    <Box id="imageBg" style={{fillColor: 'rgba(50, 70, 255, 0.7)'}} layout={[layoutFuncs.lowerThird]}>
+    <Box id="imageBg" style={{fillColor: 'rgba(50, 70, 255, 0.7)'}} layout={[baseLayoutFn]}>
       <Image id="image1" src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
     </Box>
   );
@@ -108,6 +122,13 @@ const layoutFuncs = {
     const frame = {...parentFrame};
     frame.h = Math.round(parentFrame.h / 3);
     frame.y += parentFrame.h - frame.h;
+    return frame;
+  },
+
+  sidebar: (parentFrame) => {
+    const frame = {...parentFrame};
+    frame.w = Math.round(parentFrame.h / 3);
+    frame.x += parentFrame.w - frame.w;
     return frame;
   },
 

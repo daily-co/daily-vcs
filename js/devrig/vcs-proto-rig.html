@@ -48,6 +48,20 @@ body {
 #controls button.selected {
   background-color: coral;
 }
+#controls input[type=checkbox] {
+  appearance: none;
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  border: 1px solid gray;
+  outline: none;
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+#controls input[type=checkbox]:checked {
+  background-color: coral;
+}
 #demoassets {
   display: none;
 }
@@ -162,6 +176,49 @@ function participantToggled(ev) {
   sendActiveParticipants();
 }
 
+function paramCheckboxToggled(ev) {
+  const btn = ev.target;
+  const paramId = btn.dataset.paramId;
+  if (!paramId || paramId.length < 1) {
+    alert("Missing paramId");
+    return;
+  }
+  const newValue = btn.checked === true;
+
+  sendParamChange(paramId, newValue);
+}
+
+function createParamsUI(compInterface, box) {
+  for (const paramDesc of compInterface.params) {
+    const {id, type, defaultValue} = paramDesc;
+    let el;
+    switch (type) {
+      case 'boolean':
+        el = document.createElement('input');
+        el.setAttribute('type', 'checkbox');
+        el.setAttribute('data-param-id', id);
+        if (defaultValue) el.setAttribute('checked', true);
+
+        el.addEventListener('change', paramCheckboxToggled);
+        break;
+
+      default:
+        console.warn("** unsupported param type from composition: '%s'", type);
+        break;
+    }
+
+    if (el) {
+      const div = document.createElement('div');
+      const label = document.createElement('label');
+      label.innerText = id || '<No id provided>';
+      
+      div.appendChild(el);
+      div.appendChild(label);
+      box.appendChild(div);
+    }
+  }
+}
+
 
 // --- setup rendering ---
 
@@ -274,41 +331,11 @@ async function start() {
   // create composition params
   createParamsUI(compInterface, document.querySelector("#controls .compInterface .params"));
 
-
   // send initial data
   sendActiveParticipants();
 }
 
 start();
-
-
-function createParamsUI(compInterface, box) {
-  for (const paramDesc of compInterface.params) {
-    const {id, type, defaultValue} = paramDesc;
-    let el;
-    switch (type) {
-      case 'boolean':
-        el = document.createElement('input');
-        el.setAttribute('type', 'checkbox');
-        el.setAttribute('data-param-id', id);
-        if (defaultValue) el.setAttribute('checked');
-        break;
-
-      default:
-        console.warn("** unsupported param type from composition: '%s'", type);
-        break;
-    }
-
-    if (el) {
-      const div = document.createElement('div');
-      const label = document.createElement('label');
-      label.innerText = id || '<No id provided>';
-      
-
-      box.appendChild(div);
-    }
-  }
-}
 
 
 // --- commands sent to composition ---
@@ -317,6 +344,12 @@ function sendActiveParticipants() {
   if (!g_vcsCommandApi) return;
 
   g_vcsCommandApi.setActiveParticipants(g_activeParticipants);
+}
+
+function sendParamChange(paramId, value) {
+  if (!g_vcsCommandApi) return;
+
+  g_vcsCommandApi.setParamValue(paramId, value);
 }
 
 
