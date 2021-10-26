@@ -18,6 +18,9 @@ class RootContainer extends React.Component {
       time: {
         currentTime: 0,
       },
+      videoCall: {
+        activeParticipants: []
+      }
     };
   }
 
@@ -40,13 +43,23 @@ class RootContainer extends React.Component {
     this.setState({time: newT});
   }
 
+  setActiveParticipants(arr) {
+    const newVideoCall = {
+      ...this.state.videoCall,
+      activeParticipants: arr
+    }
+    this.setState({videoCall: newVideoCall});
+  }
+
   render() {
     return (
       <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
       <ViewContexts.TimeContext.Provider value={this.state.time}>
+      <ViewContexts.VideoCallContext.Provider value={this.state.videoCall}>
         <root>
           <ContentRoot />
         </root>
+      </ViewContexts.VideoCallContext.Provider>
       </ViewContexts.TimeContext.Provider>
       </ViewContexts.ExternalDataContext.Provider>
     )
@@ -58,13 +71,13 @@ const rootContainerRef = React.createRef();
 
 let g_comp;
 let g_canvas;
-let g_assets = {};
+let g_imageSources = {};
 let g_startT = 0;
 let g_lastT = 0;
 
-export function init(canvas, assets) {
+export function init(canvas, imageSources) {
   g_canvas = canvas;
-  g_assets = assets;
+  g_imageSources = imageSources || {};
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.
@@ -80,19 +93,23 @@ export function init(canvas, assets) {
   console.log("starting");
 
   requestAnimationFrame(renderFrame);
+
+  return new DailyVCSCommandAPI();
 }
 
 function compUpdated(comp) {
   //const json = comp.serialize();
   //console.log("update complete, view structure now: ", JSON.stringify(json, null, '  '));
 
-  renderCompInCanvas(comp, g_canvas);
+  //renderCompInCanvas(comp, g_canvas, g_imageSources);
 }
 
 function renderFrame() {
   const t = Date.now() / 1000;
 
-  // limit frame rate
+  let renderNow = true;
+
+  // limit frame rate to React updates
   if (t - g_lastT >= 1/4) {
     const videoT = t - g_startT;
 
@@ -101,5 +118,23 @@ function renderFrame() {
     g_lastT = t;
   }
 
+  if (renderNow) {
+    renderCompInCanvas(g_comp, g_canvas, g_imageSources);
+  }
+
   requestAnimationFrame(renderFrame);
+}
+
+
+// --- command API ---
+
+class DailyVCSCommandAPI {
+
+  setActiveParticipants(arr) {
+    if (!Array.isArray(arr)) {
+      console.error("** setActiveParticipants: invalid object, expected array: " + typeof arr);
+      return;
+    }
+    rootContainerRef.current.setActiveParticipants(arr);
+  }
 }

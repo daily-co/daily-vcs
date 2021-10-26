@@ -89,7 +89,7 @@ export class Composition {
         frame = node.layoutFunc(frame, viewport, node.layoutParams);
       }
       node.layoutFrame = frame;
-      console.log("frame for node '%s': ", node.userGivenId, JSON.stringify(node.layoutFrame));
+      console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
 
       for (const c of node.children) {
         recurseLayout(c, frame);
@@ -122,11 +122,26 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
     }
     for (const k in newParams) {
       if (oldParams[k] !== newParams[k]) return false;
-    }  
+    }
   }
-
   return true;
 }
+
+function isEqualStyle(oldStyle, newStyle) {
+  if (!oldStyle && !newStyle) return true;
+
+  if (newStyle && !oldStyle) return false;
+  if (oldStyle && !newStyle) return false;
+
+  for (const k in oldStyle) {
+    if (oldStyle[k] !== newStyle[k]) return false;
+  }
+  for (const k in newStyle) {
+    if (oldStyle[k] !== newStyle[k]) return false;
+  }
+  return true;
+}
+
 
 class NodeBase {
   static nodeType = null; // abstract base class
@@ -165,7 +180,7 @@ class NodeBase {
   }
 
   commit(container, oldProps, newProps) {    
-    //console.log("commit %s, %s", this.uuid, newProps.id)
+    console.log("commit %s: ", this.uuid, newProps)
 
     if (newProps.id) this.userGivenId = newProps.id;
 
@@ -213,15 +228,44 @@ class RootNode extends NodeBase {
   }
 }
 
-class BoxNode extends NodeBase {
+class StyledNodeBase extends NodeBase {
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    if (!isEqualStyle(oldProps.style, newProps.style)) return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    this.style = newProps.style;
+  }
+}
+
+class BoxNode extends StyledNodeBase {
   static nodeType = IntrinsicNodeType.BOX;
 }
 
-class VideoNode extends NodeBase {
-  static nodeType = IntrinsicNodeType.VIDEO;
-}
-
-class ImageNode extends NodeBase {
+class ImageNode extends StyledNodeBase {
   static nodeType = IntrinsicNodeType.IMAGE;
 
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    if (oldProps.src !== newProps.src) return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    this.src = newProps.src;
+  }
+}
+
+class VideoNode extends ImageNode {  // inherits 'src'
+  static nodeType = IntrinsicNodeType.VIDEO;
 }

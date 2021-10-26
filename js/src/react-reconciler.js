@@ -115,9 +115,6 @@ function appendChild(parent, child) {
   //console.log("appendChild: %s (%s) -> parent %s (%s)", child.uuid, child.userGivenId, parent.uuid, parent.userGivenId);
   parent.children.push(child);
   child.parent = parent;
-  if (parent.container && child.commit) {
-    child.commit(parent.container);
-  }
 }
 
 function appendChildToContainer(container, child) {
