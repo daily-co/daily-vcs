@@ -6,8 +6,9 @@ import { v4 as uuidv4 } from 'uuid';
 export const IntrinsicNodeType = {
   ROOT: 'root',
   BOX: 'box',
-  VIDEO: 'video',
   IMAGE: 'image',
+  LABEL: 'label',
+  VIDEO: 'video',
 };
 
 export class Composition {
@@ -30,11 +31,14 @@ export class Composition {
       case IntrinsicNodeType.BOX:
         node = new BoxNode();
         break;
-      case IntrinsicNodeType.VIDEO:
-        node = new VideoNode();
-        break;
       case IntrinsicNodeType.IMAGE:
         node = new ImageNode();
+        break;
+      case IntrinsicNodeType.LABEL:
+        node = new LabelNode();
+        break;
+      case IntrinsicNodeType.VIDEO:
+        node = new VideoNode();
         break;
       }
 
@@ -97,7 +101,7 @@ export class Composition {
                 );
       }
       node.layoutFrame = frame;
-      console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
+      //console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
 
       for (const c of node.children) {
         recurseLayout(c, frame);
@@ -179,7 +183,7 @@ class NodeBase {
       }
     }
     if (!isEqualLayoutProps(this.layoutFunc, this.layoutParams, newLayout[0], newLayout[1] || {})) {
-      console.log("layout props will be updated for '%s'", newProps.id || '');
+      //console.log("layout props will be updated for '%s'", newProps.id || '');
       return true;
     }
 
@@ -187,7 +191,7 @@ class NodeBase {
   }
 
   commit(container, oldProps, newProps) {    
-    console.log("commit %s: ", this.uuid, newProps)
+    //console.log("commit %s: ", this.uuid, newProps)
 
     if (newProps.id) this.userGivenId = newProps.id;
 
@@ -253,6 +257,24 @@ class StyledNodeBase extends NodeBase {
 
 class BoxNode extends StyledNodeBase {
   static nodeType = IntrinsicNodeType.BOX;
+}
+
+class LabelNode extends StyledNodeBase {
+  static nodeType = IntrinsicNodeType.LABEL;
+
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    if (oldProps.text !== newProps.text) return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    this.text = newProps.text;
+  }
 }
 
 class ImageNode extends StyledNodeBase {

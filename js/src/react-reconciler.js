@@ -11,7 +11,6 @@ import {
 const reconciler = createReconciler({
   prepareForCommit,
   createInstance,
-  createTextInstance,
   appendInitialChild: appendChild,
   appendChild,
   appendChildToContainer,
@@ -101,10 +100,6 @@ function resetAfterCommit(container) {
 function createInstance(type, props, container) {
   //console.log("creating instance of type '%s' with props: ", type, Object.keys(props))
   return container.createNode(type, props);
-}
-
-function createTextInstance(text) {
-  //console.log("createTextInstance: ", text);
 }
 
 function appendChild(parent, child) {

@@ -23,12 +23,12 @@ export function renderCompInCanvas(comp, canvas, imageSources) {
 function recurseRenderNode(ctx, node, comp, imageSources) {
   ctx.save();
 
-  let color;
+  let fillColor;
   let srcDrawable;
 
   switch (node.constructor.nodeType) {
     case IntrinsicNodeType.BOX: {
-      color = node.style.fillColor || null;
+      fillColor = node.style.fillColor || null;
       break;
     }
     case IntrinsicNodeType.IMAGE: {
@@ -38,26 +38,48 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
           console.warn("Unable to find specified source image: ", node.src, imageSources.images);
         }
       }
-      if (!srcDrawable) color = 'red';
+      if (!srcDrawable) fillColor = 'red';
       break;
     }
     case IntrinsicNodeType.VIDEO: {
       srcDrawable = imageSources.videoElements[node.src];
 
-      if (!srcDrawable) color = 'blue';
+      if (!srcDrawable) fillColor = 'blue';
       break;
     }
   }
 
   const frame = node.layoutFrame;
 
-  if (color) {
-    ctx.fillStyle = color;
+  if (fillColor) {
+    ctx.fillStyle = fillColor;
     ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
   }
 
   if (srcDrawable) {
     ctx.drawImage(srcDrawable, frame.x, frame.y, frame.w, frame.h);
+  }
+
+  if (node.text && node.text.length > 0) {
+    ctx.fillStyle = node.style.textColor || 'white';
+
+    let fontSize_px;
+    if (isFinite(node.style.fontSize_vh) && node.style.fontSize_vh > 0) {
+      fontSize_px = comp.viewportSize.h * node.style.fontSize_vh;
+    } else {
+      fontSize_px = node.style.fontSize_px || 24;
+    }
+    let fontFamily = node.style.fontFamily || 'Helvetica';
+    let fontStyle = node.style.fontStyle || '';
+    let fontWeight = node.style.fontWeight || '';
+
+    ctx.font = `${fontWeight} ${fontStyle} ${fontSize_px}px ${fontFamily}`;
+
+    // since we don't have actual font metrics in this prototype,
+    // just take a guess to position the text inside the frame
+    const textY = frame.y + Math.round(fontSize_px*0.8);
+
+    ctx.fillText(node.text, frame.x, textY);
   }
 
   for (const c of node.children) {
