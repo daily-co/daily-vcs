@@ -7,9 +7,11 @@ import {useParams, useVideoTime, useVideoCall} from '../src/react/hooks';
 export default function HelloDailyVCS() {
   // this comp's params are defined in compositionInterface below
   const params = useParams();
+
+  // these params control presence and positioning of graphics
   const {showGraphics, fitGridToGraphics, graphicsOnSide: onSide} = params;
 
-  // layout setup for graphics
+  // layout setup for graphics based on params
   const baseLayoutFn = (onSide) ? layoutFuncs.splitH : layoutFuncs.splitV;
   const splitPos = (onSide) ? 0.8 : 0.67;
   const graphicsLayout = [baseLayoutFn, {index: 1, pos: splitPos}];
@@ -23,7 +25,10 @@ export default function HelloDailyVCS() {
   
   return (
     <Box id="main">
-      <VideoGrid layout={gridLayout} />
+      <VideoGrid
+        layout={gridLayout}
+        showLabels={params.showParticipantLabels}
+      />
       {showGraphics ?
         <TimedExampleGraphics
           layout={graphicsLayout}
@@ -59,6 +64,11 @@ export const compositionInterface = {
       type: "boolean",
       defaultValue: false,
     },
+    {
+      id: "showParticipantLabels",
+      type: "boolean",
+      defaultValue: false,
+    },
     /*{
       id: "demoAnimation",
       type: "boolean",
@@ -70,7 +80,7 @@ export const compositionInterface = {
 
 // --- components ---
 
-function VideoGrid({layout}) {
+function VideoGrid({layout, showLabels}) {
   const {activeParticipants} = useVideoCall();
 
   let maxParticipants = activeParticipants.length;
@@ -83,15 +93,38 @@ function VideoGrid({layout}) {
     }
   }
 
+  const labelStyle = {
+    textColor: 'white',
+    fontFamily: 'Helvetica',
+    fontWeight: '600',
+    fontSize_px: 16
+  };
+
+  const items = activeIndexes.map((srcIdx, i) => {
+    const key = 'videogrid_item'+i;
+
+    let participantLabel;
+    if (showLabels && n > 1) {
+      participantLabel =
+        <Label style={labelStyle} layout={[layoutFuncs.offset, {y: -18}]}>
+          {`Participant ${srcIdx + 1}`}
+        </Label>;
+    }
+
+    return (
+      <Box
+        key={key} id={key}
+        layout={[layoutFuncs.grid, {index: i, total: n}]}
+      >
+        <Video src={srcIdx} />
+        {participantLabel}
+      </Box>
+    );
+  });
+
   return (
     <Box id="videogrid" layout={layout}>
-      {activeIndexes.map((srcIdx, i) => {
-        const key = 'videogrid_'+i;
-        return <Video
-          src={srcIdx} key={key} id={key}
-          layout={[layoutFuncs.grid, {index: i, total: n}]}
-        />;
-      })}
+      {items}
     </Box>
   );
 }
@@ -138,6 +171,29 @@ function TimedExampleGraphics({onSide, layout: baseLayout, demoAnim}) {
 // --- layout functions and utils ---
 
 const layoutFuncs = {
+  
+  pad: (parentFrame, params) => {
+    let {x, y, w, h} = parentFrame;
+    const pad = params.pad || 0;
+
+    x += pad;
+    y += pad;
+    w -= 2*pad;
+    h -= 2*pad;
+
+    return {x, y, w, h};
+  },
+
+  offset: (parentFrame, params) => {
+    let {x, y, w, h} = parentFrame;
+    
+    x += params.x || 0;
+    y += params.y || 0;
+
+    return {x, y, w, h};
+  },
+
+
   splitV: (parentFrame, params) => {
     const pos = params.pos || 0.5;
     const idx = params.index || 0;
@@ -184,18 +240,6 @@ const layoutFuncs = {
     let {x, y} = parentFrame;
     x += margin;
     y += parentFrame.h - h - margin;
-
-    return {x, y, w, h};
-  },
-
-  pad: (parentFrame, params, layoutCtx) => {
-    let {x, y, w, h} = parentFrame;
-    const pad = params.pad || 0;
-
-    x += pad;
-    y += pad;
-    w -= 2*pad;
-    h -= 2*pad;
 
     return {x, y, w, h};
   },
