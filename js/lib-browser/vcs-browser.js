@@ -85,12 +85,33 @@ const rootContainerRef = React.createRef();
 let g_comp;
 let g_canvas;
 let g_imageSources = {};
+let g_extUpdatedCb;
 let g_startT = 0;
 let g_lastT = 0;
 
-export function init(canvas, imageSources) {
+export function init(canvas, imageSources, updatedCb) {
   g_canvas = canvas;
-  g_imageSources = imageSources || {};
+  g_extUpdatedCb = updatedCb;
+
+  g_imageSources = { videos: [], images: {} };
+
+  // the image sources we've received are raw DOM elements.
+  // for display list encoding, we need metadata about each source,
+  // so wrap them in these drawable objects.
+  for (let i = 0; i < imageSources.videos.length; i++) {
+    g_imageSources.videos.push({
+      vcsSourceType: 'video',
+      vcsSourceId: i,
+      domElement: imageSources.videos[i]
+    });
+  }
+  for (const key in imageSources.images) {
+    g_imageSources.images[key] = {
+      vcsSourceType: 'assetImage',
+      vcsSourceId: key,
+      domElement: imageSources.images[key]
+    };
+  }
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.
@@ -111,10 +132,11 @@ export function init(canvas, imageSources) {
 }
 
 function compUpdated(comp) {
-  //const json = comp.serialize();
-  //console.log("update complete, view structure now: ", JSON.stringify(json, null, '  '));
+  if (!g_extUpdatedCb) return;
+  
+  const sceneDesc = comp.serializeAsSceneDescription(g_imageSources);
 
-  //renderCompInCanvas(comp, g_canvas, g_imageSources);
+  g_extUpdatedCb(sceneDesc);
 }
 
 function renderFrame() {
@@ -149,9 +171,12 @@ class DailyVCSCommandAPI {
     for (const paramDesc of this.compositionInterface.params) {
       const {id, type, defaultValue} = paramDesc;
       if (!id || id.length < 1) continue;
+      if (!defaultValue) continue;
 
-      if (type === 'boolean' && defaultValue) {
-        this.setParamValue(id, true);
+      if (type === 'boolean') {
+        this.setParamValue(id, !!defaultValue);
+      } else {
+        this.setParamValue(id, defaultValue);
       }
     }
   }

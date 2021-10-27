@@ -3,42 +3,6 @@ import {Box, Image, Label, Video} from '../src/react/components';
 import {useParams, useVideoTime, useVideoCall} from '../src/react/hooks';
 
 
-// -- the root component of this composition --
-export default function HelloDailyVCS() {
-  // this comp's params are defined in compositionInterface below
-  const params = useParams();
-
-  // these params control presence and positioning of graphics
-  const {showGraphics, fitGridToGraphics, graphicsOnSide: onSide} = params;
-
-  // layout setup for graphics based on params
-  const baseLayoutFn = (onSide) ? layoutFuncs.splitH : layoutFuncs.splitV;
-  const splitPos = (onSide) ? 0.8 : 0.67;
-  const graphicsLayout = [baseLayoutFn, {index: 1, pos: splitPos}];
-  
-  // if we want to shrink the grid so it doesn't overlap with the graphics,
-  // pass it the same split layout function, just with a different index
-  let gridLayout;
-  if (showGraphics && fitGridToGraphics) {
-    gridLayout = [baseLayoutFn, {index: 0, pos: splitPos}];
-  }
-  
-  return (
-    <Box id="main">
-      <VideoGrid
-        layout={gridLayout}
-        showLabels={params.showParticipantLabels}
-      />
-      {showGraphics ?
-        <TimedExampleGraphics
-          layout={graphicsLayout}
-          onSide={onSide}
-          demoAnim={params.demoAnimation}
-        /> : null}
-    </Box>
-  )
-}
-
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
   displayMeta: {
@@ -69,18 +33,72 @@ export const compositionInterface = {
       type: "boolean",
       defaultValue: false,
     },
-    /*{
-      id: "demoAnimation",
+    {
+      id: "useRoundedCornersStyle",
       type: "boolean",
       defaultValue: false,
-    },*/
+    },
+    {
+      id: "demoText",
+      type: "text",
+      defaultValue: "Hello world",
+    },
   ]
 };
 
 
+// -- the root component of this composition --
+export default function HelloDailyVCS() {
+  // this comp's params are defined in 'compositionInterface' above.
+  // this hook lets us get the current param values.
+  const params = useParams();
+
+  // params that control the presence and positioning of graphics
+  const {showGraphics, fitGridToGraphics, graphicsOnSide: onSide} = params;
+
+  // layout setup for graphics based on params
+  const baseLayoutFn = (onSide) ? layoutFuncs.splitH : layoutFuncs.splitV;
+  const splitPos = (onSide) ? 0.8 : 0.67;
+  const graphicsLayout = [baseLayoutFn, {index: 1, pos: splitPos}];
+  
+  // if we want to shrink the grid so it doesn't overlap with the graphics,
+  // pass it the same split layout function, just with a different index
+  let gridLayout;
+  if (showGraphics && fitGridToGraphics) {
+    gridLayout = [baseLayoutFn, {index: 0, pos: splitPos}];
+  }
+
+  // style setting that components can interpret as they see fit
+  const roundedCorners = !!params.useRoundedCornersStyle;
+  
+  return (
+    <Box id="main">
+      <VideoGrid
+        layout={gridLayout}
+        showLabels={params.showParticipantLabels}
+        roundedCorners={roundedCorners}
+      />
+      {showGraphics ?
+        <TimedExampleGraphics
+          layout={graphicsLayout}
+          onSide={onSide}
+          demoText={params.demoText}
+          roundedCorners={roundedCorners}
+        /> : null}
+    </Box>
+  )
+}
+
+
 // --- components ---
 
-function VideoGrid({layout, showLabels}) {
+const DEFAULT_CORNER_RADIUS_PX = 25;
+
+function VideoGrid({
+  layout,
+  showLabels,
+  roundedCorners
+}) {
   const {activeParticipants} = useVideoCall();
 
   let maxParticipants = activeParticipants.length;
@@ -99,6 +117,9 @@ function VideoGrid({layout, showLabels}) {
     fontWeight: '600',
     fontSize_px: 16
   };
+  const videoStyle = {
+    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0
+  };
 
   const items = activeIndexes.map((srcIdx, i) => {
     const key = 'videogrid_item'+i;
@@ -116,7 +137,7 @@ function VideoGrid({layout, showLabels}) {
         key={key} id={key}
         layout={[layoutFuncs.grid, {index: i, total: n}]}
       >
-        <Video src={srcIdx} />
+        <Video src={srcIdx} style={videoStyle} />
         {participantLabel}
       </Box>
     );
@@ -129,7 +150,12 @@ function VideoGrid({layout, showLabels}) {
   );
 }
 
-function TimedExampleGraphics({onSide, layout: baseLayout, demoAnim}) {
+function TimedExampleGraphics({
+  onSide,
+  layout: baseLayout,
+  demoText,
+  roundedCorners
+}) {
   const t = useVideoTime();
 
   // change some properties based on time
@@ -154,15 +180,19 @@ function TimedExampleGraphics({onSide, layout: baseLayout, demoAnim}) {
   const textLayoutFn = layoutFuncs.pad;
   const textPad_px = 20;
 
+  const boxStyle = { fillColor: 'rgba(50, 70, 255, 0.7)' };
+  let boxOuterPad = 0;
+  if (roundedCorners) {
+    boxStyle.cornerRadius_px = DEFAULT_CORNER_RADIUS_PX;
+    boxOuterPad = 20;
+  }
+
   return (
-    <Box id="graphicsBox"
-      style={{fillColor: 'rgba(50, 70, 255, 0.7)'}}
-      layout={baseLayout}
-    >
-      <Label style={textStyle} layout={[textLayoutFn, {pad: textPad_px}]}>
-        Hello world
-      </Label>
-      <Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
+    <Box layout={[layoutFuncs.pad, {pad: boxOuterPad}]}>
+      <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
+        <Label style={textStyle} layout={[textLayoutFn, {pad: textPad_px}]}>{demoText}</Label>
+        <Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
+      </Box>
     </Box>
   );
 }
@@ -171,7 +201,7 @@ function TimedExampleGraphics({onSide, layout: baseLayout, demoAnim}) {
 // --- layout functions and utils ---
 
 const layoutFuncs = {
-  
+
   pad: (parentFrame, params) => {
     let {x, y, w, h} = parentFrame;
     const pad = params.pad || 0;

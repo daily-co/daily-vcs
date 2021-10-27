@@ -15,9 +15,36 @@ body {
 
 #mainContainer {
   width: 100%;
-  height: 100vh;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#leftSplit {
+  width: 63%;
+  min-width: 800px;
+  height: 100%;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
+}
+
+#rightSplit {
+  height: 100%;
+  flex: 1 0 0;
+  background-color: black;
+  color: #ddd;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+#sceneDescPrintOut {
+  padding: 1em;
+  font-size: 12px;
+  font-family: Menlo, monospace;
+}
+#sceneDescPrintOut h4 {
+  margin: 0;
+  margin-top: 1em;
 }
 
 #canvasContainer {
@@ -32,7 +59,6 @@ body {
   margin-top: 30px;
   height: 62px;
   background-image: url('example-assets/atari_vcs_woodgrain_texture.png');
-  background-size: contain;
 }
 #controls {
   flex: 1 0 auto;
@@ -41,6 +67,7 @@ body {
   padding: 1rem;
   padding-top: 0;
   font-size: 14px;
+  overflow-y: scroll;
 }
 #controls button {
   padding: 1px 6px;
@@ -92,44 +119,60 @@ body {
 #controls .compInterface {
   margin-top: 1.5em;
 }
+#controls .compInterface .params > div {
+  margin-top: 0.35em;
+}
+#controls .compInterface .params > div > input[type=text] {
+  display: inline-block;
+  margin-left: 1em;
+  background-color: rgba(90, 90, 90, 0.5);
+  color: white;
+}
 
     </style>
   </head>
 
   <body>
     <div id="mainContainer">
-      <div id="canvasContainer">
-        <canvas id="renderCanvas" width="640" height="360" />
+      <div id="leftSplit">
+        <div id="canvasContainer">
+          <canvas id="renderCanvas" width="640" height="360" />
+        </div>
+        <div id="deco"></div>
+        <div id="controls">
+          <div class="compInfo">
+            <div class="name"></div>
+            <div class="description"></div>
+          </div>
+          <div class="vc">
+            <h3>Video call</h3>
+            <span>Participants: </span>
+            <button data-index=0 class="selected">1</button>
+            <button data-index=1>2</button>
+            <button data-index=2>3</button>
+            <button data-index=3>4</button>
+            <button data-index=4>5</button>
+            <button data-index=5>6</button>
+            <button data-index=6>7</button>
+            <button data-index=7>8</button>
+            <button data-index=8>9</button>
+            <button data-index=9>10</button>
+            <button data-index=10>11</button>
+            <button data-index=11>12</button>
+            <button data-index=12>13</button>
+            <button data-index=13>14</button>
+            <button data-index=14>15</button>
+            <button data-index=15>16</button>
+          </div>
+          <div class="compInterface">
+            <h3>Composition interface</h3>
+            <div class="params"></div>
+          </div>
+        </div>  
       </div>
-      <div id="deco"></div>
-      <div id="controls">
-        <div class="compInfo">
-          <div class="name"></div>
-          <div class="description"></div>
-        </div>
-        <div class="vc">
-          <h3>Video call</h3>
-          <span>Participants: </span>
-          <button data-index=0 class="selected">1</button>
-          <button data-index=1>2</button>
-          <button data-index=2>3</button>
-          <button data-index=3>4</button>
-          <button data-index=4>5</button>
-          <button data-index=5>6</button>
-          <button data-index=6>7</button>
-          <button data-index=7>8</button>
-          <button data-index=8>9</button>
-          <button data-index=9>10</button>
-          <button data-index=10>11</button>
-          <button data-index=11>12</button>
-          <button data-index=12>13</button>
-          <button data-index=13>14</button>
-          <button data-index=14>15</button>
-          <button data-index=15>16</button>
-        </div>
-        <div class="compInterface">
-          <h3>Composition interface</h3>
-          <div class="params"></div>
+      <div id="rightSplit">
+        <div id="sceneDescPrintOut">
+          Loading...
         </div>
       </div>
     </div>
@@ -188,32 +231,60 @@ function paramCheckboxToggled(ev) {
   sendParamChange(paramId, newValue);
 }
 
+function paramTextEdited(ev) {
+  const field = ev.target;
+  const paramId = field.dataset.paramId;
+  if (!paramId || paramId.length < 1) {
+    alert("Missing paramId");
+    return;
+  }
+  const newValue = field.value || '';
+
+  sendParamChange(paramId, newValue);
+}
+
 function createParamsUI(compInterface, box) {
   for (const paramDesc of compInterface.params) {
     const {id, type, defaultValue} = paramDesc;
     let el;
+    let posLeft = false;
     switch (type) {
+      default:
+        console.warn("** unsupported param type from composition: '%s'", type);
+        break;
+
       case 'boolean':
         el = document.createElement('input');
         el.setAttribute('type', 'checkbox');
-        el.setAttribute('data-param-id', id);
         if (defaultValue) el.setAttribute('checked', true);
 
         el.addEventListener('change', paramCheckboxToggled);
+        posLeft = true;
         break;
 
-      default:
-        console.warn("** unsupported param type from composition: '%s'", type);
+      case 'text':
+        el = document.createElement('input');
+        el.setAttribute('type', 'text');
+        if (defaultValue) el.setAttribute('value', defaultValue);
+
+        el.addEventListener('change', paramTextEdited);
         break;
     }
 
     if (el) {
+      el.setAttribute('data-param-id', id);
+
       const div = document.createElement('div');
       const label = document.createElement('label');
       label.innerText = id || '<No id provided>';
       
-      div.appendChild(el);
-      div.appendChild(label);
+      if (posLeft) {
+        div.appendChild(el);
+        div.appendChild(label);
+      } else {
+        div.appendChild(label);
+        div.appendChild(el);
+      }
       box.appendChild(div);
     }
   }
@@ -313,13 +384,13 @@ async function start() {
   ];
 
   const sources = {
-    videoElements: [liveVideoEl].concat(demoPeople),
+    videos: [liveVideoEl].concat(demoPeople),
     images: testImages,
   };
 
   console.log("--- calling DailyVCS.init ---");
 
-  g_vcsCommandApi = DailyVCS.init(g_canvas, sources);
+  g_vcsCommandApi = DailyVCS.init(g_canvas, sources, compUpdated);
 
   // print composition info
   const compInterface = g_vcsCommandApi.getCompositionInterface();
@@ -336,6 +407,31 @@ async function start() {
 }
 
 start();
+
+
+// --- callback received from composition ---
+
+function compUpdated(sceneDesc) {
+  console.log("scene desc: ", sceneDesc);
+
+  const printoutEl = document.getElementById("sceneDescPrintOut");
+
+  let html = '';
+
+  html += "<h4>videoLayers:</h4><br>";
+  for (const item of sceneDesc.videoLayers) {
+    const json = JSON.stringify(item);
+    html += `${json}<br>`;
+  }
+  
+  html += "<h4>fgDisplayList:</h4><br>";
+  for (const cmd of sceneDesc.fgDisplayList.commands) {
+    const json = JSON.stringify(cmd);
+    html += `${json}<br>`;
+  }
+
+  printoutEl.innerHTML = html;
+}
 
 
 // --- commands sent to composition ---

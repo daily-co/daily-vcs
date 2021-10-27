@@ -1,4 +1,5 @@
 import { IntrinsicNodeType } from "../comp-backing-model";
+import { roundRect } from "./canvas-utils";
 
 export function renderCompInCanvas(comp, canvas, imageSources) {
   const canvasW = canvas.width;
@@ -20,7 +21,22 @@ export function renderCompInCanvas(comp, canvas, imageSources) {
   ctx.restore();
 }
 
+export function encodeCompIntoCanvasDisplayList(comp, canvasDL, imageSources) {
+  const ctx = canvasDL.getContext();
+
+  recurseRenderNode(ctx, comp.rootNode, comp, imageSources);
+}
+
 function recurseRenderNode(ctx, node, comp, imageSources) {
+  const isVCSDisplayListEncoder = typeof ctx.drawImage_vcsDrawable === 'function';
+
+  if (isVCSDisplayListEncoder) {
+    if (node.constructor.nodeType === IntrinsicNodeType.VIDEO) {
+      // don't encode video elements into canvas commands, they are handled separately
+      return;
+    }
+  }
+
   ctx.save();
 
   let fillColor;
@@ -42,7 +58,7 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
       break;
     }
     case IntrinsicNodeType.VIDEO: {
-      srcDrawable = imageSources.videoElements[node.src];
+      srcDrawable = imageSources.videos[node.src];
 
       if (!srcDrawable) fillColor = 'blue';
       break;
@@ -51,13 +67,26 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
 
   const frame = node.layoutFrame;
 
+  // if rounded corners requested, use a clip path while rendering this node's content
+  let inShapeClip = false;
+  if (node.style && Number.isFinite(node.style.cornerRadius_px) && node.style.cornerRadius_px > 0) {
+    inShapeClip = true;
+    ctx.save();
+    roundRect(ctx, frame.x, frame.y, frame.w, frame.h, node.style.cornerRadius_px);
+    ctx.clip();
+  }
+
   if (fillColor) {
-    ctx.fillStyle = fillColor;
+    ctx.fillStyle = fillColor;    
     ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
   }
 
   if (srcDrawable) {
-    ctx.drawImage(srcDrawable, frame.x, frame.y, frame.w, frame.h);
+    if (isVCSDisplayListEncoder) {
+      ctx.drawImage_vcsDrawable(srcDrawable, frame.x, frame.y, frame.w, frame.h);
+    } else {
+      ctx.drawImage(srcDrawable.domElement, frame.x, frame.y, frame.w, frame.h);
+    }
   }
 
   if (node.text && node.text.length > 0) {
@@ -65,22 +94,28 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
 
     let fontSize_px;
     if (isFinite(node.style.fontSize_vh) && node.style.fontSize_vh > 0) {
-      fontSize_px = comp.viewportSize.h * node.style.fontSize_vh;
+      fontSize_px = Math.round(comp.viewportSize.h * node.style.fontSize_vh);
     } else {
-      fontSize_px = node.style.fontSize_px || 24;
+      fontSize_px = Math.round(node.style.fontSize_px || 24);
     }
     let fontFamily = node.style.fontFamily || 'Helvetica';
     let fontStyle = node.style.fontStyle || '';
     let fontWeight = node.style.fontWeight || '';
 
-    ctx.font = `${fontWeight} ${fontStyle} ${fontSize_px}px ${fontFamily}`;
+    if (isVCSDisplayListEncoder) {
+      ctx.font = [fontWeight, fontStyle, fontSize_px, fontFamily];
+    } else {
+      ctx.font = `${fontWeight} ${fontStyle} ${fontSize_px}px ${fontFamily}`;
+    }
 
     // since we don't have actual font metrics in this prototype,
     // just take a guess to position the text inside the frame
     const textY = frame.y + Math.round(fontSize_px*0.8);
 
-    ctx.fillText(node.text, frame.x, textY);
+    ctx.fillText(node.text, Math.round(frame.x), Math.round(textY));
   }
+
+  if (inShapeClip) ctx.restore();
 
   for (const c of node.children) {
     recurseRenderNode(ctx, c, comp, imageSources);

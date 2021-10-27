@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-
+import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
+import { encodeCompIntoCanvasDisplayList } from '../src/render/canvas';
+import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)
@@ -111,10 +113,24 @@ export class Composition {
     recurseLayout(this.rootNode, layoutCtxBase.viewport);
   }
 
-  serialize() {
+  serializeAsSceneDescription(imageSources) {
     if (!this.rootNode) return {};
 
-    return this.rootNode.serialize();
+    const viewportW = this.viewportSize.w;
+    const viewportH = this.viewportSize.h;
+
+    // get foreground graphics as a display list
+    const encoder = new CanvasDisplayListEncoder(viewportW, viewportH);
+    encodeCompIntoCanvasDisplayList(this, encoder, imageSources);
+    const fgDisplayList = encoder.finalize();
+
+    // get video elements
+    const videoLayers = encodeCompVideoSceneDesc(this, imageSources);
+
+    return {
+      videoLayers,
+      fgDisplayList,
+    };
   }
 }
 
