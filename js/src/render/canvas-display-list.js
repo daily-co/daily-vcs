@@ -45,6 +45,12 @@ class CanvasEncodingContext {
   }
 
   restore() {
+    const n = this.cmds.length;
+    if (n > 0 && this.cmds[n - 1][0] === 'save') {
+      // don't bother encoding empty save-restore pairs
+      this.cmds.splice(n - 1, 1);
+      return;
+    }
     this.encodeCmd('restore');
   }
 
