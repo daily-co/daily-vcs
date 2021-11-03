@@ -1,0 +1,41 @@
+{
+  "width": 1280,
+  "height": 720,
+  "commands": [
+    ["save"],
+    ["save"],
+    ["save"],
+    ["save"],
+    ["save"],
+    ["beginPath"],
+    ["moveTo", [1037, 20]],
+    ["lineTo", [1235, 20]],
+    ["quadraticCurveTo", [1260, 20, 1260, 45]],
+    ["lineTo", [1260, 675]],
+    ["quadraticCurveTo", [1260, 700, 1235, 700]],
+    ["lineTo", [1037, 700]],
+    ["quadraticCurveTo", [1012, 700, 1012, 675]],
+    ["lineTo", [1012, 45]],
+    ["quadraticCurveTo", [1012, 20, 1037, 20]],
+    ["closePath"],
+    ["clip"],
+    ["fillStyle", "rgba(50, 70, 255, 0.7)"],
+    ["fillRect", [1012, 20, 248, 680]],
+    ["restore"],
+    ["save"],
+    ["fillStyle", "rgba(255, 250, 200, 0.93)"],
+    ["font", ["200", "", 25, "Helvetica"]],
+    ["fillText", ["Hello world", 1032, 60]],
+    ["restore"],
+    ["save"],
+    [
+      "drawImage",
+      [{ "type": "assetImage", "id": "test_square" }, 1048, 484, 180, 180]
+    ],
+    ["restore"],
+    ["restore"],
+    ["restore"],
+    ["restore"],
+    ["restore"]
+  ]
+}
