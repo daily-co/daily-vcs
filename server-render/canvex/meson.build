@@ -56,4 +56,9 @@ executable(
     rapidjson_dep,
   ],
   install : true,
+  cpp_args: [
+    '-Wno-gnu-anonymous-struct',
+    '-Wno-gnu-zero-variadic-macro-arguments',
+    '-Wno-nested-anon-types',
+  ],
 )

@@ -2,13 +2,15 @@
 #include <cstdio>
 #include "skia_includes.h"
 #include "canvas_display_list.h"
+#include "canvex_skia_executor.h"
 #include "file_util.h"
+#include "time_util.h"
 
 using namespace std;
 using namespace canvex;
 
 
-void renderTestIntoBitmap(SkBitmap& bitmap, int w, int h) {
+void renderTestIntoBitmap(SkBitmap& bitmap, int /*w*/, int /*h*/) {
   SkCanvas canvas(bitmap);
 
   canvas.drawColor(SkColorSetARGB(255, 50, 60, 120));
@@ -58,16 +60,30 @@ int main() {
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;
 
-  std::unique_ptr<VCSCanvasDisplayList> displayList;
-  try {
-    auto json = readTextFile(jsonPath);
-    displayList = ParseVCSDisplayListJSON(json);
-  } catch (std::exception& e) {
-    std::cerr << "Unable to read display list file: "<< e.what() << std::endl;
-    return 2;
+  const int numIters = 1;
+
+  for (int i = 0; i < numIters; i++) {
+    const double t0 = getMonotonicTime();
+
+    std::unique_ptr<VCSCanvasDisplayList> displayList;
+    try {
+      auto json = readTextFile(jsonPath);
+      displayList = ParseVCSDisplayListJSON(json);
+    } catch (std::exception& e) {
+      std::cerr << "Unable to read display list file: "<< e.what() << std::endl;
+      return 2;
+    }
+
+    const double t_parseJson = getMonotonicTime() - t0;
+
+    GraphicsExecutionStats execStats{};
+
+    RenderDisplayListToPNG(*displayList, "test-dl.png", &execStats);
+
+    std::cout << "Done. Timings:" << std::endl;
+    std::cout << "Parse JSON " << round(t_parseJson*1.0e6)/1000.0 << "ms" << std::endl;
+    std::cout << "Graphics execution " << execStats.graphicsRender_us/1000.0 << "ms" << std::endl;
+    std::cout << "File write " << execStats.fileWrite_us/1000.0 << "ms" << std::endl;
   }
-
-  
-
   return 0;
 }

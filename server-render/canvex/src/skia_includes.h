@@ -5,5 +5,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkPath.h"
 #include "include/core/SkTextBlob.h"
 #include "include/core/SkTypeface.h"

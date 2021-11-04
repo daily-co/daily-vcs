@@ -10,7 +10,7 @@
     ["fillRect",[0,482,1280,238]],
     ["save"],
     ["fillStyle","rgba(255, 250, 200, 0.93)"],
-    ["font",["200","",40,"Helvetica"]],
+    ["font",["600","",40,"Helvetica"]],
     ["fillText",["Hello world",20,534]],
     ["restore"],
     ["save"],

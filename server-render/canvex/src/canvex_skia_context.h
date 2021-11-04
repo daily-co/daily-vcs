@@ -1,6 +1,7 @@
 #pragma once
 #include "skia_includes.h"
 #include <iostream>
+#include <unordered_map>
 
 /*
  Implements a basic HTML-style canvas 2D context around Skia.
@@ -21,26 +22,16 @@ struct CanvexContextStateFrame {
 
 class CanvexContext {
  public:
-  CanvexContext(std::shared_ptr<SkCanvas> canvas) : canvas_(canvas) {
-    // init stack with state defaults
-    stateStack_.push_back({});
-  }
+  CanvexContext(std::shared_ptr<SkCanvas> canvas);
 
-  void save() {
-    canvas_->save();
-    stateStack_.emplace_back(stateStack_.back());
-  }
+  void save();
+  void restore();
 
-  void restore() {
-    if (stateStack_.size() == 1) {
-      std::cerr << "** warning: canvas context stack underflow in restore()" << std::endl;
-      return;
-    }
-    canvas_->restore();
-    stateStack_.pop_back();
-  }
+  void setFillStyle(const std::string& s);
+  void setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name);
 
-
+  void fillRect(double x, double y, double w, double h);
+  void fillText(const std::string& text, double x, double y);
 
  private:
   // external rendering target
@@ -49,6 +40,34 @@ class CanvexContext {
   // internal state
   std::unique_ptr<SkPath> path_;
   std::vector<CanvexContextStateFrame> stateStack_;
+
+  // cached resources.
+  // TODO: move these to a higher-level object that can be shared between contexts
+  std::unordered_map<int, sk_sp<SkTypeface>> typefaceCache_HelveticaByWeight_;
+
+  // utils to access current state
+  float getGlobalAlpha() {
+    const auto& sf = stateStack_.back();
+    return sf.globalAlpha;
+  }
+
+  SkColor getSkFillColor() {
+    const auto& sf = stateStack_.back();
+    return SkColorSetARGB(
+        sf.globalAlpha * sf.fillColor[3] * 255.0f,
+        sf.fillColor[0] * 255.0f,
+        sf.fillColor[1] * 255.0f,
+        sf.fillColor[2] * 255.0f);
+  }
+
+  SkColor getSkStrokeColor() {
+    const auto& sf = stateStack_.back();
+    return SkColorSetARGB(
+        sf.globalAlpha * sf.strokeColor[3] * 255.0f,
+        sf.strokeColor[0] * 255.0f,
+        sf.strokeColor[1] * 255.0f,
+        sf.strokeColor[2] * 255.0f);
+  }
 };
 
 } // namespace canvex

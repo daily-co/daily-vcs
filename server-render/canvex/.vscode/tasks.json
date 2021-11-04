@@ -15,7 +15,7 @@
       }
     },
     {
-      "label": "run canvex standalone",
+      "label": "run canvex demo",
       "type": "shell",
       "command": "build/canvex",
       "group": "build",
