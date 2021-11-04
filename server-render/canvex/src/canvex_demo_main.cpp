@@ -56,11 +56,13 @@ int main() {
   fclose(pngFile);
 
   // -- json test --
-  auto jsonPath = "example-data/basic-lowerthird.json";
+  auto jsonPath = 
+        //"example-data/basic-lowerthird.json";
+        "example-data/graphics-test-random-50.json";
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;
 
-  const int numIters = 1;
+  const int numIters = 20;
 
   for (int i = 0; i < numIters; i++) {
     const double t0 = getMonotonicTime();

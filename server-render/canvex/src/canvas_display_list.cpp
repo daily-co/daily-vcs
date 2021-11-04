@@ -251,6 +251,9 @@ class DisplayListJSONHandler {
   const std::unordered_map<std::string, OpType> opsByName_ = {
     {"save", OpType::save},
     {"restore", OpType::restore},
+    {"scale", OpType::scale},
+    {"rotate", OpType::rotate},
+    {"translate", OpType::translate},
     {"fillStyle", OpType::fillStyle},
     {"font", OpType::font},
     {"clip", OpType::clip},

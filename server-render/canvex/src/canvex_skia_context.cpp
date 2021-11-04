@@ -23,6 +23,10 @@ void CanvexContext::restore() {
   stateStack_.pop_back();
 }
 
+void CanvexContext::rotate(double radians) {
+  canvas_->rotate(radians * (180.0 / M_PI));
+}
+
 void CanvexContext::setFillStyle(const std::string& s) {
   auto& sf = stateStack_.back();
   if (!getRGBAColorFromCSSStyleString(s, sf.fillColor)) {

@@ -26,6 +26,7 @@ class CanvexContext {
 
   void save();
   void restore();
+  void rotate(double radians);
 
   void setFillStyle(const std::string& s);
   void setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name);
