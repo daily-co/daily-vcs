@@ -1,85 +1,13 @@
 import * as React from 'react';
 import { Composition, render } from '../src';
-import * as ViewContexts from '../src/react/contexts';
 import { renderCompInCanvas } from '../src/render/canvas';
+import { makeVCSRootContainer } from '../src/loader-base';
 
 // the example composition
 import * as VCSComp from
-        //'../example/hello.jsx';
-        '../example/graphics-test.jsx';
+        '../example/hello.jsx';
+        //'../example/graphics-test.jsx';
 
-
-// a root component that wraps the view we loaded from the external JSX source,
-// and provides the React Context interface for feeding external data from a JSON file.
-class RootContainer extends React.Component {
-  constructor() {
-    super();
-
-    this.state = {
-      externalData: {
-        params: {},
-      },
-      time: {
-        currentTime: 0,
-      },
-      videoCall: {
-        activeParticipants: []
-      }
-    };
-  }
-
-  componentDidCatch(error, info) {
-    console.error("\n** An error occurred in a React component:\n  %s\n", error.message, info.componentStack);
-  }
-
-  setExternalData(data) {
-    console.log("set data: ", data)
-    this.setState({
-      externalData: data || {}
-    });
-  }
-
-  setVideoTime(t) {
-    const newT = {
-      ...this.state.time,
-      currentTime: t
-    };
-    this.setState({time: newT});
-  }
-
-  setActiveParticipants(arr) {
-    const newVideoCall = {
-      ...this.state.videoCall,
-      activeParticipants: arr
-    }
-    this.setState({videoCall: newVideoCall});
-  }
-
-  setParamValue(id, value) {
-    const newExtData = {...this.state.externalData};
-    newExtData.params = {...newExtData.params};
-
-    newExtData.params[id] = value;
-
-    this.setState({externalData: newExtData});
-  }
-
-  render() {
-    const ContentRoot = VCSComp.default;
-
-    return (
-      <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
-      <ViewContexts.TimeContext.Provider value={this.state.time}>
-      <ViewContexts.VideoCallContext.Provider value={this.state.videoCall}>
-        <root>
-          <ContentRoot />
-        </root>
-      </ViewContexts.VideoCallContext.Provider>
-      </ViewContexts.TimeContext.Provider>
-      </ViewContexts.ExternalDataContext.Provider>
-    )
-  }
-}
 
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
@@ -121,7 +49,9 @@ export function init(canvas, imageSources, updatedCb) {
 
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
-  render(<RootContainer ref={rootContainerRef} />, g_comp);
+  render(
+    makeVCSRootContainer(VCSComp.default, rootContainerRef),
+    g_comp);
 
   g_startT = Date.now() / 1000;
   g_lastT = g_startT;
@@ -195,10 +125,12 @@ class DailyVCSCommandAPI {
       console.error("** setActiveParticipants: invalid object, expected array: " + typeof arr);
       return;
     }
+    console.log("setActiveParticipants: ", JSON.stringify(arr));
     rootContainerRef.current.setActiveParticipants(arr);
   }
 
   setParamValue(id, value) {
+    console.log("setParamValue: ", id, value);
     rootContainerRef.current.setParamValue(id, value);
   }
 }

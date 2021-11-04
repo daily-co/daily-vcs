@@ -3,8 +3,7 @@ import * as Path from 'path';
 import * as React from 'react';
 
 import { Composition, render } from './src';
-import * as ViewComponents from './src/react/components';
-import * as ViewContexts from './src/react/contexts';
+import { makeVCSRootContainer } from './src/loader-base';
 
 
 // CLI arguments.
@@ -20,54 +19,20 @@ if (!srcCompPath?.length) {
 
 const ContentRoot = require(Path.resolve('.', srcCompPath)).default;
 
-
-// a root component that wraps the view we loaded from the external JSX source,
-// and provides the React Context interface for feeding external data from a JSON file.
-class RootContainer extends React.Component {
-  constructor() {
-    super();
-
-    this.state = {
-      externalData: {},
-      time: {
-        currentTime: 0,
-      }
-    };
-  }
-
-  componentDidCatch(error, info) {
-    console.error("\n** An error occurred in a React component:\n  %s\n", error.message, info.componentStack);
-    console.error("\nExiting.");
-    process.exit(4);
-  }
-
-  setExternalData(data) {
-    console.log("set data: ", data)
-    this.setState({
-      externalData: data || {}
-    });
-  }
-
-  setVideoTime(t) {
-    const newT = {
-      ...this.state.time,
-      currentTime: t
-    };
-    this.setState({time: newT});
-  }
-
-  render() {
-    return (
-    <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
-    <ViewContexts.TimeContext.Provider value={this.state.time}>
-      <root>
-        <ContentRoot />
-      </root>
-    </ViewContexts.TimeContext.Provider>
-    </ViewContexts.ExternalDataContext.Provider>
-    )
-  }
+// mock objects to represent image sources.
+// this is passed in when writing the composition into a flat scene description,
+// so image/video references can be resolved.
+const imageSources = { videos: [], images: {} };
+for (let i = 0; i < 16; i++) {
+  imageSources.videos.push({
+    vcsSourceType: 'video',
+    vcsSourceId: i,
+  })
 }
+imageSources.images['test_square'] = {
+  vcsSourceType: 'assetImage',
+  vcsSourceId: 'test_square_320px.png',
+};
 
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
@@ -75,13 +40,18 @@ const rootContainerRef = React.createRef();
 // the backing model for our views.
 // the callback passed here will be called every time React has finished an update.
 const composition = new Composition(function(comp) {
-  //const json = comp.serialize();
-  //console.log("update complete, view structure now: ", JSON.stringify(json, null, '  '));
+  const sceneDesc = comp.serializeAsSceneDescription(imageSources);
+  console.log("update complete, scene description now: ", JSON.stringify(sceneDesc));
 });
 
 // bind our React reconciler with the container component and the composition model.
 // when the root container receives a state update, React will reconcile it into composition.
-render(<RootContainer ref={rootContainerRef} />, composition);
+render(makeVCSRootContainer(ContentRoot, rootContainerRef), composition);
+
+// set up defaults
+rootContainerRef.current.setActiveParticipants([true, true]);
+rootContainerRef.current.setParamValue('showGraphics', true);
+rootContainerRef.current.setParamValue('demoText', 'Greetings from Node');
 
 let g_startT = Date.now() / 1000;
 
