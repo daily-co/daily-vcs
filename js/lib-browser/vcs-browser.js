@@ -4,7 +4,9 @@ import * as ViewContexts from '../src/react/contexts';
 import { renderCompInCanvas } from '../src/render/canvas';
 
 // the example composition
-import * as VCSComp from '../example/hello.jsx';
+import * as VCSComp from
+        //'../example/hello.jsx';
+        '../example/graphics-test.jsx';
 
 
 // a root component that wraps the view we loaded from the external JSX source,
@@ -151,6 +153,9 @@ function renderFrame() {
     rootContainerRef.current.setVideoTime(videoT);
 
     g_lastT = t;
+
+    const t1 = Date.now() / 1000;
+    console.log("updated react, time spent %f ms", Math.round((t1-t)*1000));
   }
 
   if (renderNow) {

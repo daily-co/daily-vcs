@@ -54,6 +54,18 @@ class CanvasEncodingContext {
     this.encodeCmd('restore');
   }
 
+  scale(...args) {
+    this.encodeCmd('scale', args);
+  }
+
+  rotate(...args) {
+    this.encodeCmd('rotate', args);
+  }
+
+  translate(...args) {
+    this.encodeCmd('translate', args);
+  }
+
   clip() {
     this.encodeCmd('clip');
   }
