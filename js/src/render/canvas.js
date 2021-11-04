@@ -37,7 +37,22 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
     }
   }
 
+  const frame = node.layoutFrame;
+
   ctx.save();
+
+  if (node.transform) {
+    const {rotate_deg} = node.transform;
+
+    if (Math.abs(rotate_deg) > 0.001) {
+      // set rotate anchor point to center of layer
+      const cx = frame.x + frame.w/2;
+      const cy = frame.y + frame.h/2;
+      ctx.translate(cx, cy);
+      ctx.rotate(rotate_deg * (Math.PI/180));
+      ctx.translate(-cx, -cy);
+    }
+  }
 
   let fillColor;
   let srcDrawable;
@@ -64,8 +79,6 @@ function recurseRenderNode(ctx, node, comp, imageSources) {
       break;
     }
   }
-
-  const frame = node.layoutFrame;
 
   // if rounded corners requested, use a clip path while rendering this node's content
   let inShapeClip = false;

@@ -412,7 +412,7 @@ start();
 // --- callback received from composition ---
 
 function compUpdated(sceneDesc) {
-  console.log("scene desc: ", sceneDesc);
+  console.log("scene desc JSON: ", JSON.stringify(sceneDesc));
 
   const printoutEl = document.getElementById("sceneDescPrintOut");
 

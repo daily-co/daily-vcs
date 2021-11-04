@@ -7,7 +7,10 @@ export function Label(props) {
 
   return (
     <label
-      id={props.id} layout={props.layout} style={props.style || {}}
+      id={props.id}
+      layout={props.layout}
+      style={props.style || {}}
+      transform={props.transform || {}}
       text={text}
     />
   )
