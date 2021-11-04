@@ -22,6 +22,7 @@
   },
   "scripts": {
     "build-lib-browser": "yarn webpack --config lib-browser/vcs-browser.webpack.config.js",
-    "hello": "yarn run ts-node -T daily-vcs-main.js --comp example/hello.jsx"
+    "hello": "yarn run ts-node -T daily-vcs-main.js --comp example/hello.jsx",
+    "graphics-test": "yarn run ts-node -T daily-vcs-main.js --comp example/graphics-test.jsx"
   }
 }

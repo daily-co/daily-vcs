@@ -37,26 +37,38 @@ imageSources.images['test_square'] = {
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
 
+// render time state
+let g_startT = Date.now() / 1000;
+let g_lastUpdateT = 0;
+
 // the backing model for our views.
 // the callback passed here will be called every time React has finished an update.
 const composition = new Composition(function(comp) {
   const sceneDesc = comp.serializeAsSceneDescription(imageSources);
-  console.log("update complete, scene description now: ", JSON.stringify(sceneDesc));
+
+  if (g_lastUpdateT > 0) {
+    const t = Date.now() / 1000;
+    const timeElapsed_update = t - g_lastUpdateT;
+  
+    console.log("update complete in %f ms, scene description now: ", timeElapsed_update*1000, JSON.stringify(sceneDesc));  
+  }
 });
 
 // bind our React reconciler with the container component and the composition model.
 // when the root container receives a state update, React will reconcile it into composition.
 render(makeVCSRootContainer(ContentRoot, rootContainerRef), composition);
 
-// set up defaults
+// set up some defaults in the composition.
+// the params are hardwired for example/hello
 rootContainerRef.current.setActiveParticipants([true, true]);
 rootContainerRef.current.setParamValue('showGraphics', true);
 rootContainerRef.current.setParamValue('demoText', 'Greetings from Node');
 
-let g_startT = Date.now() / 1000;
-
+// the videoTime render loop
 function updateVideoTime() {
-  const t = Date.now() / 1000 - g_startT;
+  g_lastUpdateT = Date.now() / 1000;
+
+  const t = g_lastUpdateT - g_startT;
   rootContainerRef.current.setVideoTime(t);
 }
 setInterval(updateVideoTime, 1000);

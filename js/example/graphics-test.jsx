@@ -39,7 +39,7 @@ function RandomGraphics() {
       y: Math.round(Math.random()*600)
     };
     const trs = {
-      rotate_deg: (-8 + Math.random()*16).toFixed(2)
+      rotate_deg: (-8 + Math.random()*16)
     };
     const style = {
       fillColor: `rgba(${Math.round(Math.random()*255)}, ${Math.round(Math.random()*255)}, `+
