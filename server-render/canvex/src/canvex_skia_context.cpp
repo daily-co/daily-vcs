@@ -56,6 +56,7 @@ void CanvexContext::fillRect(double x, double y, double w, double h) {
   SkPaint paint;
   paint.setStyle(SkPaint::kFill_Style);
   paint.setColor(getSkFillColor());
+  paint.setAntiAlias(true);
 
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
 }
@@ -66,6 +67,7 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
   SkPaint paint;
   paint.setStyle(SkPaint::kFill_Style);
   paint.setColor(getSkFillColor());
+  paint.setAntiAlias(true);
 
   double t0 = getMonotonicTime();
 
