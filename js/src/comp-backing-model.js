@@ -113,7 +113,7 @@ export class Composition {
     recurseLayout(this.rootNode, layoutCtxBase.viewport);
   }
 
-  serializeAsSceneDescription(imageSources) {
+  writeSceneDescription(imageSources) {
     if (!this.rootNode) return {};
 
     const viewportW = this.viewportSize.w;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <cstdio>
 #include "skia_includes.h"
@@ -57,12 +58,14 @@ int main() {
 
   // -- json test --
   auto jsonPath = 
-        //"example-data/basic-lowerthird.json";
-        "example-data/graphics-test-random-50.json";
+        "example-data/basic-lowerthird.json";
+        //"example-data/graphics-test-random-50.json";
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;
 
-  const int numIters = 20;
+  const int numIters = 50;
+  std::vector<double> stats_parseJson_s;
+  std::vector<double> stats_graphicsRender_s;
 
   for (int i = 0; i < numIters; i++) {
     const double t0 = getMonotonicTime();
@@ -82,10 +85,38 @@ int main() {
 
     RenderDisplayListToPNG(*displayList, "test-dl.png", &execStats);
 
-    std::cout << "Done. Timings:" << std::endl;
-    std::cout << "Parse JSON " << round(t_parseJson*1.0e6)/1000.0 << "ms" << std::endl;
-    std::cout << "Graphics execution " << execStats.graphicsRender_us/1000.0 << "ms" << std::endl;
-    std::cout << "File write " << execStats.fileWrite_us/1000.0 << "ms" << std::endl;
+    if (i > 0) {
+      // leave out the warming-up first frame
+      stats_parseJson_s.push_back(t_parseJson);
+      stats_graphicsRender_s.push_back(execStats.graphicsRender_us/1.0e6);
+
+      std::cout << "Frame done. Timings:" << std::endl;
+      std::cout << "Parse JSON " << round(t_parseJson*1.0e6)/1000.0 << "ms" << std::endl;
+      std::cout << "Graphics execution " << execStats.graphicsRender_us/1000.0 << "ms" << std::endl;
+      std::cout << "File write " << execStats.fileWrite_us/1000.0 << "ms" << std::endl;
+    }
   }
+
+  // print stats
+  {
+    std::sort(stats_parseJson_s.begin(), stats_parseJson_s.end());
+    std::sort(stats_graphicsRender_s.begin(), stats_graphicsRender_s.end());
+
+    const int n = stats_parseJson_s.size();
+    const int mid = n / 2;
+
+    std::cout << std::endl;
+
+    std::cout << "parseJson: ";
+    std::cout << "median " << (stats_parseJson_s[mid]*1000.0) << " ms, ";
+    std::cout << "min " << (stats_parseJson_s[0]*1000.0) << " ms, ";
+    std::cout << "max " << (stats_parseJson_s[n - 1]*1000.0) << " ms." << std::endl;
+
+    std::cout << "graphicsRender: ";
+    std::cout << "median " << (stats_graphicsRender_s[mid]*1000.0) << " ms, ";
+    std::cout << "min " << (stats_graphicsRender_s[0]*1000.0) << " ms, ";
+    std::cout << "max " << (stats_graphicsRender_s[n - 1]*1000.0) << " ms." << std::endl;
+  }
+
   return 0;
 }
