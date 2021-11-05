@@ -191,7 +191,7 @@ function TimedExampleGraphics({
     <Box layout={[layoutFuncs.pad, {pad: boxOuterPad}]}>
       <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
         <Label style={textStyle} layout={[textLayoutFn, {pad: textPad_px}]}>{demoText}</Label>
-        <Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
+        {/*<Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />*/}
       </Box>
     </Box>
   );

@@ -66,7 +66,7 @@ export function init(canvas, imageSources, updatedCb) {
 function compUpdated(comp) {
   if (!g_extUpdatedCb) return;
   
-  const sceneDesc = comp.serializeAsSceneDescription(g_imageSources);
+  const sceneDesc = comp.writeSceneDescription(g_imageSources);
 
   g_extUpdatedCb(sceneDesc);
 }
