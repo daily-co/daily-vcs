@@ -4,7 +4,10 @@
 
 namespace canvex {
 
-CanvexContext::CanvexContext(std::shared_ptr<SkCanvas> canvas) : canvas_(canvas) {
+CanvexContext::CanvexContext(
+    std::shared_ptr<SkCanvas> canvas,
+    const std::filesystem::path& fontResPath
+  ) : canvas_(canvas), fontResPath_(fontResPath) {
   // init stack with state defaults
   stateStack_.push_back({});
 }
@@ -61,6 +64,34 @@ void CanvexContext::fillRect(double x, double y, double w, double h) {
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
 }
 
+// translate CSS-style font weight to known Roboto font names
+static std::string getRobotoFontNameSuffix(int fontWeight, bool italic) {
+  std::string s;
+
+  switch (fontWeight) {
+    default: case 400:
+      if (!italic)
+        return "Regular";
+      else
+        return "Italic";
+    case 500: case 600:
+      s = "Medium"; break;
+    case 700:
+      s = "Bold"; break;
+    case 800:
+    case 900:
+      s = "Black"; break;
+    case 300: case 200:
+      s = "Light"; break;
+    case 100:
+      s = "Thin"; break;
+  }
+  if (italic) {
+    s = s += "Italic";
+  }
+  return s;
+}
+
 void CanvexContext::fillText(const std::string& text, double x, double y) {
   auto& sf = stateStack_.back();
 
@@ -71,15 +102,34 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
 
   double t0 = getMonotonicTime();
 
-  // FIXME: only Helvetica supported for rendering text
-  sk_sp<SkTypeface> typeface = typefaceCache_HelveticaByWeight_[sf.fontWeight];
+  // currently locally loaded Roboto supported for rendering text
+  std::string fontFileName = "Roboto-";
+  fontFileName += getRobotoFontNameSuffix(sf.fontWeight, false);  // FIXME: support italic
+  fontFileName += ".ttf";
+
+  sk_sp<SkTypeface> typeface = typefaceCache_Roboto_[fontFileName];
   if (!typeface) {
-    // this font look-up call is somewhat expensive, so we cache the typeface objects
+    // the font look-up call is somewhat expensive, so we cache the typeface objects
+    if (fontResPath_.empty()) {
+      std::cerr << "Warning: fontResPath is empty, can't load fonts" << std::endl;
+    } else {
+      // FIXME: hardcoded subpath to roboto
+      auto fontPath = fontResPath_ / "font-roboto" / fontFileName;
+      //std::cout << "Loading font at: " << fontPath << std::endl;
+      typeface = SkTypeface::MakeFromFile(fontPath.c_str());
+      if (!typeface) {
+        std::cerr << "** Unable to load font at: " << fontPath << std::endl;
+      } else {
+        typefaceCache_Roboto_[fontFileName] = typeface;
+      }
+    }
+    /*
+    // example of loading a font through the OS font manager API instead.
+    // this is unpredictably slow and dependent on fonts being installed, so prefer to use our own embedded fonts.
     typeface = SkTypeface::MakeFromName(
                     "Helvetica",
                     {sf.fontWeight, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant});
-    
-    typefaceCache_HelveticaByWeight_[sf.fontWeight] = typeface;
+    */
   }
 
   double t_typeface = getMonotonicTime() - t0;

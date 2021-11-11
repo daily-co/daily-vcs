@@ -35,12 +35,16 @@ static void debugPrintArgs(const Command& cmd, std::ostream& os) {
 }
 
 
-static void renderDisplayListInBitmap(const VCSCanvasDisplayList& dl, SkBitmap& bitmap) {
+static void renderDisplayListInBitmap(
+    const VCSCanvasDisplayList& dl,
+    SkBitmap& bitmap,
+    const std::filesystem::path& resourceDir
+  ) {
   auto canvas = std::make_shared<SkCanvas>(bitmap);
 
   canvas->clear(SK_ColorTRANSPARENT);
 
-  CanvexContext ctx(canvas);
+  CanvexContext ctx(canvas, resourceDir);
 
   // basic status tracking
   int numInvalidArgErrors = 0;
@@ -173,7 +177,8 @@ static bool writeBitmapToPNG(SkBitmap& bitmap, const std::string& file) {
 
 bool RenderDisplayListToPNG(
   const VCSCanvasDisplayList& dl,
-  const std::string& dstFile,
+  const std::filesystem::path& dstFile,
+  const std::filesystem::path& resourceDir,
   GraphicsExecutionStats* stats
 ) {
   const auto w = dl.width;
@@ -192,13 +197,13 @@ bool RenderDisplayListToPNG(
 
   double t1 = getMonotonicTime();
 
-  renderDisplayListInBitmap(dl, bitmap);
+  renderDisplayListInBitmap(dl, bitmap, resourceDir);
 
   double t2 = getMonotonicTime();
 
   bool ok = true;
   if (!dstFile.empty()) {
-    ok = writeBitmapToPNG(bitmap, dstFile);
+    ok = writeBitmapToPNG(bitmap, dstFile.string());
   }
 
   double t3 = getMonotonicTime();

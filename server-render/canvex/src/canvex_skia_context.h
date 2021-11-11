@@ -1,5 +1,6 @@
 #pragma once
 #include "skia_includes.h"
+#include <filesystem>
 #include <iostream>
 #include <unordered_map>
 
@@ -22,7 +23,9 @@ struct CanvexContextStateFrame {
 
 class CanvexContext {
  public:
-  CanvexContext(std::shared_ptr<SkCanvas> canvas);
+  CanvexContext(
+    std::shared_ptr<SkCanvas> canvas,
+    const std::filesystem::path& fontResPath);
 
   void save();
   void restore();
@@ -35,8 +38,9 @@ class CanvexContext {
   void fillText(const std::string& text, double x, double y);
 
  private:
-  // external rendering target
+  // external rendering target and configuration
   std::shared_ptr<SkCanvas> canvas_;
+  std::filesystem::path fontResPath_;
 
   // internal state
   std::unique_ptr<SkPath> path_;
@@ -44,7 +48,7 @@ class CanvexContext {
 
   // cached resources.
   // TODO: move these to a higher-level object that can be shared between contexts
-  std::unordered_map<int, sk_sp<SkTypeface>> typefaceCache_HelveticaByWeight_;
+  std::unordered_map<std::string, sk_sp<SkTypeface>> typefaceCache_Roboto_;
 
   // utils to access current state
   float getGlobalAlpha() {

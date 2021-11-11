@@ -1,10 +1,20 @@
 project('canvex', 'cpp',
   version : '0.1',
-  default_options : ['warning_level=3', 'cpp_std=gnu++17'])
+  default_options : ['warning_level=3', 'cpp_std=gnu++17', 'optimization=3', 'debug=false'])
 
 cpp = meson.get_compiler('cpp')
 
-skia_libdir = meson.current_source_dir() + '/skia/lib-static/mac-arm64'
+system_mac = build_machine.system() == 'darwin'
+
+if system_mac
+  # currently only ARM Mac build available of the Skia libs
+  message('Building for macOS ARM')
+  skia_libdir = meson.current_source_dir() + '/skia/lib-static/mac-arm64'
+else
+  message('Building for Linux x86_64')
+  skia_libdir = meson.current_source_dir() + '/skia/lib-static/linux-x64'
+endif
+
 message('Using Skia libdir: {}', skia_libdir)
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
@@ -12,23 +22,47 @@ skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
 #skia_sktext = cpp.find_library('sktext', static : true, dirs : skia_libdir)
 #skia_skunicode = cpp.find_library('skunicode', static : true, dirs : skia_libdir)
 
-mac_frameworks = declare_dependency(
-  dependencies : [
-    dependency('CoreFoundation'),
-    dependency('CoreGraphics'),
-    dependency('CoreText'),
-  ]
-)
+skia_include = include_directories('./skia')
 
-libjpeg_turbo = cpp.find_library('jpeg', dirs : '/opt/homebrew/opt/jpeg-turbo/lib')
+if system_mac
+  # macOS system dependencies
+  mac_frameworks = declare_dependency(
+    dependencies : [
+      dependency('CoreFoundation'),
+      dependency('CoreGraphics'),
+      dependency('CoreText'),
+    ]
+  )
 
-mac_homebrew_deps = declare_dependency(
-  dependencies : [
-    dependency('png'),
-    libjpeg_turbo,
-  ],
-  include_directories : '/opt/homebrew/opt/jpeg-turbo/include',
-)
+  libjpeg_turbo = cpp.find_library('jpeg', dirs : '/opt/homebrew/opt/jpeg-turbo/lib')
+  mac_homebrew_deps = declare_dependency(
+    dependencies : [
+      dependency('png'),
+      libjpeg_turbo,
+    ],
+    include_directories : '/opt/homebrew/opt/jpeg-turbo/include',
+  )
+
+  skia_system_deps = declare_dependency(
+    dependencies : [
+      mac_frameworks,
+      mac_homebrew_deps,
+    ],
+  )
+else
+  # Linux dependencies
+  fontconfig_dep = dependency('fontconfig')
+  threads_dep = dependency('threads')
+  zlib_dep = dependency('zlib')
+
+  skia_system_deps = declare_dependency(
+    dependencies : [
+      fontconfig_dep,
+      threads_dep,
+      zlib_dep,
+    ],
+  )
+endif
 
 skia_dep = declare_dependency(
   dependencies : [
@@ -36,10 +70,9 @@ skia_dep = declare_dependency(
     #skia_icu,
     #skia_sktext,
     #skia_skunicode,
-    mac_frameworks,
-    mac_homebrew_deps,
+    skia_system_deps,
   ],
-  include_directories : include_directories('./skia'),
+  include_directories : skia_include,
 )
 
 rapidjson_dep = declare_dependency(
@@ -57,6 +90,8 @@ executable(
   ],
   install : true,
   cpp_args: [
+    # somehow this project stubbornly builds in c++17 instead of gnu++17 on Mac,
+    # despite my best configuration efforts. ignore warnings about Skia's use of gnu features.
     '-Wno-gnu-anonymous-struct',
     '-Wno-gnu-zero-variadic-macro-arguments',
     '-Wno-nested-anon-types',

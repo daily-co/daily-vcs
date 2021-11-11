@@ -1,5 +1,6 @@
 #pragma once
 #include "canvas_display_list.h"
+#include <filesystem>
 
 namespace canvex {
 
@@ -10,7 +11,8 @@ struct GraphicsExecutionStats {
 
 bool RenderDisplayListToPNG(
   const VCSCanvasDisplayList& dl,
-  const std::string& dstFile,
+  const std::filesystem::path& dstFile,
+  const std::filesystem::path& resourceDir,
   GraphicsExecutionStats* stats  // optional stats
 );
 
