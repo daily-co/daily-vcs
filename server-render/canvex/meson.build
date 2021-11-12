@@ -18,10 +18,6 @@ endif
 message('Using Skia libdir: {}', skia_libdir)
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
-#skia_icu = cpp.find_library('icu', static : true, dirs : skia_libdir)
-#skia_sktext = cpp.find_library('sktext', static : true, dirs : skia_libdir)
-#skia_skunicode = cpp.find_library('skunicode', static : true, dirs : skia_libdir)
-
 skia_include = include_directories('./skia')
 
 if system_mac
@@ -51,13 +47,11 @@ if system_mac
   )
 else
   # Linux dependencies
-  fontconfig_dep = dependency('fontconfig')
   threads_dep = dependency('threads')
   zlib_dep = dependency('zlib')
 
   skia_system_deps = declare_dependency(
     dependencies : [
-      fontconfig_dep,
       threads_dep,
       zlib_dep,
     ],
@@ -67,9 +61,6 @@ endif
 skia_dep = declare_dependency(
   dependencies : [
     skia_lib,
-    #skia_icu,
-    #skia_sktext,
-    #skia_skunicode,
     skia_system_deps,
   ],
   include_directories : skia_include,
@@ -81,19 +72,31 @@ rapidjson_dep = declare_dependency(
 
 subdir('src')
 
-executable(
+canvex_cpp_args = [
+  # somehow this project stubbornly builds in c++17 instead of gnu++17 on Mac,
+  # despite my best configuration efforts. ignore warnings about Skia's use of gnu features.
+  '-Wno-gnu-anonymous-struct',
+  '-Wno-gnu-zero-variadic-macro-arguments',
+  '-Wno-nested-anon-types',
+]
+
+canvex_lib = static_library(
   'canvex',
-  canvex_sources,
+  canvex_lib_sources,
   dependencies : [
     skia_dep,
     rapidjson_dep,
   ],
-  install : true,
-  cpp_args: [
-    # somehow this project stubbornly builds in c++17 instead of gnu++17 on Mac,
-    # despite my best configuration efforts. ignore warnings about Skia's use of gnu features.
-    '-Wno-gnu-anonymous-struct',
-    '-Wno-gnu-zero-variadic-macro-arguments',
-    '-Wno-nested-anon-types',
+  cpp_args: canvex_cpp_args,
+)
+
+executable(
+  'canvex',
+  canvex_standalone_demo_sources,
+  link_with : canvex_lib,
+  dependencies : [
+    skia_dep,
   ],
+  install : true,
+  cpp_args: canvex_cpp_args,
 )

@@ -172,10 +172,10 @@ function TimedExampleGraphics({
   }
 
   const textStyle = {
-    textColor: 'rgba(255, 250, 200, 0.93)',
-    fontFamily: 'Helvetica',
-    fontWeight: '200',
-    fontSize_vh: onSide ? 0.035 : 0.055,
+    textColor: 'rgba(255, 250, 200, 0.95)',
+    fontFamily: 'Roboto',
+    fontWeight: '300',
+    fontSize_vh: onSide ? 0.05 : 0.07,
   };
   const textLayoutFn = layoutFuncs.pad;
   const textPad_px = 20;
@@ -191,7 +191,7 @@ function TimedExampleGraphics({
     <Box layout={[layoutFuncs.pad, {pad: boxOuterPad}]}>
       <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
         <Label style={textStyle} layout={[textLayoutFn, {pad: textPad_px}]}>{demoText}</Label>
-        {/*<Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />*/}
+        <Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
       </Box>
     </Box>
   );
