@@ -16,4 +16,14 @@ bool RenderDisplayListToPNG(
   GraphicsExecutionStats* stats  // optional stats
 );
 
+bool RenderDisplayListToRGBABuffer(
+  const VCSCanvasDisplayList& dl,
+  uint8_t *imageBuffer,
+  uint32_t w,
+  uint32_t h,
+  uint32_t rowBytes,
+  const std::filesystem::path& resourceDir,
+  GraphicsExecutionStats* stats  // optional stats
+);
+
 } // namespace canvex

@@ -1,8 +1,14 @@
-project('canvex', 'cpp',
+project('canvex', ['c', 'cpp'],
   version : '0.1',
-  default_options : ['warning_level=3', 'cpp_std=gnu++17', 'optimization=3', 'debug=false'])
+  default_options : ['warning_level=3', 'c_std=c99', 'cpp_std=gnu++17', 'optimization=3', 'debug=false'])
+
+subdir('src')
+subdir('test')
 
 cpp = meson.get_compiler('cpp')
+c = meson.get_compiler('c')
+
+png_dep = dependency('png')
 
 system_mac = build_machine.system() == 'darwin'
 
@@ -33,7 +39,7 @@ if system_mac
   libjpeg_turbo = cpp.find_library('jpeg', dirs : '/opt/homebrew/opt/jpeg-turbo/lib')
   mac_homebrew_deps = declare_dependency(
     dependencies : [
-      dependency('png'),
+      png_dep,
       libjpeg_turbo,
     ],
     include_directories : '/opt/homebrew/opt/jpeg-turbo/include',
@@ -70,8 +76,6 @@ rapidjson_dep = declare_dependency(
   include_directories : include_directories('./rapidjson'),
 )
 
-subdir('src')
-
 canvex_cpp_args = [
   # somehow this project stubbornly builds in c++17 instead of gnu++17 on Mac,
   # despite my best configuration efforts. ignore warnings about Skia's use of gnu features.
@@ -99,4 +103,14 @@ executable(
   ],
   install : true,
   cpp_args: canvex_cpp_args,
+)
+
+executable(
+  'canvex_test_runner',
+  canvex_c_api_test_sources,
+  link_with : canvex_lib,
+  dependencies : [
+    png_dep
+  ],
+  install : true,
 )

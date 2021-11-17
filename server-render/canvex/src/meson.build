@@ -1,5 +1,6 @@
 canvex_lib_sources = files(
   'canvas_display_list.cpp',
+  'canvex_c_api.cpp',
   'canvex_skia_context.cpp',
   'canvex_skia_executor.cpp',
   'file_util.cpp',

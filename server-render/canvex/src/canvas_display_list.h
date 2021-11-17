@@ -66,6 +66,7 @@ struct VCSCanvasDisplayList {
 };
 
 // throws on parse error
-std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(std::string str);
+std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const std::string& str);
+std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const char* cstr);
 
 } // namespace canvex

@@ -35,13 +35,11 @@ static void debugPrintArgs(const Command& cmd, std::ostream& os) {
 }
 
 
-static void renderDisplayListInBitmap(
+static void renderDisplayListInSkCanvas(
     const VCSCanvasDisplayList& dl,
-    SkBitmap& bitmap,
+    std::shared_ptr<SkCanvas> canvas,
     const std::filesystem::path& resourceDir
   ) {
-  auto canvas = std::make_shared<SkCanvas>(bitmap);
-
   canvas->clear(SK_ColorTRANSPARENT);
 
   CanvexContext ctx(canvas, resourceDir);
@@ -195,9 +193,11 @@ bool RenderDisplayListToPNG(
   SkBitmap bitmap;
   bitmap.allocPixels(SkImageInfo::MakeN32Premul(w, h));
 
+  auto canvas = std::make_shared<SkCanvas>(bitmap);
+
   double t1 = getMonotonicTime();
 
-  renderDisplayListInBitmap(dl, bitmap, resourceDir);
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir);
 
   double t2 = getMonotonicTime();
 
@@ -212,6 +212,28 @@ bool RenderDisplayListToPNG(
     stats->fileWrite_us = (t3 - t2) * 1.0e6;
   }
   return ok;
+}
+
+bool RenderDisplayListToRGBABuffer(
+  const VCSCanvasDisplayList& dl,
+  uint8_t *imageBuffer,
+  uint32_t w,
+  uint32_t h,
+  uint32_t rowBytes,
+  const std::filesystem::path& resourceDir,
+  GraphicsExecutionStats* stats  // optional stats
+) {
+  // TODO: check display list's encoded w/h and scale Skia context accordingly
+  // so that rendering fills given buffer?
+
+  auto imageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+  std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
+
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir);
+
+  // TODO: collect stats in this call too (refactor from above)
+
+  return true;
 }
 
 } // namespace canvex

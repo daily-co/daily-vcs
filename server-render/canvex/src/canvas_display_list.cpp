@@ -287,13 +287,17 @@ class DisplayListJSONHandler {
   }
 };
 
+std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const std::string& jsonStr)
+{
+  return ParseVCSDisplayListJSON(jsonStr.c_str());
+}
 
-std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(std::string jsonStr)
+std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const char* jsonStr)
 {
   auto dl = std::make_unique<VCSCanvasDisplayList>();
 
   rapidjson::Reader reader;
-  rapidjson::StringStream ss(jsonStr.c_str());
+  rapidjson::StringStream ss(jsonStr);
   DisplayListJSONHandler jsonHandler(*dl);
 
   reader.Parse(ss, jsonHandler);
