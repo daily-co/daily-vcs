@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -e
+
 name=$1
-path=$2
+path="scenarios/$name"
 
 echo "Starting scenario $name..."
 
@@ -30,17 +32,14 @@ for f in $outputJsonFiles
 do
   # TODO: support multiple frame comparisons
   # (expimage currently hardcoded to a single path)
-  tmpimage="$tmpdir/frame.png"
-  expimage="$path/frame.png"
+  tmpimage="$tmpdir/fg.png"
+  expimage="$path/fg.png"
 
   ( cd ../canvex && build/canvex_render_frame 1280 720 "$f" "$tmpimage" )
 
   # compare rendered image with expected output
   cmp "$tmpimage" "$expimage"
-  if [ $? -ne 0 ]; then
-    echo "Rendered image didn't match with $expimage"
-    exit 2
-  fi
+
   echo "Image match for $expimage"
 done
 
