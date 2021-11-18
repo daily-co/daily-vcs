@@ -8,6 +8,14 @@
 
 #include <png.h>
 
+/*
+  A minimal CLI renderer using the Canvex C API.
+
+  Takes an image size + a JSON and produces a PNG.
+
+  This program is useful for automated tests.
+*/
+
 
 static int writePNG_RGBA(
   const char *filename,
@@ -78,16 +86,23 @@ static int testWrite() {
 int main(int argc, char *argv[]) {
   // return testWrite();
 
-  if (argc < 3) {
-    printf("Expected arguments: 1) input JSON path, 2) output PNG path.\n");
+  if (argc < 5) {
+    printf("Expected arguments: 1) image width, 2) image height, 3) input JSON path, 4) output PNG path.\n");
     return 1;
   }
-  const char *jsonPath = argv[1];
-  const char *pngPath = argv[2];
+  int w = strtol(argv[1], NULL, 10);
+  int h = strtol(argv[2], NULL, 10);
+  const char *jsonPath = argv[3];
+  const char *pngPath = argv[4];
+
+  if (w < 0 || h < 0 || w > 32768 || h > 32768) {
+    printf("** Invalid image size specified (%d * %d).\n", w, h);
+    return 1;
+  }
 
   FILE* f = fopen(jsonPath, "r");
   if (!f) {
-    printf("Unable to open %s\n", jsonPath);
+    printf("** Unable to open %s\n", jsonPath);
     return 1;
   }
 
@@ -98,8 +113,6 @@ int main(int argc, char *argv[]) {
   fread(json, sb.st_size, 1, f);
   fclose(f); f = NULL;
 
-  int w = 1280;
-  int h = 720;
   int rowBytes = w * 4;
   uint8_t *buf = malloc(rowBytes * h);
 

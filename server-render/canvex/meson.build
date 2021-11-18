@@ -3,7 +3,6 @@ project('canvex', ['c', 'cpp'],
   default_options : ['warning_level=3', 'c_std=c99', 'cpp_std=gnu++17', 'optimization=3', 'debug=false'])
 
 subdir('src')
-subdir('test')
 
 cpp = meson.get_compiler('cpp')
 c = meson.get_compiler('c')
@@ -95,7 +94,7 @@ canvex_lib = static_library(
 )
 
 executable(
-  'canvex',
+  'canvex_demo',
   canvex_standalone_demo_sources,
   link_with : canvex_lib,
   dependencies : [
@@ -106,8 +105,8 @@ executable(
 )
 
 executable(
-  'canvex_test_runner',
-  canvex_c_api_test_sources,
+  'canvex_render_frame',
+  canvex_render_frame_util_sources,
   link_with : canvex_lib,
   dependencies : [
     png_dep

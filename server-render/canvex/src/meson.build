@@ -10,3 +10,7 @@ canvex_lib_sources = files(
 canvex_standalone_demo_sources = files(
   'canvex_demo_main.cpp',
 )
+
+canvex_render_frame_util_sources = files(
+  'canvex_render_frame_main.c',
+)
