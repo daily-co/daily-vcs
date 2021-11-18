@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "minimist": "^1.2.5",
+    "random-seed": "^0.3.0",
     "uuid": "^8.3.2"
   },
   "scripts": {

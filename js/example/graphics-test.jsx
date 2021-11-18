@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Box, Image, Label, Video} from '../src/react/components';
+import * as Rand from 'random-seed';
 
 
 export const compositionInterface = {
@@ -26,6 +27,11 @@ export default function GraphicsTestComposition() {
 function RandomGraphics() {
   const items = [];
 
+  // instead of Math.random, use a seedable PRNG so we get a repeating sequence
+  // and can use this composition in automated tests.
+  const rndRef = React.useRef(Rand.create("this is the random seed"));
+  const rnd = rndRef.current;
+
   const textStyle = {
     textColor: 'rgba(255, 250, 200, 0.93)',
     fontFamily: 'Helvetica',
@@ -35,15 +41,15 @@ function RandomGraphics() {
 
   for (let i = 0; i < 50; i++) {
     const pos = {
-      x: Math.round(Math.random()*1000),
-      y: Math.round(Math.random()*600)
+      x: Math.round(rnd.random()*1000),
+      y: Math.round(rnd.random()*600)
     };
     const trs = {
-      rotate_deg: (-8 + Math.random()*16)
+      rotate_deg: (-8 + rnd.random()*16)
     };
     const style = {
-      fillColor: `rgba(${Math.round(Math.random()*255)}, ${Math.round(Math.random()*255)}, `+
-                 `${55 + Math.round(Math.random()*200)}, ${(0.5 + Math.random()*0.5).toFixed(2)})`
+      fillColor: `rgba(${Math.round(rnd.random()*255)}, ${Math.round(rnd.random()*255)}, `+
+                 `${55 + Math.round(rnd.random()*200)}, ${(0.5 + rnd.random()*0.5).toFixed(2)})`
     }
     items.push(
       <Box key={i} layout={[layoutFuncs.demoBox, pos]} style={style} transform={trs}>
