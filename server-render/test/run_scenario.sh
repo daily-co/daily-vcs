@@ -17,7 +17,7 @@ fi
 scenarioJsFile=$(cd "$(dirname "$scenarioJsFile")" && pwd)/$(basename "$scenarioJsFile")
 
 # tmp location to hold output artifacts during test
-tmpdir="/tmp/vcs-test-run/$name"
+tmpdir=$(pwd)/output/"$name"
 mkdir -p "$tmpdir"
 rm -rf "$tmpdir"/*
 
@@ -27,20 +27,32 @@ tmpOutputPrefix="$tmpdir/vcs-output"
 
 echo "VSC runner completed scenario execution. Will run canvex next."
 
-outputJsonFiles="$tmpdir/*.json"
-for f in $outputJsonFiles
+outputCanvexJsonFiles="$tmpdir/*.canvex.json"
+for f in $outputCanvexJsonFiles
 do
-  # TODO: support multiple frame comparisons
-  # (expimage currently hardcoded to a single path)
-  tmpimage="$tmpdir/fg.png"
-  expimage="$path/fg.png"
+  filename=$(basename $f)
+  filename=${filename%.*} # remove extension
+  tmpimage="$tmpdir/$filename.png"
+  expimage="$path/$filename.png"
 
   ( cd ../canvex && build/canvex_render_frame 1280 720 "$f" "$tmpimage" )
 
   # compare rendered image with expected output
   cmp "$tmpimage" "$expimage"
 
-  echo "Image match for $expimage"
+  echo "Output match: rendered graphics ($expimage)"
+done
+
+outputVideoLayersFiles="$tmpdir/*_videolayers.json"
+for f in $outputVideoLayersFiles
+do
+  filename=$(basename $f)
+  expjson="$path/$filename"
+
+  # compare JSON with expected output
+  cmp "$f" "$expjson"
+
+  echo "Output match: videoLayers JSON ($expjson)"
 done
 
 echo "---- Scenario $name successful, rendering matches."

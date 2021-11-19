@@ -86,9 +86,11 @@ function compUpdatedCb(comp) {
 
     const sceneDesc = comp.writeSceneDescription(imageSources);
 
-    // canvex will render only this display list, so write it separately
-    const {fgDisplayList} = sceneDesc;
-    fs.writeFileSync(`${outputPathPrefix}_fgdisplaylist_${g_currentFrame}.json`, JSON.stringify(fgDisplayList));
+    // break down scene components to separate files,
+    // since the display list will be processed by canvex.
+    const {videoLayers, fgDisplayList} = sceneDesc;
+    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayers.json`, JSON.stringify(videoLayers));
+    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`, JSON.stringify(fgDisplayList));
   }
 }
 
