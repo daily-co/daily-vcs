@@ -25,7 +25,24 @@ tmpOutputPrefix="$tmpdir/vcs-output"
 
 ( cd ../../js && yarn run test-scenario "$scenarioJsFile" --output "$tmpOutputPrefix" )
 
-echo "VSC runner completed scenario execution. Will run canvex next."
+set +e # let all comparisons run
+cmpErr=0
+
+outputVideoLayersFiles="$tmpdir/*_videolayers.json"
+for f in $outputVideoLayersFiles
+do
+  filename=$(basename $f)
+  expjson="$path/$filename"
+
+  # compare JSON with expected output
+  cmp "$f" "$expjson"
+  if [ $? -ne 0 ]; then
+    cmpErr=1
+  else
+    echo "Output match: videoLayers JSON ($expjson)"
+  fi
+
+done
 
 outputCanvexJsonFiles="$tmpdir/*.canvex.json"
 for f in $outputCanvexJsonFiles
@@ -39,20 +56,16 @@ do
 
   # compare rendered image with expected output
   cmp "$tmpimage" "$expimage"
-
-  echo "Output match: rendered graphics ($expimage)"
+  if [ $? -ne 0 ]; then
+    cmpErr=1
+  else
+    echo "Output match: canvex-rendered graphics ($expimage)"
+  fi
 done
 
-outputVideoLayersFiles="$tmpdir/*_videolayers.json"
-for f in $outputVideoLayersFiles
-do
-  filename=$(basename $f)
-  expjson="$path/$filename"
-
-  # compare JSON with expected output
-  cmp "$f" "$expjson"
-
-  echo "Output match: videoLayers JSON ($expjson)"
-done
+if [ $cmpErr -ne 0 ]; then
+  echo "**** Scenario $name failed."
+  exit 1
+fi
 
 echo "---- Scenario $name successful, rendering matches."

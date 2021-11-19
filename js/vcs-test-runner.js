@@ -77,6 +77,10 @@ if (scenario.initialState) {
 }
 
 for (g_currentFrame = 0; g_currentFrame < durationInFrames; g_currentFrame++) {
+  if (scenario.frameWillRenderCb) {
+    applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
+  }
+
   rootContainerRef.current.setVideoTime(getVideoTime());
 }
 
@@ -95,6 +99,8 @@ function compUpdatedCb(comp) {
 }
 
 function applyScenarioState(s) {
+  if ( !s) return;
+
   const { activeParticipants, params } = s;
 
   if (Array.isArray(activeParticipants)) {
