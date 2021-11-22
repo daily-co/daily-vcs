@@ -1,4 +1,4 @@
-project('canvex', ['c', 'cpp'],
+project('canvex', ['c', 'cpp', 'rust'],
   version : '0.1',
   default_options : ['warning_level=3', 'c_std=c99', 'cpp_std=gnu++17', 'optimization=3', 'debug=false'])
 

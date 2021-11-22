@@ -31,9 +31,9 @@ struct ResourceCtx {
 
 
 CanvexResourceCtx CanvexResourceCtxCreate(
-  const char *resourcePath
+  const char *resourceDir
 ) {
-  auto ctx = new canvex::c_api_internal::ResourceCtx(resourcePath);
+  auto ctx = new canvex::c_api_internal::ResourceCtx(resourceDir);
   return static_cast<void*>(ctx);
 }
 
@@ -45,16 +45,18 @@ void CanvexResourceCtxDestroy(CanvexResourceCtx ctx_c) {
 
 CanvexRenderResult CanvexRenderJSON_RGBA(
   CanvexResourceCtx ctx_c,
-  const char *json, size_t jsonLen,
+  const char *json,
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes
 ) {
-  if (!json || jsonLen < 1) {
+  if (!json) {
     return CanvexRenderError_InvalidArgument_JSONInput;
   }
-  if (!dstImageData || dstImageW < 1 || dstImageH < 1 || dstImageRowBytes < dstImageW*4) {
+  if (!dstImageData ||
+      dstImageW < 1 || dstImageH < 1 ||
+      (dstImageRowBytes != 0 && dstImageRowBytes < dstImageW*4)) {
     return CanvexRenderError_InvalidArgument_ImageOutput;
   }
   if (dstImageRowBytes == 0) {

@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 
   CanvexRenderResult renderRes = CanvexRenderJSON_RGBA(
     ctx,
-    json, strlen(json),
+    json,
     buf, w, h, rowBytes
   );
 

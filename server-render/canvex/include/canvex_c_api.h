@@ -50,7 +50,7 @@ void CanvexResourceCtxDestroy(CanvexResourceCtx);
 */
 CanvexRenderResult CanvexRenderJSON_RGBA(
   CanvexResourceCtx resourceCtx,
-  const char *json, size_t jsonLen,
+  const char *json,
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
