@@ -7,7 +7,8 @@ subdir('src')
 cpp = meson.get_compiler('cpp')
 c = meson.get_compiler('c')
 
-png_dep = dependency('png')
+png_dep = dependency('libpng')
+freetype_dep = dependency('freetype2')
 
 system_mac = build_machine.system() == 'darwin'
 
@@ -59,6 +60,7 @@ else
     dependencies : [
       threads_dep,
       zlib_dep,
+      freetype_dep
     ],
   )
 endif

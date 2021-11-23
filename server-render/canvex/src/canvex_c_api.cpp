@@ -7,6 +7,7 @@
 #include "time_util.h"
 
 #include <iostream>
+#include <string.h>
 
 using namespace canvex;
 
