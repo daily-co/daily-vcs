@@ -85,27 +85,33 @@ for (g_currentFrame = 0; g_currentFrame < durationInFrames; g_currentFrame++) {
 }
 
 function compUpdatedCb(comp) {
-  if (outputFrames.includes(g_currentFrame)) {
-    console.log("writing requested frame %d (t %f) to: ", g_currentFrame, getVideoTime(), outputPathPrefix);
-
-    const sceneDesc = comp.writeSceneDescription(imageSources);
-
-    // break down scene components to separate files,
-    // since the display list will be processed by canvex.
-    const {
-      videoLayers, fgDisplayList
-    } = sceneDesc;
-
-    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayers.json`, JSON.stringify(videoLayers));
-    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`, JSON.stringify(fgDisplayList));
-
-    // also write a canvex display list that shows the video layers as colored rectangles.
-    // this is useful for visual verification of the output.
-    const videoLayersPreviewDisplayList = comp.writeVideoLayersPreview();
-
-    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayerspreview.canvex.json`,
-          JSON.stringify(videoLayersPreviewDisplayList));
+  if (!outputFrames.includes(g_currentFrame)) {
+    return; // do nothing on frames if they're not part of our test output set
   }
+  console.log("writing requested frame %d (t %f) to: ", g_currentFrame, getVideoTime(), outputPathPrefix);
+
+  const sceneDesc = comp.writeSceneDescription(imageSources);
+
+  if (!sceneDesc || !sceneDesc.videoLayers) {
+    console.error("** comp.writeSceneDescription returned empty object, can't write output");
+    return;
+  }
+
+  // break down scene components to separate files,
+  // since the display list will be processed by canvex.
+  const {
+    videoLayers, fgDisplayList
+  } = sceneDesc;
+
+  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayers.json`, JSON.stringify(videoLayers));
+  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`, JSON.stringify(fgDisplayList));
+
+  // also write a canvex display list that shows the video layers as colored rectangles.
+  // this is useful for visual verification of the output.
+  const videoLayersPreviewDisplayList = comp.writeVideoLayersPreview();
+
+  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayerspreview.canvex.json`,
+        JSON.stringify(videoLayersPreviewDisplayList));
 }
 
 function applyScenarioState(s) {
