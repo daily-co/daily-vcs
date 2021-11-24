@@ -6,8 +6,8 @@ namespace canvex {
 
 CanvexContext::CanvexContext(
     std::shared_ptr<SkCanvas> canvas,
-    const std::filesystem::path& fontResPath
-  ) : canvas_(canvas), fontResPath_(fontResPath) {
+    const std::filesystem::path& resPath
+  ) : canvas_(canvas), resPath_(resPath) {
   // init stack with state defaults
   stateStack_.push_back({});
 }
@@ -110,11 +110,11 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
   sk_sp<SkTypeface> typeface = typefaceCache_Roboto_[fontFileName];
   if (!typeface) {
     // the font look-up call is somewhat expensive, so we cache the typeface objects
-    if (fontResPath_.empty()) {
+    if (resPath_.empty()) {
       std::cerr << "Warning: fontResPath is empty, can't load fonts" << std::endl;
     } else {
       // FIXME: hardcoded subpath to roboto
-      auto fontPath = fontResPath_ / "font-roboto" / fontFileName;
+      auto fontPath = resPath_ / "font-roboto" / fontFileName;
       //std::cout << "Loading font at: " << fontPath << std::endl;
       typeface = SkTypeface::MakeFromFile(fontPath.c_str());
       if (!typeface) {
@@ -140,6 +140,33 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
   auto textBlob = SkTextBlob::MakeFromString(text.c_str(), font);
 
   canvas_->drawTextBlob(textBlob, x, y, paint);
+}
+
+void CanvexContext::drawImage_fromAssets(const std::string& imageName, double x, double y, double w, double h) {
+  if (imageName.empty()) return; // --
+
+  sk_sp<SkImage> image = imageCache_assetNamespace_[imageName];
+  if (!image) {
+    // FIXME: hardcoded subpath to known test images
+    auto assetsPath = resPath_ / "test-assets" / imageName;
+
+    auto data = SkData::MakeFromFileName(assetsPath.c_str());
+    if (!data) {
+      std::cerr << "drawImage: unable to load path " << assetsPath << std::endl;
+      return;
+    }
+    image = SkImage::MakeFromEncoded(data);
+    if (!image) {
+      std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
+      return;
+    }
+    imageCache_assetNamespace_[imageName] = image;
+  }
+
+  SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};
+  SkSamplingOptions sampleOptions(SkFilterMode::kLinear);
+
+  canvas_->drawImageRect(image, rect, sampleOptions);
 }
   
 } // namespace canvex

@@ -25,7 +25,7 @@ class CanvexContext {
  public:
   CanvexContext(
     std::shared_ptr<SkCanvas> canvas,
-    const std::filesystem::path& fontResPath);
+    const std::filesystem::path& resPath);
 
   void save();
   void restore();
@@ -37,10 +37,12 @@ class CanvexContext {
   void fillRect(double x, double y, double w, double h);
   void fillText(const std::string& text, double x, double y);
 
+  void drawImage_fromAssets(const std::string& imageName, double x, double y, double w, double h);
+
  private:
   // external rendering target and configuration
   std::shared_ptr<SkCanvas> canvas_;
-  std::filesystem::path fontResPath_;
+  std::filesystem::path resPath_;
 
   // internal state
   std::unique_ptr<SkPath> path_;
@@ -49,6 +51,7 @@ class CanvexContext {
   // cached resources.
   // TODO: move these to a higher-level object that can be shared between contexts
   std::unordered_map<std::string, sk_sp<SkTypeface>> typefaceCache_Roboto_;
+  std::unordered_map<std::string, sk_sp<SkImage>> imageCache_assetNamespace_;
 
   // utils to access current state
   float getGlobalAlpha() {

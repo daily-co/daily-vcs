@@ -17,7 +17,7 @@
     {
       "label": "run canvex demo",
       "type": "shell",
-      "command": "build/canvex",
+      "command": "build/canvex_demo",
       "group": "build",
       "presentation": {
         "reveal": "always",

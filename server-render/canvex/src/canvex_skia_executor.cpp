@@ -143,7 +143,28 @@ static void renderDisplayListInSkCanvas(
       }
       case drawImage: {
         PRINTCMD_ARGS("drawImage")
-        // TODO: implement drawImage
+        if (cmd.args.size() != 5 || cmd.args[0].type != ArgType::assetRef
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number || cmd.args[4].type != ArgType::number) {
+          std::cout << "Invalid args for drawImage: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else if (!cmd.args[0].assetRefValue || cmd.args[0].assetRefValue->second.empty()) {
+          std::cout << "Invalid assetRef for drawImage, has_value=" << cmd.args[0].assetRefValue.has_value() << std::endl;
+          numInvalidArgErrors++;
+        } else {
+          // TODO: handle other values for 'type' than 'assetImage'
+          auto& imgType = cmd.args[0].assetRefValue->first;
+          auto& imgName = cmd.args[0].assetRefValue->second;
+          if (imgType == "assetImage") {
+            std::cout << "Drawing asset image: " << imgName << std::endl;      
+            ctx.drawImage_fromAssets(imgName,
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+          } else {
+            std::cout << "Invalid type for drawImage asset: " << imgType << std::endl;
+          }
+          numCmds++;
+        }
+
         break;
       }
     }
