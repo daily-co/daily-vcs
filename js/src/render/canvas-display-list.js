@@ -1,3 +1,4 @@
+import * as cssColors from 'css-color-names';
 
 export class CanvasDisplayListEncoder {
   constructor(w, h) {
@@ -20,6 +21,23 @@ export class CanvasDisplayListEncoder {
   }
 }
 
+// we don't want to encode named CSS colors because then those have to be parsed in canvex.
+// instead normalize the named colors here and always write rgb[a].
+function normalizeColorValue(c) {
+  if (!c) return '#000';
+
+  if (c.indexOf('#') === 0
+    || c.indexOf('rgb') === 0) {
+    return c;
+  }
+  const mapped = cssColors[c];
+  if (mapped) {
+    return mapped;
+  }
+  console.error("** Unsupported CSS color value for display list encoding: " + c);
+  return '#fff';
+}
+
 class CanvasEncodingContext {
   constructor(encoder) {
     this.encoder = encoder;
@@ -33,7 +51,7 @@ class CanvasEncodingContext {
   }
 
   set fillStyle(v) {
-    this.encodeCmd('fillStyle', v);
+    this.encodeCmd('fillStyle', normalizeColorValue(v));
   }
 
   set font(v) {

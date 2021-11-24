@@ -17,6 +17,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
+    "css-color-names": "^1.0.1",
     "minimist": "^1.2.5",
     "random-seed": "^0.3.0",
     "uuid": "^8.3.2"
