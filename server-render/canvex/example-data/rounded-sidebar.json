@@ -30,7 +30,7 @@
     ["save"],
     [
       "drawImage",
-      [{ "type": "assetImage", "id": "test_square" }, 1048, 484, 180, 180]
+      [{ "type": "defaultAsset", "id": "test_square_320px.png" }, 1048, 484, 180, 180]
     ],
     ["restore"],
     ["restore"],

@@ -152,15 +152,16 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid assetRef for drawImage, has_value=" << cmd.args[0].assetRefValue.has_value() << std::endl;
           numInvalidArgErrors++;
         } else {
-          // TODO: handle other values for 'type' than 'assetImage'
           auto& imgType = cmd.args[0].assetRefValue->first;
           auto& imgName = cmd.args[0].assetRefValue->second;
-          if (imgType == "assetImage") {
-            std::cout << "Drawing asset image: " << imgName << std::endl;      
+
+          // eventually we'll support other types of images,
+          // e.g. compositions can have their own namespace for user-provided assets.
+          if (imgType == "defaultAsset") {
             ctx.drawImage_fromAssets(imgName,
               cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
           } else {
-            std::cout << "Invalid type for drawImage asset: " << imgType << std::endl;
+            std::cout << "Unsupported type for drawImage: " << imgType << std::endl;
           }
           numCmds++;
         }

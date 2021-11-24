@@ -37,7 +37,7 @@ export function init(canvas, imageSources, updatedCb) {
   }
   for (const key in imageSources.images) {
     g_imageSources.images[key] = {
-      vcsSourceType: 'assetImage',
+      vcsSourceType: 'defaultAsset',
       vcsSourceId: key,
       domElement: imageSources.images[key]
     };

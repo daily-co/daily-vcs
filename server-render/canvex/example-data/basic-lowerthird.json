@@ -17,7 +17,7 @@
     [
       "drawImage",
       [
-        { "type": "assetImage", "id": "test_square_320px.png" },
+        { "type": "defaultAsset", "id": "test_square_320px.png" },
         1172,
         518,
         72,

@@ -16,16 +16,20 @@ function frameWillRenderCb(frameIdx) {
     state.activeParticipants.push(true);
     didUpdate = true;
   }
-  if (frameIdx === outputFrames[2]) {
+  else if (frameIdx === outputFrames[2]) {
     state.activeParticipants.push(true);
     state.params.graphicsOnSide = true;
     didUpdate = true;
   }
-  if (frameIdx === outputFrames[3]) {
+  else if (frameIdx === outputFrames[3]) {
     state.activeParticipants.push(true);
     didUpdate = true;
   }
-  if (frameIdx === outputFrames[4]) {
+  else if (frameIdx === outputFrames[4]) {
+    state.activeParticipants.push(true);
+    
+    state.activeParticipants[1] = false; // remove an existing participant
+
     state.params.fitGridToGraphics = true;
     didUpdate = true;
   }

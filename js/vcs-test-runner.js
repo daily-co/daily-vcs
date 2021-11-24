@@ -50,7 +50,7 @@ for (let i = 0; i < 16; i++) {
   })
 }
 imageSources.images['test_square'] = {
-  vcsSourceType: 'assetImage',
+  vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
 };
 
