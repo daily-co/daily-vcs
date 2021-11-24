@@ -92,9 +92,19 @@ function compUpdatedCb(comp) {
 
     // break down scene components to separate files,
     // since the display list will be processed by canvex.
-    const {videoLayers, fgDisplayList} = sceneDesc;
+    const {
+      videoLayers, fgDisplayList
+    } = sceneDesc;
+
     fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayers.json`, JSON.stringify(videoLayers));
     fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`, JSON.stringify(fgDisplayList));
+
+    // also write a canvex display list that shows the video layers as colored rectangles.
+    // this is useful for visual verification of the output.
+    const videoLayersPreviewDisplayList = comp.writeVideoLayersPreview();
+
+    fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayerspreview.canvex.json`,
+          JSON.stringify(videoLayersPreviewDisplayList));
   }
 }
 

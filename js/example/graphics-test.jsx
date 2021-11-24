@@ -34,7 +34,7 @@ function RandomGraphics() {
 
   const textStyle = {
     textColor: 'rgba(255, 250, 200, 0.93)',
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     fontWeight: '200',
     fontSize_px: 32,
   };

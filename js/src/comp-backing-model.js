@@ -1,6 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
-import { encodeCompIntoCanvasDisplayList } from '../src/render/canvas';
+import {
+  encodeCanvasDisplayList_fg,
+  encodeCanvasDisplayList_videoLayersPreview,
+ } from '../src/render/canvas';
 import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
@@ -116,12 +119,11 @@ export class Composition {
   writeSceneDescription(imageSources) {
     if (!this.rootNode) return {};
 
-    const viewportW = this.viewportSize.w;
-    const viewportH = this.viewportSize.h;
-
     // get foreground graphics as a display list
-    const encoder = new CanvasDisplayListEncoder(viewportW, viewportH);
-    encodeCompIntoCanvasDisplayList(this, encoder, imageSources);
+    const encoder = new CanvasDisplayListEncoder(this.viewportSize.w, this.viewportSize.h);
+
+    encodeCanvasDisplayList_fg(this, encoder, imageSources);
+    
     const fgDisplayList = encoder.finalize();
 
     // get video elements
@@ -131,6 +133,15 @@ export class Composition {
       videoLayers,
       fgDisplayList,
     };
+  }
+
+  writeVideoLayersPreview() {
+    // write a display list that can be used to render a preview
+    const encoder = new CanvasDisplayListEncoder(this.viewportSize.w, this.viewportSize.h);
+
+    encodeCanvasDisplayList_videoLayersPreview(this, encoder);
+
+    return encoder.finalize();
   }
 }
 

@@ -113,7 +113,7 @@ function VideoGrid({
 
   const labelStyle = {
     textColor: 'white',
-    fontFamily: 'Helvetica',
+    fontFamily: 'Roboto',
     fontWeight: '600',
     fontSize_px: 16
   };
