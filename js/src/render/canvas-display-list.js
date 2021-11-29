@@ -25,6 +25,10 @@ export class CanvasDisplayListEncoder {
 // instead normalize the named colors here and always write rgb[a].
 function normalizeColorValue(c) {
   if (!c) return '#000';
+  if (typeof c !== 'string') {
+    console.error("** Unsupported CSS color value, not a string: " + c);
+    return '#000';
+  }
 
   if (c.indexOf('#') === 0
     || c.indexOf('rgb') === 0) {
@@ -52,6 +56,18 @@ class CanvasEncodingContext {
 
   set fillStyle(v) {
     this.encodeCmd('fillStyle', normalizeColorValue(v));
+  }
+
+  set strokeStyle(v) {
+    this.encodeCmd('strokeStyle', normalizeColorValue(v));
+  }
+
+  set lineWidth(v) {
+    this.encodeCmd('lineWidth', v);
+  }
+
+  set lineJoin(v) {
+    this.encodeCmd('lineJoin', v);
   }
 
   set font(v) {
@@ -92,8 +108,16 @@ class CanvasEncodingContext {
     this.encodeCmd('fillRect', args);
   }
 
+  strokeRect(...args) {
+    this.encodeCmd('strokeRect', args);
+  }
+
   fillText(...args) {
     this.encodeCmd('fillText', args);
+  }
+
+  strokeText(...args) {
+    this.encodeCmd('strokeText', args);
   }
 
   drawImage_vcsDrawable(srcDrawable, ...args) {
