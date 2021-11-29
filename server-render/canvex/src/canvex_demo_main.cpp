@@ -58,7 +58,8 @@ int main() {
 
   // -- json test --
   auto jsonPath = 
-        "example-data/basic-lowerthird.json";
+        //"example-data/basic-lowerthird.json";
+        "example-data/rounded-sidebar.json";
         //"example-data/graphics-test-random-50.json";
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;

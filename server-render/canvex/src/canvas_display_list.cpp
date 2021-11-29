@@ -126,6 +126,7 @@ class DisplayListJSONHandler {
           throwErr(ss.str());
         }
         return true;
+
       case cmdArgArray:
         addArgToCurrentCmd(s);
         return true;
@@ -146,6 +147,15 @@ class DisplayListJSONHandler {
   bool Double(double d) {
     switch (parseState_) {
       default: break;
+
+      case cmdArray:
+        if (currentCmdIsValid()) {
+          // we already have the op (first item), so this is an argument
+          addArgToCurrentCmd(d);
+          return true;
+        }
+        break;
+
       case cmdArgArray:
         addArgToCurrentCmd(d);
         return true;        
@@ -178,10 +188,17 @@ class DisplayListJSONHandler {
         }
         break;
 
+      case cmdArray:
+        if (currentCmdIsValid()) {
+          // we already have the op (first item), so this is an argument
+          addArgToCurrentCmd(i);
+          return true;
+        }
+        break;
+
       case cmdArgArray:
         addArgToCurrentCmd(i);
-        return true;
-        
+        return true;        
     }
     std::stringstream ss;
     ss << "Unexpected int value: " << i;
@@ -255,10 +272,15 @@ class DisplayListJSONHandler {
     {"rotate", OpType::rotate},
     {"translate", OpType::translate},
     {"fillStyle", OpType::fillStyle},
+    {"strokeStyle", OpType::strokeStyle},
+    {"lineWidth", OpType::lineWidth},
+    {"lineJoin", OpType::lineJoin},
     {"font", OpType::font},
     {"clip", OpType::clip},
     {"fillRect", OpType::fillRect},
+    {"strokeRect", OpType::strokeRect},
     {"fillText", OpType::fillText},
+    {"strokeText", OpType::strokeText},
     {"drawImage", OpType::drawImage},
     {"beginPath", OpType::beginPath},
     {"closePath", OpType::closePath},

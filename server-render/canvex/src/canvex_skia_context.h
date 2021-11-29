@@ -10,13 +10,23 @@
 
 namespace canvex {
 
+enum JoinType {
+  MITER = SkPaint::kMiter_Join,
+  BEVEL = SkPaint::kBevel_Join,
+  ROUND = SkPaint::kRound_Join,
+};
+
 // The canvas API has state that can be saved but is not part of Skia's save/restore.
 // This frame object tracks that extra state.
 struct CanvexContextStateFrame {
   float globalAlpha = 1.0;
+
   float fillColor[4] = {0, 0, 0, 0}; // RGBA
+
   float strokeColor[4] = {0, 0, 0, 0};
   float strokeWidth_px = 1.0;
+  JoinType strokeJoin = MITER;
+
   double fontSize = 12;
   int fontWeight = 400;
 };
@@ -32,12 +42,25 @@ class CanvexContext {
   void rotate(double radians);
 
   void setFillStyle(const std::string& s);
+  void setStrokeStyle(const std::string& s);
+  void setLineWidth(double lineW);
+  void setLineJoin(JoinType t);
   void setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name);
 
   void fillRect(double x, double y, double w, double h);
+  void strokeRect(double x, double y, double w, double h);
   void fillText(const std::string& text, double x, double y);
+  void strokeText(const std::string& text, double x, double y);
 
   void drawImage_fromAssets(const std::string& imageName, double x, double y, double w, double h);
+
+  // commands that operate on current path
+  void beginPath();
+  void closePath();
+  void moveTo(double x, double y);
+  void lineTo(double x, double y);
+  void quadraticCurveTo(double cp_x, double cp_y, double x, double y);
+  void clip();
 
  private:
   // external rendering target and configuration
@@ -76,6 +99,9 @@ class CanvexContext {
         sf.strokeColor[1] * 255.0f,
         sf.strokeColor[2] * 255.0f);
   }
+
+  // drawing utils
+  void drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint);
 };
 
 } // namespace canvex

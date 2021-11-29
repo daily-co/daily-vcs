@@ -100,6 +100,8 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     const isVCSDisplayListEncoder = typeof ctx.drawImage_vcsDrawable === 'function';
 
     let fillColor;
+    let strokeColor;
+    let strokeW_px;
     let srcDrawable;
     let textContent = node.text;
     let textStyle = node.style;
@@ -107,6 +109,8 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     switch (node.constructor.nodeType) {
       case IntrinsicNodeType.BOX: {
         fillColor = node.style.fillColor || null;
+        strokeColor = node.style.strokeColor || null;
+        strokeW_px = parseFloat(node.style.strokeWidth_px);
         break;
       }
       case IntrinsicNodeType.IMAGE: {
@@ -146,8 +150,13 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
   
     if (fillColor) {
-      ctx.fillStyle = fillColor;    
+      ctx.fillStyle = fillColor;
       ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
+    }
+    if (strokeColor && Number.isFinite(strokeW_px) && strokeW_px > 0) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeW_px;
+      ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
     }
   
     if (srcDrawable) {
@@ -200,7 +209,21 @@ function drawStyledText(ctx, text, style, frame, comp) {
 
   // since we don't have access to actual font metrics yet,
   // just take a guess to position the text baseline properly
-  const textY = frame.y + Math.round(fontSize_px*0.8);
+  let textY = Math.round(frame.y + fontSize_px*0.8);
+  let textX = Math.round(frame.x);
 
-  ctx.fillText(text, Math.round(frame.x), Math.round(textY));
+  if (style.strokeColor && style.strokeWidth_px) {
+    const strokeW = parseFloat(style.strokeWidth_px);
+    if (Number.isFinite(strokeW) && strokeW > 0) {
+      ctx.strokeStyle = style.strokeColor;
+      ctx.lineWidth = strokeW;
+
+      // round join generally looks right for text, but this should perhaps be user-controllable
+      ctx.lineJoin = 'round';
+      
+      ctx.strokeText(text, textX, textY);
+    }
+  }
+
+  ctx.fillText(text, textX, textY);
 }

@@ -12,6 +12,7 @@
 
 namespace canvex {
 
+// if you add to this list, also make sure to update "opsByName" in the .cpp counterpart
 enum OpType {
   noop = 0,
   save,
@@ -20,10 +21,15 @@ enum OpType {
   rotate,
   translate,
   fillStyle,
+  strokeStyle,
+  lineWidth,
+  lineJoin,
   font,
   clip,
   fillRect,
+  strokeRect,
   fillText,
+  strokeText,
   drawImage,
   beginPath,
   closePath,

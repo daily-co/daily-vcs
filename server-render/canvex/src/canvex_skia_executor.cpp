@@ -98,6 +98,44 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case strokeStyle: {
+        PRINTCMD_ARGS("strokeStyle")
+        if (cmd.args.size() != 1 || cmd.args[0].type != ArgType::string) {
+          std::cout << "Invalid arg for strokeStyle: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.setStrokeStyle(cmd.args[0].stringValue);
+          numCmds++;
+        }
+        break;
+      }
+      case lineWidth: {
+        PRINTCMD_ARGS("lineWidth")
+        if (cmd.args.size() != 1 || cmd.args[0].type != ArgType::number) {
+          std::cout << "Invalid args for lineWidth: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.setLineWidth(cmd.args[0].numberValue);
+          numCmds++;
+        }
+        break;
+      }
+      case lineJoin: {
+        PRINTCMD_ARGS("lineJoin")
+        if (cmd.args.size() != 1 || cmd.args[0].type != ArgType::string) {
+          std::cout << "Invalid args for lineJoin: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          auto& str = cmd.args[0].stringValue;
+          JoinType join = MITER;
+          if (str == "bevel") join = BEVEL;
+          else if (str == "round") join = ROUND;
+          std::cout << "Setting join " << (int)join << " from " << str << std::endl;
+          ctx.setLineJoin(join);
+          numCmds++;
+        }
+        break;
+      }
       case font: {
         PRINTCMD_ARGS("font")
         if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::string
@@ -111,9 +149,56 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case beginPath: {
+        PRINTCMD_ARGS("beginPath")
+        ctx.beginPath();
+        break;
+      }
+      case closePath: {
+        PRINTCMD_ARGS("closePath")
+        ctx.closePath();
+        break;
+      }
+      case moveTo: {
+        PRINTCMD_ARGS("moveTo")
+        if (cmd.args.size() != 2 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number) {
+          std::cout << "Invalid args for moveTo: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.moveTo(cmd.args[0].numberValue, cmd.args[1].numberValue);
+          numCmds++;
+        }
+        break;
+      }
+      case lineTo: {
+        PRINTCMD_ARGS("lineTo")
+        if (cmd.args.size() != 2 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number) {
+          std::cout << "Invalid args for lineTo: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.lineTo(cmd.args[0].numberValue, cmd.args[1].numberValue);
+          numCmds++;
+        }
+        break;
+      }
+      case quadraticCurveTo: {
+        PRINTCMD_ARGS("quadraticCurveTo")
+        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number) {
+          std::cout << "Invalid args for quadraticCurveTo: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.quadraticCurveTo(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case clip: {
         PRINTCMD_ARGS("clip")
-        // TODO: implement clip
+        ctx.clip();
         break;
       }
       case fillRect: {
@@ -129,6 +214,19 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case strokeRect: {
+        PRINTCMD_ARGS("strokeRect")
+        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number) {
+          std::cout << "Invalid args for strokeRect: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.strokeRect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case fillText: {
         PRINTCMD_ARGS("fillText")
         if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string
@@ -137,6 +235,18 @@ static void renderDisplayListInSkCanvas(
           numInvalidArgErrors++;
         } else {
           ctx.fillText(cmd.args[0].stringValue, cmd.args[1].numberValue, cmd.args[2].numberValue);
+          numCmds++;
+        }
+        break;
+      }
+      case strokeText: {
+        PRINTCMD_ARGS("strokeText")
+        if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number) {
+          std::cout << "Invalid args for strokeText: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.strokeText(cmd.args[0].stringValue, cmd.args[1].numberValue, cmd.args[2].numberValue);
           numCmds++;
         }
         break;

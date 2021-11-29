@@ -33,11 +33,31 @@ void CanvexContext::rotate(double radians) {
 void CanvexContext::setFillStyle(const std::string& s) {
   auto& sf = stateStack_.back();
   if (!getRGBAColorFromCSSStyleString(s, sf.fillColor)) {
-    std::cerr << "warning: invalid CSS color arg: " << s << std::endl;
+    std::cerr << "warning: invalid fillStyle arg: " << s << std::endl;
     return;
   }
   //std::cout << " fill style now: " << sf.fillColor[0] << ", " << sf.fillColor[1] << ", "
   //  << sf.fillColor[2] << ", " << sf.fillColor[3] << std::endl;
+}
+
+void CanvexContext::setStrokeStyle(const std::string& s) {
+  auto& sf = stateStack_.back();
+  if (!getRGBAColorFromCSSStyleString(s, sf.strokeColor)) {
+    std::cerr << "warning: invalid strokeStyle arg: " << s << std::endl;
+    return;
+  }
+  //std::cout << " stroke style now: " << sf.fillColor[0] << ", " << sf.fillColor[1] << ", "
+  //  << sf.fillColor[2] << ", " << sf.fillColor[3] << std::endl;
+}
+
+void CanvexContext::setLineWidth(double lineW) {
+  auto& sf = stateStack_.back();
+  sf.strokeWidth_px = lineW;
+}
+
+void CanvexContext::setLineJoin(JoinType t) {
+  auto& sf = stateStack_.back();
+  sf.strokeJoin = t;
 }
 
 void CanvexContext::setFont(const std::string& weight, const std::string& /*style*/, double pxSize, const std::string& /*name*/) {
@@ -60,6 +80,18 @@ void CanvexContext::fillRect(double x, double y, double w, double h) {
   paint.setStyle(SkPaint::kFill_Style);
   paint.setColor(getSkFillColor());
   paint.setAntiAlias(true);
+
+  canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
+}
+
+void CanvexContext::strokeRect(double x, double y, double w, double h) {
+  const auto& sf = stateStack_.back();
+  SkPaint paint;
+  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setColor(getSkStrokeColor());
+  paint.setAntiAlias(true);
+  paint.setStrokeWidth(sf.strokeWidth_px);
+  paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
 
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
 }
@@ -93,12 +125,28 @@ static std::string getRobotoFontNameSuffix(int fontWeight, bool italic) {
 }
 
 void CanvexContext::fillText(const std::string& text, double x, double y) {
-  auto& sf = stateStack_.back();
-
   SkPaint paint;
   paint.setStyle(SkPaint::kFill_Style);
   paint.setColor(getSkFillColor());
   paint.setAntiAlias(true);
+
+  drawTextWithPaint_(text, x, y, paint);
+}
+
+void CanvexContext::strokeText(const std::string& text, double x, double y) {
+  const auto& sf = stateStack_.back();
+  SkPaint paint;
+  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setColor(getSkStrokeColor());
+  paint.setAntiAlias(true);
+  paint.setStrokeWidth(sf.strokeWidth_px);
+  paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
+
+  drawTextWithPaint_(text, x, y, paint);
+}
+
+void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint) {
+  auto& sf = stateStack_.back();
 
   double t0 = getMonotonicTime();
 
@@ -168,5 +216,41 @@ void CanvexContext::drawImage_fromAssets(const std::string& imageName, double x,
 
   canvas_->drawImageRect(image, rect, sampleOptions);
 }
-  
+
+void CanvexContext::beginPath() {
+  path_ = std::make_unique<SkPath>();
+}
+
+void CanvexContext::closePath() {
+  // do we need to write close here?
+}
+
+void CanvexContext::moveTo(double x, double y) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->moveTo(x, y);
+}
+
+void CanvexContext::lineTo(double x, double y) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->lineTo(x, y);
+}
+
+void CanvexContext::quadraticCurveTo(double cp_x, double cp_y, double x, double y) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->quadTo(cp_x, cp_y, x, y);
+}
+
+void CanvexContext::clip() {
+  if (path_) {
+    const bool antialias = true;
+    canvas_->clipPath(*path_, antialias);
+  }
+}
+
 } // namespace canvex

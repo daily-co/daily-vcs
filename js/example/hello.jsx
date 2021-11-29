@@ -176,11 +176,17 @@ function TimedExampleGraphics({
     fontFamily: 'Roboto',
     fontWeight: '300',
     fontSize_vh: onSide ? 0.05 : 0.07,
+    strokeColor: 'rgba(0, 0, 0, 0.95)',
+    strokeWidth_px: 12,
   };
   const textLayoutFn = layoutFuncs.pad;
   const textPad_px = 20;
 
-  const boxStyle = { fillColor: 'rgba(50, 70, 255, 0.7)' };
+  const boxStyle = {
+    fillColor: 'rgba(50, 70, 255, 0.7)',
+    strokeColor: 'rgba(255, 255, 255, 0.8)',
+    strokeWidth_px: 4,
+  };
   let boxOuterPad = 0;
   if (roundedCorners) {
     boxStyle.cornerRadius_px = DEFAULT_CORNER_RADIUS_PX;
