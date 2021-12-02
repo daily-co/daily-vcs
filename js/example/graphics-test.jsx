@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Box, Image, Label, Video} from '../src/react/components';
+import {Box, Label, Video} from 'vcs-react/components';
 import * as Rand from 'random-seed';
 
 

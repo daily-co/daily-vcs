@@ -1,4 +1,6 @@
 const path = require('path');
+const webpack = require('webpack');
+const {getCompPathFromId} = require('../comp-namespace-util.js');
 
 const breakOnWarningPlugin = function() {
   this.hooks.done.tap('BreakOnWarning', stats => {
@@ -19,8 +21,32 @@ const breakOnWarningPlugin = function() {
   });
 };
 
+// the user is expected to provide a composition id on the command line.
+// using moduleReplacementPlugin, the root import in vcs-browser.js is replaced
+// so that only the specified composition is loaded.
+let compositionImportPath;
+
+const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
+  /(.*)__VCS_COMP_PATH__(\.*)/,
+  function (resource) {
+    resource.request = resource.request.replace(
+      /__VCS_COMP_PATH__/,
+      compositionImportPath
+    );
+  }
+);
+
 const wwwClientConfig = function(env) {
   const isDev = true;
+  const compId = env.vcsCompId;
+
+  if (!compId || compId.length < 1) {
+    console.error("** Must provide VCS composition id (use webpack CLI arg env=vcsCompId={id})");
+    return false;
+  }
+  if (!(compositionImportPath = getCompPathFromId(compId))) {
+    process.exit(3);
+  }
 
   return {
     mode: isDev ? 'development' : 'production',
@@ -67,11 +93,18 @@ const wwwClientConfig = function(env) {
     },
     plugins: [
       breakOnWarningPlugin,
+      moduleReplacementPlugin,
     ],
     externals: [
     ],
     optimization: {
       minimize: false,
+    },
+    resolve: {
+      alias: {
+        "#vcs": path.resolve(__dirname, '../src'),
+        "#vcs-react": path.resolve(__dirname, '../src/react'),
+      },
     },
   };
 };
