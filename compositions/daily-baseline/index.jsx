@@ -52,6 +52,11 @@ export const compositionInterface = {
       defaultValue: 100,
     },
     {
+      id: "textRotationInDegrees",
+      type: "text",
+      defaultValue: "0",
+    },
+    {
       id: "textColor",
       type: "text",
       defaultValue: "rgba(255, 250, 200, 0.95)",
@@ -91,6 +96,7 @@ export default function DailyBaselineVCS() {
       content: params.textContent,
       x: parseInt(params.textPos_x, 10),
       y: parseInt(params.textPos_y, 10),
+      rotation: parseFloat(params.textRotationInDegrees),
       color: params.textColor,
     };
     graphics = <TextOverlay {...overlayProps} />;
@@ -193,7 +199,7 @@ function VideoGrid({
 }
 
 function TextOverlay({
-  content, x, y, color
+  content, x, y, rotation, color
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
@@ -203,12 +209,19 @@ function TextOverlay({
     strokeColor: 'rgba(0, 0, 0, 0.8)',
     strokeWidth_px: 12,
   };
+  let textTrs;
+  if (rotation) {
+    textTrs = {
+      rotate_deg: rotation
+    };
+  }
 
   const layoutFn = layoutFuncs.offset;
   const layoutParams = {x, y};
 
   return <Label
     style={textStyle}
+    transform={textTrs}
     layout={[layoutFn, layoutParams]}
   >{content || ''}</Label>;
 }
