@@ -22,10 +22,15 @@
     "random-seed": "^0.3.0",
     "uuid": "^8.3.2"
   },
+  "imports": {
+    "#vcs-react/components": "./src/react/components/index.js",
+    "#vcs-react/hooks": "./src/react/hooks/index.js"
+  },
   "scripts": {
-    "build-lib-browser": "yarn webpack --config lib-browser/vcs-browser.webpack.config.js",
-    "hello": "yarn run ts-node -T vcs-benchmark.js --comp example/hello.jsx",
+    "hello-node": "yarn run ts-node -T vcs-benchmark.js --comp example/hello.jsx",
     "graphics-test": "yarn run ts-node -T vcs-benchmark.js --comp example/graphics-test.jsx",
-    "test-scenario": "yarn run ts-node -T vcs-test-runner.js --scenario"
+    "test-scenario": "yarn run ts-node -T vcs-test-runner.js --scenario",
+    "hello-browser": "yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env=vcsCompId=example:hello; echo 'Now open devrig/vcs-proto-rig.html in your web browser.'",
+    "build-browser": "wrap () { yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env=vcsCompId=\"$*\" | cat; }; wrap"
   }
 }

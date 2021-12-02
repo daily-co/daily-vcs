@@ -9,7 +9,8 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
       super();
 
       this.state = {
-        externalData: {
+        compositionData: {
+          mode: '',
           params: {},
         },
         time: {
@@ -23,12 +24,6 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
 
     componentDidCatch(error, info) {
       console.error("\n** An error occurred in a React component:\n  %s\n", error.message, info.componentStack);
-    }
-
-    setExternalData(data) {
-      this.setState({
-        externalData: data || {}
-      });
     }
 
     setVideoTime(t) {
@@ -48,17 +43,27 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
     }
 
     setParamValue(id, value) {
-      const newExtData = {...this.state.externalData};
-      newExtData.params = {...newExtData.params};
+      const compositionData = {...this.state.compositionData};
+      compositionData.params = {...compositionData.params};
 
-      newExtData.params[id] = value;
+      compositionData.params[id] = value;
 
-      this.setState({externalData: newExtData});
+      this.setState({compositionData});
+    }
+
+    selectMode(modeId) {
+      const compositionData = {...this.state.compositionData};
+
+      compositionData.mode = modeId; 
+
+      console.log("mode update: " + modeId);
+
+      this.setState({compositionData});
     }
 
     render() {
       return (
-        <ViewContexts.ExternalDataContext.Provider value={this.state.externalData}>
+        <ViewContexts.CompositionDataContext.Provider value={this.state.compositionData}>
         <ViewContexts.TimeContext.Provider value={this.state.time}>
         <ViewContexts.VideoCallContext.Provider value={this.state.videoCall}>
           <root>
@@ -66,7 +71,7 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
           </root>
         </ViewContexts.VideoCallContext.Provider>
         </ViewContexts.TimeContext.Provider>
-        </ViewContexts.ExternalDataContext.Provider>
+        </ViewContexts.CompositionDataContext.Provider>
       )
     }
   }

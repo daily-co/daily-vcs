@@ -1,90 +1,109 @@
 import * as React from 'react';
 import {Box, Image, Label, Video} from '#vcs-react/components';
-import {useParams, useVideoTime, useVideoCall} from '#vcs-react/hooks';
+import {useParams, useMode, useVideoTime, useVideoCall} from '#vcs-react/hooks';
 
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
   displayMeta: {
-    name: "Hello Daily",
-    description: "An example composition in a single file",
+    name: "Daily Baseline",
+    description: "Composition with Daily's baseline features",
   },
   modes: [
+    "single",
+    "split",
     "grid",
+    "dominant",
   ],
   params: [
-    {
-      id: "showGraphics",
-      type: "boolean",
-      defaultValue: true,
-    },
-    {
-      id: "graphicsOnSide",
-      type: "boolean",
-      defaultValue: false,
-    },
-    {
-      id: "fitGridToGraphics",
-      type: "boolean",
-      defaultValue: false,
-    },
     {
       id: "showParticipantLabels",
       type: "boolean",
       defaultValue: false,
     },
     {
-      id: "useRoundedCornersStyle",
+      id: "roundedCorners",
       type: "boolean",
       defaultValue: false,
     },
     {
-      id: "demoText",
+      id: "dominantOnLeft",
+      type: "boolean",
+      defaultValue: false,
+    },
+    {
+      id: "showTextOverlay",
+      type: "boolean",
+      defaultValue: false,
+    },
+    {
+      id: "textContent",
       type: "text",
-      defaultValue: "Hello world",
+      defaultValue: "An example text overlay",
+    },
+    {
+      id: "textPos_x",
+      type: "text",
+      defaultValue: 100,
+    },
+    {
+      id: "textPos_y",
+      type: "text",
+      defaultValue: 100,
+    },
+    {
+      id: "textColor",
+      type: "text",
+      defaultValue: "rgba(255, 250, 200, 0.95)",
     },
   ]
 };
 
 
 // -- the root component of this composition --
-export default function HelloDailyVCS() {
-  // this comp's params are defined in 'compositionInterface' above.
-  // this hook lets us get the current param values.
+export default function DailyBaselineVCS() {
   const params = useParams();
-
-  // params that control the presence and positioning of graphics
-  const {showGraphics, fitGridToGraphics, graphicsOnSide: onSide} = params;
-
-  // layout setup for graphics based on params
-  const baseLayoutFn = (onSide) ? layoutFuncs.splitH : layoutFuncs.splitV;
-  const splitPos = (onSide) ? 0.8 : 0.67;
-  const graphicsLayout = [baseLayoutFn, {index: 1, pos: splitPos}];
   
-  // if we want to shrink the grid so it doesn't overlap with the graphics,
-  // pass it the same split layout function, just with a different index
-  let gridLayout;
-  if (showGraphics && fitGridToGraphics) {
-    gridLayout = [baseLayoutFn, {index: 0, pos: splitPos}];
+  const mode = useMode();
+
+  const videoProps = {
+    roundedCorners: params.roundedCorners,
+    showLabels: params.showParticipantLabels,
+  };
+  let video;
+  switch (mode) {
+    default:
+    case 'single':
+      video = <VideoSingle {...videoProps} />;
+      break;
+    case 'grid':
+      video = <VideoGrid {...videoProps} />;
+      break;
+    case 'split':
+    case 'dominant':
+      console.log(`mode ${mode} not implemented yet`);
+      break;
   }
 
-  // style setting that components can interpret as they see fit
-  const roundedCorners = !!params.useRoundedCornersStyle;
+  let graphics;
+  if (params.showTextOverlay) {
+    const overlayProps = {
+      content: params.textContent,
+      x: parseInt(params.textPos_x, 10),
+      y: parseInt(params.textPos_y, 10),
+      color: params.textColor,
+    };
+    graphics = <TextOverlay {...overlayProps} />;
+  }
   
   return (
     <Box id="main">
-      <VideoGrid
-        layout={gridLayout}
-        showLabels={params.showParticipantLabels}
-        roundedCorners={roundedCorners}
-      />
-      {showGraphics ?
-        <TimedExampleGraphics
-          layout={graphicsLayout}
-          onSide={onSide}
-          demoText={params.demoText}
-          roundedCorners={roundedCorners}
-        /> : null}
+      <Box id="videoBox">
+        {video}
+      </Box>
+      <Box id="graphicsBox">
+        {graphics}
+      </Box>
     </Box>
   )
 }
@@ -94,8 +113,31 @@ export default function HelloDailyVCS() {
 
 const DEFAULT_CORNER_RADIUS_PX = 25;
 
+function VideoSingle({
+  roundedCorners
+}) {
+  const {activeParticipants} = useVideoCall();
+
+  let activeIdx = -1;
+  for (let i = 0; i < activeParticipants.length; i++) {
+    if (activeParticipants[i]) {
+      activeIdx = i;
+      break;
+    }
+  }
+
+  if (activeIdx < 0) {
+    // if nobody is active, show a placeholder
+    return <Box style={{fillColor: '#008'}} />;
+  }
+
+  const videoStyle = {
+    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0
+  };
+  return <Video src={activeIdx} style={videoStyle} />;  
+}
+
 function VideoGrid({
-  layout,
   showLabels,
   roundedCorners
 }) {
@@ -144,11 +186,33 @@ function VideoGrid({
   });
 
   return (
-    <Box id="videogrid" layout={layout}>
+    <Box id="videogrid">
       {items}
     </Box>
   );
 }
+
+function TextOverlay({
+  content, x, y, color
+}) {
+  const textStyle = {
+    textColor: color || 'rgba(255, 250, 200, 0.95)',
+    fontFamily: 'Roboto',
+    fontWeight: '500',
+    fontSize_vh: 0.07,
+    strokeColor: 'rgba(0, 0, 0, 0.8)',
+    strokeWidth_px: 12,
+  };
+
+  const layoutFn = layoutFuncs.offset;
+  const layoutParams = {x, y};
+
+  return <Label
+    style={textStyle}
+    layout={[layoutFn, layoutParams]}
+  >{content || ''}</Label>;
+}
+
 
 function TimedExampleGraphics({
   onSide,

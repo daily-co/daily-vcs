@@ -3,10 +3,8 @@ import { Composition, render } from '../src';
 import { renderCompInCanvas } from '../src/render/canvas';
 import { makeVCSRootContainer } from '../src/loader-base';
 
-// the example composition
-import * as VCSComp from
-        '../example/hello.jsx';
-        //'../example/graphics-test.jsx';
+// composition path is replaced by our webpack config
+import * as VCSComp from '__VCS_COMP_PATH__';
 
 
 // this will receive the instance of our root container component
@@ -85,7 +83,7 @@ function renderFrame() {
     g_lastT = t;
 
     const t1 = Date.now() / 1000;
-    console.log("updated react, time spent %f ms", Math.round((t1-t)*1000));
+    //console.log("updated react, time spent %f ms", Math.round((t1-t)*1000));
   }
 
   if (renderNow) {
@@ -132,5 +130,9 @@ class DailyVCSCommandAPI {
   setParamValue(id, value) {
     console.log("setParamValue: ", id, value);
     rootContainerRef.current.setParamValue(id, value);
+  }
+
+  selectMode(modeId) {
+    rootContainerRef.current.selectMode(modeId);
   }
 }
