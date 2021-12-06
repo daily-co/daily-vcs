@@ -7,8 +7,7 @@ import { makeVCSRootContainer } from './src/loader-base';
 
 
 // CLI arguments.
-// 'comp' is a path to the JSX file to be loaded.
-// 'data' is a path to a JSON file that will be watched for realtime updates.
+// --scenario is mandatory.
 const argmap = require('minimist')(process.argv.slice(2));
 
 const scenarioPath = argmap['scenario'];

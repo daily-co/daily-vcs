@@ -44,7 +44,7 @@ const wwwClientConfig = function(env) {
     console.error("** Must provide VCS composition id (use webpack CLI arg env=vcsCompId={id})");
     return false;
   }
-  if (!(compositionImportPath = getCompPathFromId(compId))) {
+  if (!(compositionImportPath = getCompPathFromId(compId, 'browser'))) {
     process.exit(3);
   }
 

@@ -48,7 +48,7 @@ export class Composition {
       }
 
     if ( !node) {
-      console.log("** couldn't create node: ", type, props);
+      console.error("** couldn't create node: ", type, props);
     } else {
       this.nodes.push(node);
     }
