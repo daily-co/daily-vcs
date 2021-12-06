@@ -56,8 +56,6 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
 
       compositionData.mode = modeId; 
 
-      console.log("mode update: " + modeId);
-
       this.setState({compositionData});
     }
 

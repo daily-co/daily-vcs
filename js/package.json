@@ -20,6 +20,7 @@
     "css-color-names": "^1.0.1",
     "minimist": "^1.2.5",
     "random-seed": "^0.3.0",
+    "split": "^1.0.1",
     "uuid": "^8.3.2"
   },
   "imports": {
@@ -30,6 +31,8 @@
     "hello-node": "yarn run ts-node -T vcs-benchmark.js --comp example/hello.jsx",
     "graphics-test": "yarn run ts-node -T vcs-benchmark.js --comp example/graphics-test.jsx",
     "test-scenario": "yarn run ts-node -T vcs-test-runner.js --scenario",
+    "line-protocol": "yarn run ts-node -T vcs-line-protocol-main.js --compid",
+    "import-test": "yarn run ts-node -T import-test.mjs --compid",
     "hello-browser": "yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env=vcsCompId=example:hello; echo 'Now open devrig/vcs-rig.html in your web browser.'",
     "build-browser": "wrap () { yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env=vcsCompId=\"$*\" | cat; }; wrap"
   }
