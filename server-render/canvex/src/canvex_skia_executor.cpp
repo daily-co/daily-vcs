@@ -130,7 +130,7 @@ static void renderDisplayListInSkCanvas(
           JoinType join = MITER;
           if (str == "bevel") join = BEVEL;
           else if (str == "round") join = ROUND;
-          std::cout << "Setting join " << (int)join << " from " << str << std::endl;
+          //std::cout << "Setting join " << (int)join << " from " << str << std::endl;
           ctx.setLineJoin(join);
           numCmds++;
         }

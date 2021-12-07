@@ -14,16 +14,16 @@ system_mac = build_machine.system() == 'darwin'
 if system_mac
   # currently only ARM Mac build available of the Skia libs
   message('Building for macOS ARM')
-  skia_libdir = meson.current_source_dir() + '/skia/lib-static/mac-arm64'
+  skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
 else
   message('Building for Linux x86_64')
-  skia_libdir = meson.current_source_dir() + '/skia/lib-static/linux-x64'
+  skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
 endif
 
 message('Using Skia libdir: {}', skia_libdir)
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
-skia_include = include_directories('./skia')
+skia_include = include_directories('./canvex-skia')
 
 if system_mac
   # macOS system dependencies
