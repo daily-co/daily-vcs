@@ -4,6 +4,11 @@
 
 namespace canvex {
 
+enum RenderFormat {
+  Rgba,
+  Bgra,
+};
+
 struct GraphicsExecutionStats {
   int64_t graphicsRender_us;
   int64_t fileWrite_us;
@@ -16,8 +21,9 @@ bool RenderDisplayListToPNG(
   GraphicsExecutionStats* stats  // optional stats
 );
 
-bool RenderDisplayListToRGBABuffer(
+bool RenderDisplayListToRawBuffer(
   const VCSCanvasDisplayList& dl,
+  RenderFormat format,
   uint8_t *imageBuffer,
   uint32_t w,
   uint32_t h,

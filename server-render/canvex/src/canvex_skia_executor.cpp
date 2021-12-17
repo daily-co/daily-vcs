@@ -357,8 +357,9 @@ bool RenderDisplayListToPNG(
   return ok;
 }
 
-bool RenderDisplayListToRGBABuffer(
+bool RenderDisplayListToRawBuffer(
   const VCSCanvasDisplayList& dl,
+  const RenderFormat format,
   uint8_t *imageBuffer,
   uint32_t w,
   uint32_t h,
@@ -366,7 +367,19 @@ bool RenderDisplayListToRGBABuffer(
   const std::filesystem::path& resourceDir,
   GraphicsExecutionStats* stats  // optional stats
 ) {
-  auto imageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+  SkColorType skFormat;
+
+  switch (format) {
+    case Rgba:
+      skFormat = kRGBA_8888_SkColorType;
+      break;
+
+    case Bgra:
+      skFormat = kBGRA_8888_SkColorType;
+      break;
+  }
+
+  auto imageInfo = SkImageInfo::Make(w, h, skFormat, kPremul_SkAlphaType);
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 
   renderDisplayListInSkCanvas(dl, canvas, resourceDir);

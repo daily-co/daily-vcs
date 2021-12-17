@@ -44,8 +44,9 @@ void CanvexResourceCtxDestroy(CanvexResourceCtx ctx_c) {
 }
 
 
-CanvexRenderResult CanvexRenderJSON_RGBA(
+static CanvexRenderResult CanvexRenderJSON_Raw(
   CanvexResourceCtx ctx_c,
+  canvex::RenderFormat format,
   const char *json,
   uint8_t *dstImageData,
   uint32_t dstImageW,
@@ -80,7 +81,7 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   // TODO: provide stats to caller?
   // currently no provision in C API for this
 
-  if (!RenderDisplayListToRGBABuffer(*displayList,
+  if (!RenderDisplayListToRawBuffer(*displayList, format,
     dstImageData, dstImageW, dstImageH, dstImageRowBytes,
     ctx->resourceDir,
     nullptr)) {
@@ -88,4 +89,30 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   }
 
   return CanvexRenderSuccess;
+}
+
+CanvexRenderResult CanvexRenderJSON_RGBA(
+  CanvexResourceCtx ctx_c,
+  const char *json,
+  uint8_t *dstImageData,
+  uint32_t dstImageW,
+  uint32_t dstImageH,
+  uint32_t dstImageRowBytes
+) {
+  return CanvexRenderJSON_Raw(
+      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+  );
+}
+
+CanvexRenderResult CanvexRenderJSON_BGRA(
+  CanvexResourceCtx ctx_c,
+  const char *json,
+  uint8_t *dstImageData,
+  uint32_t dstImageW,
+  uint32_t dstImageH,
+  uint32_t dstImageRowBytes
+) {
+  return CanvexRenderJSON_Raw(
+      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+  );
 }

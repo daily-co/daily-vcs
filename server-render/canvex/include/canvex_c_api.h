@@ -57,6 +57,27 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint32_t dstImageRowBytes
 );
 
+/*
+  Renders the given JSON display list into the image buffer specified by the dstImage* args.
+  Returns a CanvexRenderResult value (0 on success or an error id).
+
+  The image will be written with BGRA memory layout,
+  i.e. dstImageData[0] is a red component regardless of system endianness.
+
+  If dstImageRowBytes==0, the default value will be dstImageW * 4.
+  ("rowBytes" is also known as "stride", "step" or "row offset" in other APIs.)
+
+  An empty or null input json string will return CanvexRenderError_InvalidArgument_JSONInput.
+*/
+CanvexRenderResult CanvexRenderJSON_BGRA(
+  CanvexResourceCtx resourceCtx,
+  const char *json,
+  uint8_t *dstImageData,
+  uint32_t dstImageW,
+  uint32_t dstImageH,
+  uint32_t dstImageRowBytes
+);
+
 #ifdef __cplusplus
 }
 #endif
