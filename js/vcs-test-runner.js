@@ -116,11 +116,11 @@ function compUpdatedCb(comp) {
 function applyScenarioState(s) {
   if ( !s) return;
 
-  const { activeParticipants, params } = s;
+  const { activeVideoInputSlots, params } = s;
 
-  if (Array.isArray(activeParticipants)) {
-    rootContainerRef.current.setActiveParticipants(activeParticipants);
-    console.log("setActiveParticipants: ", activeParticipants)
+  if (Array.isArray(activeVideoInputSlots)) {
+    rootContainerRef.current.setActiveVideoInputSlots(activeVideoInputSlots);
+    console.log("setActiveVideoInputSlots: ", activeVideoInputSlots)
   }
   if (params) {
    for (const key in params) {

@@ -166,8 +166,8 @@ body {
         </div>
         <div id="controls">
           <div class="vc">
-            <h3>Video call</h3>
-            <span>Participants: </span>
+            <h3>Media input</h3>
+            <span>Active video inputs: </span>
             <button data-index=0 class="selected">1</button>
             <button data-index=1>2</button>
             <button data-index=2>3</button>
@@ -218,18 +218,18 @@ body {
 
 const MAX_PARTICIPANTS = 16;
 
-const g_activeParticipants = [];
+const g_activeVideoInputSlots = [];
 for (let i = 0; i < MAX_PARTICIPANTS; i++) {
-  g_activeParticipants[i] = false;
+  g_activeVideoInputSlots[i] = false;
 }
-g_activeParticipants[0] = true;
+g_activeVideoInputSlots[0] = true;
 
 
 // --- UI actions ---
 
 for (const btn of document.querySelectorAll("#controls .vc button")) {
   const idx = btn.dataset.index;
-  const active = g_activeParticipants[idx];
+  const active = g_activeVideoInputSlots[idx];
   btn.setAttribute('class', active ? 'selected' : '');
 
   btn.addEventListener('click', participantToggled);
@@ -239,12 +239,12 @@ function participantToggled(ev) {
   const btn = ev.target;
   const idx = btn.dataset.index;
 
-  const active = g_activeParticipants[idx] ? false : true;
+  const active = g_activeVideoInputSlots[idx] ? false : true;
   btn.setAttribute('class', active ? 'selected' : '');
 
-  g_activeParticipants[idx] = active;
+  g_activeVideoInputSlots[idx] = active;
 
-  sendActiveParticipants();
+  sendActiveVideoInputSlots();
 }
 
 function paramCheckboxToggled(ev) {
@@ -462,7 +462,7 @@ async function start() {
   createParamsUI(compInterface, document.querySelector("#controls .compInterface .params"));
 
   // send initial data
-  sendActiveParticipants();
+  sendActiveVideoInputSlots();
 }
 
 start();
@@ -495,10 +495,10 @@ function compUpdated(sceneDesc) {
 
 // --- commands sent to composition ---
 
-function sendActiveParticipants() {
+function sendActiveVideoInputSlots() {
   if (!g_vcsCommandApi) return;
 
-  g_vcsCommandApi.setActiveParticipants(g_activeParticipants);
+  g_vcsCommandApi.setActiveVideoInputSlots(g_activeVideoInputSlots);
 }
 
 function sendParamChange(paramId, value) {
