@@ -5,8 +5,9 @@ export function Image(props) {
     <image
       id={props.id}
       layout={props.layout}
-      style={props.style || {}}
+      style={props.style || {}}
       transform={props.transform || {}}
-      src={props.src} />
-  )
+      src={props.src}
+    />
+  );
 }

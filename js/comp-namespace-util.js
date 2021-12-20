@@ -7,12 +7,14 @@ const Path = require('path');
 */
 function getCompPathFromId(compId, targetId) {
   if (!compId) {
-    console.error("** VCS composition id must be a string, got: " + compId);
+    console.error('** VCS composition id must be a string, got: ' + compId);
     return null;
   }
   let idx = compId.indexOf(':');
   if (idx < 0) {
-    console.error("** VCS composition id must have colon as namespace separator (e.g. example:hello)");
+    console.error(
+      '** VCS composition id must have colon as namespace separator (e.g. example:hello)'
+    );
     return null;
   }
 
@@ -27,7 +29,10 @@ function getCompPathFromId(compId, targetId) {
       break;
 
     default:
-      console.error("** Unknown target specified for getCompPathForId: '%s'", targetId);
+      console.error(
+        "** Unknown target specified for getCompPathForId: '%s'",
+        targetId
+      );
       return null;
   }
 
@@ -63,8 +68,8 @@ function getCompPathFromId(compId, targetId) {
     }
 
     default:
-      console.error("** Unsupported VCS composition namespace: ", compId);
-      return null;  
+      console.error('** Unsupported VCS composition namespace: ', compId);
+      return null;
   }
   return jsxPath;
 }

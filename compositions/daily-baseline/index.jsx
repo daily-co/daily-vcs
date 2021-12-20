@@ -1,74 +1,72 @@
 import * as React from 'react';
-import {Box, Image, Label, Video} from '#vcs-react/components';
-import {useParams, useMode, useVideoTime, useVideoCall} from '#vcs-react/hooks';
-
+import { Box, Image, Label, Video } from '#vcs-react/components';
+import {
+  useParams,
+  useMode,
+  useVideoTime,
+  useMediaInput,
+} from '#vcs-react/hooks';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
   displayMeta: {
-    name: "Daily Baseline",
+    name: 'Daily Baseline',
     description: "Composition with Daily's baseline features",
   },
-  modes: [
-    "single",
-    "split",
-    "grid",
-    "dominant",
-  ],
+  modes: ['single', 'split', 'grid', 'dominant'],
   params: [
     {
-      id: "showParticipantLabels",
-      type: "boolean",
+      id: 'showParticipantLabels',
+      type: 'boolean',
       defaultValue: false,
     },
     {
-      id: "roundedCorners",
-      type: "boolean",
+      id: 'roundedCorners',
+      type: 'boolean',
       defaultValue: false,
     },
     {
-      id: "dominantOnLeft",
-      type: "boolean",
+      id: 'dominantOnLeft',
+      type: 'boolean',
       defaultValue: false,
     },
     {
-      id: "showTextOverlay",
-      type: "boolean",
+      id: 'showTextOverlay',
+      type: 'boolean',
       defaultValue: false,
     },
     {
-      id: "textContent",
-      type: "text",
-      defaultValue: "An example text overlay",
+      id: 'textContent',
+      type: 'text',
+      defaultValue: 'An example text overlay',
     },
     {
-      id: "textPos_x",
-      type: "text",
+      id: 'textPos_x',
+      type: 'text',
       defaultValue: 100,
     },
     {
-      id: "textPos_y",
-      type: "text",
+      id: 'textPos_y',
+      type: 'text',
       defaultValue: 100,
     },
     {
-      id: "textRotationInDegrees",
-      type: "text",
-      defaultValue: "0",
+      id: 'textRotationInDegrees',
+      type: 'text',
+      defaultValue: '0',
     },
     {
-      id: "textColor",
-      type: "text",
-      defaultValue: "rgba(255, 250, 200, 0.95)",
+      id: 'textColor',
+      type: 'text',
+      defaultValue: 'rgba(255, 250, 200, 0.95)',
     },
-  ]
+  ],
 };
-
 
 // -- the root component of this composition --
 export default function DailyBaselineVCS() {
   const params = useParams();
-  
+
   const mode = useMode();
 
   const videoProps = {
@@ -101,32 +99,25 @@ export default function DailyBaselineVCS() {
     };
     graphics = <TextOverlay {...overlayProps} />;
   }
-  
+
   return (
     <Box id="main">
-      <Box id="videoBox">
-        {video}
-      </Box>
-      <Box id="graphicsBox">
-        {graphics}
-      </Box>
+      <Box id="videoBox">{video}</Box>
+      <Box id="graphicsBox">{graphics}</Box>
     </Box>
-  )
+  );
 }
-
 
 // --- components ---
 
 const DEFAULT_CORNER_RADIUS_PX = 25;
 
-function VideoSingle({
-  roundedCorners
-}) {
-  const {activeParticipants} = useVideoCall();
+function VideoSingle({ roundedCorners }) {
+  const { activeVideoInputSlots } = useMediaInput();
 
   let activeIdx = -1;
-  for (let i = 0; i < activeParticipants.length; i++) {
-    if (activeParticipants[i]) {
+  for (let i = 0; i < activeVideoInputSlots.length; i++) {
+    if (activeVideoInputSlots[i]) {
       activeIdx = i;
       break;
     }
@@ -134,26 +125,23 @@ function VideoSingle({
 
   if (activeIdx < 0) {
     // if nobody is active, show a placeholder
-    return <Box style={{fillColor: '#008'}} />;
+    return <Box style={{ fillColor: '#008' }} />;
   }
 
   const videoStyle = {
-    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0
+    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0,
   };
-  return <Video src={activeIdx} style={videoStyle} />;  
+  return <Video src={activeIdx} style={videoStyle} />;
 }
 
-function VideoGrid({
-  showLabels,
-  roundedCorners
-}) {
-  const {activeParticipants} = useVideoCall();
+function VideoGrid({ showLabels, roundedCorners }) {
+  const { activeVideoInputSlots } = useMediaInput();
 
-  let maxParticipants = activeParticipants.length;
+  let maxParticipants = activeVideoInputSlots.length;
   let activeIndexes = [];
   let n = 0;
   for (let i = 0; i < maxParticipants; i++) {
-    if (activeParticipants[i]) {
+    if (activeVideoInputSlots[i]) {
       activeIndexes.push(i);
       n++;
     }
@@ -163,27 +151,29 @@ function VideoGrid({
     textColor: 'white',
     fontFamily: 'Roboto',
     fontWeight: '600',
-    fontSize_px: 16
+    fontSize_px: 16,
   };
   const videoStyle = {
-    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0
+    cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0,
   };
 
   const items = activeIndexes.map((srcIdx, i) => {
-    const key = 'videogrid_item'+i;
+    const key = 'videogrid_item' + i;
 
     let participantLabel;
     if (showLabels && n > 1) {
-      participantLabel =
-        <Label style={labelStyle} layout={[layoutFuncs.offset, {y: -18}]}>
+      participantLabel = (
+        <Label style={labelStyle} layout={[layoutFuncs.offset, { y: -18 }]}>
           {`Participant ${srcIdx + 1}`}
-        </Label>;
+        </Label>
+      );
     }
 
     return (
       <Box
-        key={key} id={key}
-        layout={[layoutFuncs.grid, {index: i, total: n}]}
+        key={key}
+        id={key}
+        layout={[layoutFuncs.grid, { index: i, total: n }]}
       >
         <Video src={srcIdx} style={videoStyle} />
         {participantLabel}
@@ -191,16 +181,10 @@ function VideoGrid({
     );
   });
 
-  return (
-    <Box id="videogrid">
-      {items}
-    </Box>
-  );
+  return <Box id="videogrid">{items}</Box>;
 }
 
-function TextOverlay({
-  content, x, y, rotation, color
-}) {
+function TextOverlay({ content, x, y, rotation, color }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
     fontFamily: 'Roboto',
@@ -212,26 +196,29 @@ function TextOverlay({
   let textTrs;
   if (rotation) {
     textTrs = {
-      rotate_deg: rotation
+      rotate_deg: rotation,
     };
   }
 
   const layoutFn = layoutFuncs.offset;
-  const layoutParams = {x, y};
+  const layoutParams = { x, y };
 
-  return <Label
-    style={textStyle}
-    transform={textTrs}
-    layout={[layoutFn, layoutParams]}
-  >{content || ''}</Label>;
+  return (
+    <Label
+      style={textStyle}
+      transform={textTrs}
+      layout={[layoutFn, layoutParams]}
+    >
+      {content || ''}
+    </Label>
+  );
 }
-
 
 function TimedExampleGraphics({
   onSide,
   layout: baseLayout,
   demoText,
-  roundedCorners
+  roundedCorners,
 }) {
   const t = useVideoTime();
 
@@ -245,7 +232,7 @@ function TimedExampleGraphics({
   }
   let imageLayoutFn = layoutFuncs.cornerBug_topRight;
   if (t % 6 >= 3) {
-    imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;    
+    imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;
   }
 
   const textStyle = {
@@ -271,47 +258,49 @@ function TimedExampleGraphics({
   }
 
   return (
-    <Box layout={[layoutFuncs.pad, {pad: boxOuterPad}]}>
+    <Box layout={[layoutFuncs.pad, { pad: boxOuterPad }]}>
       <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
-        <Label style={textStyle} layout={[textLayoutFn, {pad: textPad_px}]}>{demoText}</Label>
-        <Image src="test_square" layout={[imageLayoutFn, {size: imageSize}]} />
+        <Label style={textStyle} layout={[textLayoutFn, { pad: textPad_px }]}>
+          {demoText}
+        </Label>
+        <Image
+          src="test_square"
+          layout={[imageLayoutFn, { size: imageSize }]}
+        />
       </Box>
     </Box>
   );
 }
 
-
 // --- layout functions and utils ---
 
 const layoutFuncs = {
-
   pad: (parentFrame, params) => {
-    let {x, y, w, h} = parentFrame;
+    let { x, y, w, h } = parentFrame;
     const pad = params.pad || 0;
 
     x += pad;
     y += pad;
-    w -= 2*pad;
-    h -= 2*pad;
+    w -= 2 * pad;
+    h -= 2 * pad;
 
-    return {x, y, w, h};
+    return { x, y, w, h };
   },
 
   offset: (parentFrame, params) => {
-    let {x, y, w, h} = parentFrame;
-    
-    x += params.x || 0;
-    y += params.y || 0;
+    let { x, y, w, h } = parentFrame;
 
-    return {x, y, w, h};
+    x += params.x || 0;
+    y += params.y || 0;
+
+    return { x, y, w, h };
   },
 
-
   splitV: (parentFrame, params) => {
-    const pos = params.pos || 0.5;
-    const idx = params.index || 0;
+    const pos = params.pos || 0.5;
+    const idx = params.index || 0;
 
-    const frame = {...parentFrame};
+    const frame = { ...parentFrame };
     if (idx === 0) {
       frame.h = Math.round(parentFrame.h * pos);
     } else {
@@ -322,10 +311,10 @@ const layoutFuncs = {
   },
 
   splitH: (parentFrame, params) => {
-    const pos = params.pos || 0.5;
-    const idx = params.index || 0;
+    const pos = params.pos || 0.5;
+    const idx = params.index || 0;
 
-    const frame = {...parentFrame};
+    const frame = { ...parentFrame };
     if (idx === 0) {
       frame.w = Math.round(parentFrame.w * pos);
     } else {
@@ -337,63 +326,69 @@ const layoutFuncs = {
 
   cornerBug_topRight: (parentFrame, params, layoutCtx) => {
     const margin = cornerBugMargin(layoutCtx);
-    const {w, h} = cornerBugSize(params, layoutCtx);
+    const { w, h } = cornerBugSize(params, layoutCtx);
 
-    let {x, y} = parentFrame;
+    let { x, y } = parentFrame;
     x += parentFrame.w - w - margin;
     y += margin;
 
-    return {x, y, w, h};
+    return { x, y, w, h };
   },
 
   cornerBug_bottomLeft: (parentFrame, params, layoutCtx) => {
     const margin = cornerBugMargin(layoutCtx);
-    const {w, h} = cornerBugSize(params, layoutCtx);
+    const { w, h } = cornerBugSize(params, layoutCtx);
 
-    let {x, y} = parentFrame;
+    let { x, y } = parentFrame;
     x += margin;
     y += parentFrame.h - h - margin;
 
-    return {x, y, w, h};
+    return { x, y, w, h };
   },
 
   grid: (parentFrame, params, layoutCtx) => {
-    const {index, total} = params;
-    const {viewport} = layoutCtx;
+    const { index, total } = params;
+    const { viewport } = layoutCtx;
 
     if (total < 1 || !isFinite(total)) {
-      return {...parentFrame};
+      return { ...parentFrame };
     }
 
-    const outerMargin = total > 1 ? viewport.h*0.05 : 0;
-    const innerMargin = total > 1 ? viewport.h*0.05 : 0;
+    const outerMargin = total > 1 ? viewport.h * 0.05 : 0;
+    const innerMargin = total > 1 ? viewport.h * 0.05 : 0;
 
-    const numCols = (total > 9) ? 4 : (total > 4) ? 3 : (total > 1) ? 2 : 1;
+    const numCols = total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
     const numRows = Math.ceil(total / numCols);
 
     // for proto, hardcoded video item aspect ratio
     const videoAsp = 16 / 9;
     const parentAsp = parentFrame.w / parentFrame.h;
-    const contentAsp = (numCols*videoAsp) / numRows;
+    const contentAsp = (numCols * videoAsp) / numRows;
 
-    let {x, y, w, h} = parentFrame;
+    let { x, y, w, h } = parentFrame;
     let itemW, itemH;
 
     // item size depends on whether our content is wider or narrower than the parent frame
     if (contentAsp >= parentAsp) {
-      itemW = (parentFrame.w - 2*outerMargin - (numCols - 1)*innerMargin) / numCols;
+      itemW =
+        (parentFrame.w - 2 * outerMargin - (numCols - 1) * innerMargin) /
+        numCols;
       itemH = itemW / videoAsp;
 
       // center grid vertically
       x += outerMargin;
-      y += (parentFrame.h - (numRows*itemH + innerMargin*(numRows - 1))) / 2;  
+      y +=
+        (parentFrame.h - (numRows * itemH + innerMargin * (numRows - 1))) / 2;
     } else {
-      itemH = (parentFrame.h - 2*outerMargin - (numRows - 1)*innerMargin) / numRows;
+      itemH =
+        (parentFrame.h - 2 * outerMargin - (numRows - 1) * innerMargin) /
+        numRows;
       itemW = itemH * videoAsp;
 
       // center grid horizontally
       y += outerMargin;
-      x += (parentFrame.w - (numCols*itemW + innerMargin*(numCols - 1))) / 2;  
+      x +=
+        (parentFrame.w - (numCols * itemW + innerMargin * (numCols - 1))) / 2;
     }
 
     const col = index % numCols;
@@ -410,7 +405,7 @@ const layoutFuncs = {
 
     //console.log("computing grid %d / %d, rows/cols %d, %d: ", index, total, numRows, numCols, x, y);
 
-    return {x, y, w, h};
+    return { x, y, w, h };
   },
 };
 
@@ -418,7 +413,7 @@ function cornerBugSize(params, layoutCtx) {
   // 'size' param is in proportion to viewport height
   const h = layoutCtx.viewport.h * params.size;
   const w = h;
-  return {w, h};
+  return { w, h };
 }
 
 function cornerBugMargin(layoutCtx) {

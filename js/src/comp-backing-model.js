@@ -3,7 +3,7 @@ import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
 import {
   encodeCanvasDisplayList_fg,
   encodeCanvasDisplayList_videoLayersPreview,
- } from '../src/render/canvas';
+} from '../src/render/canvas';
 import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
@@ -24,7 +24,7 @@ export class Composition {
     this.uncommitted = true;
     this.commitFinishedCb = cb;
 
-    this.viewportSize = {w: 1280, h: 720};
+    this.viewportSize = { w: 1280, h: 720 };
   }
 
   createNode(type, props) {
@@ -45,9 +45,9 @@ export class Composition {
       case IntrinsicNodeType.VIDEO:
         node = new VideoNode();
         break;
-      }
+    }
 
-    if ( !node) {
+    if (!node) {
       console.error("** couldn't create node: ", type, props);
     } else {
       this.nodes.push(node);
@@ -76,7 +76,6 @@ export class Composition {
     //console.log("prepare for first commit; we have %d nodes", this.nodes.length);
 
     this.uncommitted = false;
-
   }
 
   reactFinishedCommits() {
@@ -91,19 +90,16 @@ export class Composition {
     if (!this.rootNode) return;
 
     const layoutCtxBase = {
-      viewport: {x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h},
+      viewport: { x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h },
     };
 
     function recurseLayout(node, parentFrame) {
-      let frame = {...parentFrame};
+      let frame = { ...parentFrame };
       if (node.layoutFunc) {
-        frame = node.layoutFunc(
-                  frame,
-                  node.layoutParams,
-                  { ...layoutCtxBase,
-                    node,
-                  }
-                );
+        frame = node.layoutFunc(frame, node.layoutParams, {
+          ...layoutCtxBase,
+          node,
+        });
       }
       node.layoutFrame = frame;
       //console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
@@ -120,10 +116,13 @@ export class Composition {
     if (!this.rootNode) return {};
 
     // get foreground graphics as a display list
-    const encoder = new CanvasDisplayListEncoder(this.viewportSize.w, this.viewportSize.h);
+    const encoder = new CanvasDisplayListEncoder(
+      this.viewportSize.w,
+      this.viewportSize.h
+    );
 
     encodeCanvasDisplayList_fg(this, encoder, imageSources);
-    
+
     const fgDisplayList = encoder.finalize();
 
     // get video elements
@@ -137,14 +136,16 @@ export class Composition {
 
   writeVideoLayersPreview() {
     // write a display list that can be used to render a preview
-    const encoder = new CanvasDisplayListEncoder(this.viewportSize.w, this.viewportSize.h);
+    const encoder = new CanvasDisplayListEncoder(
+      this.viewportSize.w,
+      this.viewportSize.h
+    );
 
     encodeCanvasDisplayList_videoLayersPreview(this, encoder);
 
     return encoder.finalize();
   }
 }
-
 
 function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
   if (!oldFn && !newFn) return true;
@@ -154,7 +155,7 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
   if (newParams || oldParams) {
     if (newParams && !oldParams) return false;
     if (oldParams && !newParams) return false;
-  
+
     for (const k in oldParams) {
       if (oldParams[k] !== newParams[k]) return false;
     }
@@ -202,12 +203,19 @@ class NodeBase {
     let newLayout = [];
     if (newProps.layout) {
       if (!Array.isArray(newProps.layout)) {
-        console.warn("invalid layout prop passed to node: ", newProps.layout);
+        console.warn('invalid layout prop passed to node: ', newProps.layout);
       } else {
         newLayout = newProps.layout;
       }
     }
-    if (!isEqualLayoutProps(this.layoutFunc, this.layoutParams, newLayout[0], newLayout[1] || {})) {
+    if (
+      !isEqualLayoutProps(
+        this.layoutFunc,
+        this.layoutParams,
+        newLayout[0],
+        newLayout[1] || {}
+      )
+    ) {
       //console.log("layout props will be updated for '%s'", newProps.id || '');
       return true;
     }
@@ -215,14 +223,14 @@ class NodeBase {
     return false;
   }
 
-  commit(container, oldProps, newProps) {    
+  commit(container, oldProps, newProps) {
     //console.log("commit %s: ", this.uuid, newProps)
 
     if (newProps.id) this.userGivenId = newProps.id;
 
     if (Array.isArray(newProps.layout)) {
       this.layoutFunc = newProps.layout[0];
-      this.layoutParams = newProps.layout[1] || {};
+      this.layoutParams = newProps.layout[1] || {};
       //console.log("new layout for '%s': ", this.userGivenId, this.layoutFunc, JSON.stringify(this.layoutParams));
     } else {
       this.layoutFunc = null;
@@ -270,7 +278,8 @@ class StyledNodeBase extends NodeBase {
 
     if (!isEqualStyleOrTransform(oldProps.style, newProps.style)) return true;
 
-    if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform)) return true;
+    if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform))
+      return true;
 
     return false;
   }
@@ -329,6 +338,7 @@ class ImageNode extends StyledNodeBase {
   }
 }
 
-class VideoNode extends ImageNode {  // inherits 'src'
+class VideoNode extends ImageNode {
+  // inherits 'src'
   static nodeType = IntrinsicNodeType.VIDEO;
 }

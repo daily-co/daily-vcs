@@ -5,34 +5,37 @@ import * as fs from 'fs';
 import { Composition, render } from './src';
 import { makeVCSRootContainer } from './src/loader-base';
 
-
 // CLI arguments.
 // --scenario is mandatory.
 const argmap = require('minimist')(process.argv.slice(2));
 
 const scenarioPath = argmap['scenario'];
 if (!scenarioPath?.length) {
-  console.error("Error: must provide path to scenario definition using --scenario.");
+  console.error(
+    'Error: must provide path to scenario definition using --scenario.'
+  );
   process.exit(1);
 }
 const outputPathPrefix = argmap['output'];
 
 // argument is a JS file specifying the test scenario, load it as a module
 const scenario = require(Path.resolve('.', scenarioPath)).default;
-if ( !scenario) {
-  console.error("Error: no JS scenario module at: ", scenarioPath);
+if (!scenario) {
+  console.error('Error: no JS scenario module at: ', scenarioPath);
   process.exit(1);
 }
-console.log("scenario definition loaded: ", scenario);
+console.log('scenario definition loaded: ', scenario);
 
 // currently we assume known compositions are in the example folder.
 // clearly this won't go far.
 const srcCompPath = `example/${scenario.compositionId}.jsx`;
-const durationInFrames = parseInt(scenario.durationInFrames) || 100;
-const outputFrames = Array.isArray(scenario.outputFrames) ? scenario.outputFrames : [];
+const durationInFrames = parseInt(scenario.durationInFrames) || 100;
+const outputFrames = Array.isArray(scenario.outputFrames)
+  ? scenario.outputFrames
+  : [];
 
 if (outputFrames.length > 0 && !outputPathPrefix?.length) {
-  console.error("Scenario needs output but output path not specified");
+  console.error('Scenario needs output but output path not specified');
   process.exit(1);
 }
 
@@ -46,7 +49,7 @@ for (let i = 0; i < 16; i++) {
   imageSources.videos.push({
     vcsSourceType: 'video',
     vcsSourceId: i,
-  })
+  });
 }
 imageSources.images['test_square'] = {
   vcsSourceType: 'defaultAsset',
@@ -87,45 +90,58 @@ function compUpdatedCb(comp) {
   if (!outputFrames.includes(g_currentFrame)) {
     return; // do nothing on frames if they're not part of our test output set
   }
-  console.log("writing requested frame %d (t %f) to: ", g_currentFrame, getVideoTime(), outputPathPrefix);
+  console.log(
+    'writing requested frame %d (t %f) to: ',
+    g_currentFrame,
+    getVideoTime(),
+    outputPathPrefix
+  );
 
   const sceneDesc = comp.writeSceneDescription(imageSources);
 
   if (!sceneDesc || !sceneDesc.videoLayers) {
-    console.error("** comp.writeSceneDescription returned empty object, can't write output");
+    console.error(
+      "** comp.writeSceneDescription returned empty object, can't write output"
+    );
     return;
   }
 
   // break down scene components to separate files,
   // since the display list will be processed by canvex.
-  const {
-    videoLayers, fgDisplayList
-  } = sceneDesc;
+  const { videoLayers, fgDisplayList } = sceneDesc;
 
-  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayers.json`, JSON.stringify(videoLayers));
-  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`, JSON.stringify(fgDisplayList));
+  fs.writeFileSync(
+    `${outputPathPrefix}_${g_currentFrame}_videolayers.json`,
+    JSON.stringify(videoLayers)
+  );
+  fs.writeFileSync(
+    `${outputPathPrefix}_${g_currentFrame}_fgdisplaylist.canvex.json`,
+    JSON.stringify(fgDisplayList)
+  );
 
   // also write a canvex display list that shows the video layers as colored rectangles.
   // this is useful for visual verification of the output.
   const videoLayersPreviewDisplayList = comp.writeVideoLayersPreview();
 
-  fs.writeFileSync(`${outputPathPrefix}_${g_currentFrame}_videolayerspreview.canvex.json`,
-        JSON.stringify(videoLayersPreviewDisplayList));
+  fs.writeFileSync(
+    `${outputPathPrefix}_${g_currentFrame}_videolayerspreview.canvex.json`,
+    JSON.stringify(videoLayersPreviewDisplayList)
+  );
 }
 
 function applyScenarioState(s) {
-  if ( !s) return;
+  if (!s) return;
 
   const { activeVideoInputSlots, params } = s;
 
   if (Array.isArray(activeVideoInputSlots)) {
     rootContainerRef.current.setActiveVideoInputSlots(activeVideoInputSlots);
-    console.log("setActiveVideoInputSlots: ", activeVideoInputSlots)
+    console.log('setActiveVideoInputSlots: ', activeVideoInputSlots);
   }
   if (params) {
-   for (const key in params) {
-    rootContainerRef.current.setParamValue(key, params[key]);
-    console.log("setParamValue: ", params[key])
-   } 
+    for (const key in params) {
+      rootContainerRef.current.setParamValue(key, params[key]);
+      console.log('setParamValue: ', params[key]);
+    }
   }
 }

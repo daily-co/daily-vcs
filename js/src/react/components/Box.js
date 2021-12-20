@@ -5,10 +5,10 @@ export function Box(props) {
     <box
       id={props.id}
       layout={props.layout}
-      style={props.style || {}}
+      style={props.style || {}}
       transform={props.transform || {}}
     >
       {props.children}
     </box>
-  )
+  );
 }

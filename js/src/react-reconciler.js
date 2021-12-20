@@ -3,7 +3,7 @@ import {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,
   unstable_shouldYield as shouldYield,
-  unstable_cancelCallback as cancelDeferredCallback
+  unstable_cancelCallback as cancelDeferredCallback,
 } from 'scheduler';
 
 // -- reconciler singleton --
@@ -20,14 +20,14 @@ const reconciler = createReconciler({
   removeChild,
   removeChildFromContainer,
   resetAfterCommit,
-  clearContainer
+  clearContainer,
 });
 
 // -- utility to create our custom reconciler with sensible defaults --
 //
 function createReconciler(cfg) {
-  const NOOP = () => undefined
-  const IDENTITY = v => v
+  const NOOP = () => undefined;
+  const IDENTITY = (v) => v;
 
   return Reconciler({
     getPublicInstance: IDENTITY,
@@ -59,24 +59,31 @@ function createReconciler(cfg) {
     unhideInstance: NOOP,
     unhideTextInstance: NOOP,
 
-    ...cfg
-  })
+    ...cfg,
+  });
 }
-
 
 // -- the main entry point for our custom reconciler --
 //
 // first argument is the root component.
 // second argument is the container that our reconciler will mutate.
-// 
+//
 export function render(reactNode, composition, cb) {
   if (composition._reactRoot === undefined) {
     // only call createContainer once
-    composition._reactRoot = reconciler.createContainer(composition, false, false);
+    composition._reactRoot = reconciler.createContainer(
+      composition,
+      false,
+      false
+    );
   }
-  return reconciler.updateContainer(reactNode, composition._reactRoot, null, cb);
+  return reconciler.updateContainer(
+    reactNode,
+    composition._reactRoot,
+    null,
+    cb
+  );
 }
-
 
 // -- reconciler implementation methods --
 //
@@ -103,8 +110,8 @@ function createInstance(type, props, container) {
 }
 
 function appendChild(parent, child) {
-  if ( !child) {
-    console.error("** appendChild with null child, parent: ", parent);
+  if (!child) {
+    console.error('** appendChild with null child, parent: ', parent);
     return;
   }
   //console.log("appendChild: %s (%s) -> parent %s (%s)", child.uuid, child.userGivenId, parent.uuid, parent.userGivenId);
@@ -118,8 +125,8 @@ function appendChildToContainer(container, child) {
 }
 
 function removeChild(parent, child) {
-  if ( !child) {
-    console.error("** removeChild with null child, parent: ", parent);
+  if (!child) {
+    console.error('** removeChild with null child, parent: ', parent);
     return;
   }
   //console.log("removeChild: %s (%s) -> parent %s (%s)", child.uuid, child.userGivenId, parent.uuid, parent.userGivenId);
@@ -152,5 +159,3 @@ function prepareUpdate(node, type, oldProps, newProps, container) {
 function commitUpdate(node, container, type, oldProps, newProps, handle) {
   node.commit(container, oldProps, newProps);
 }
-
-

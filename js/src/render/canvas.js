@@ -1,5 +1,5 @@
-import { IntrinsicNodeType } from "../comp-backing-model";
-import { roundRect } from "./canvas-utils";
+import { IntrinsicNodeType } from '../comp-backing-model';
+import { roundRect } from './canvas-utils';
 
 const CanvasRenderMode = {
   ALL: 'all',
@@ -7,14 +7,7 @@ const CanvasRenderMode = {
   VIDEO_PREVIEW: 'video-preview',
 };
 
-const kVideoPreviewColors = [
-  '#f22',
-  '#4c4',
-  '#34f',
-  '#ec1',
-  '#2ad',
-  '#92c',
-];
+const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
 export function renderCompInCanvas(comp, canvas, imageSources) {
   const canvasW = canvas.width;
@@ -70,26 +63,25 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       // don't encode video elements at all into canvas commands, they are handled separately
       writeContent = false;
       recurseChildren = false;
-    }
-    else if (!isVideo && renderMode === CanvasRenderMode.VIDEO_PREVIEW) {
+    } else if (!isVideo && renderMode === CanvasRenderMode.VIDEO_PREVIEW) {
       writeContent = false;
     }
   }
 
   const frame = node.layoutFrame;
 
-  if (writeContent || recurseChildren) {
+  if (writeContent || recurseChildren) {
     ctx.save();
 
     if (node.transform) {
-      const {rotate_deg} = node.transform;
+      const { rotate_deg } = node.transform;
 
       if (Math.abs(rotate_deg) > 0.001) {
         // set rotate anchor point to center of layer
-        const cx = frame.x + frame.w/2;
-        const cy = frame.y + frame.h/2;
+        const cx = frame.x + frame.w / 2;
+        const cy = frame.y + frame.h / 2;
         ctx.translate(cx, cy);
-        ctx.rotate(rotate_deg * (Math.PI/180));
+        ctx.rotate(rotate_deg * (Math.PI / 180));
         ctx.translate(-cx, -cy);
       }
     }
@@ -97,7 +89,8 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
 
   if (writeContent) {
     // encode asset references explicitly when writing a display list
-    const isVCSDisplayListEncoder = typeof ctx.drawImage_vcsDrawable === 'function';
+    const isVCSDisplayListEncoder =
+      typeof ctx.drawImage_vcsDrawable === 'function';
 
     let fillColor;
     let strokeColor;
@@ -105,7 +98,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     let srcDrawable;
     let textContent = node.text;
     let textStyle = node.style;
-  
+
     switch (node.constructor.nodeType) {
       case IntrinsicNodeType.BOX: {
         fillColor = node.style.fillColor || null;
@@ -117,7 +110,11 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         if (node.src && node.src.length > 0) {
           srcDrawable = imageSources ? imageSources.images[node.src] : null;
           if (!srcDrawable) {
-            console.warn("Unable to find specified source image: ", node.src, imageSources.images);
+            console.warn(
+              'Unable to find specified source image: ',
+              node.src,
+              imageSources.images
+            );
           }
         }
         if (!srcDrawable) fillColor = 'red';
@@ -127,28 +124,38 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         if (renderMode === CanvasRenderMode.VIDEO_PREVIEW) {
           // in preview mode, draw a fill color and a text label.
           // these are visual aids for layout tests.
-          const idx = parseInt(node.src, 10) || 0;
+          const idx = parseInt(node.src, 10) || 0;
           fillColor = kVideoPreviewColors[idx % kVideoPreviewColors.length];
           textContent = 'Video layer preview / ' + node.src;
-        }
-        else {
+        } else {
           srcDrawable = imageSources ? imageSources.videos[node.src] : null;
-  
-          if (!srcDrawable) fillColor = 'blue';  
+
+          if (!srcDrawable) fillColor = 'blue';
         }
         break;
       }
     }
-  
+
     // if rounded corners requested, use a clip path while rendering this node's content
     let inShapeClip = false;
-    if (node.style && Number.isFinite(node.style.cornerRadius_px) && node.style.cornerRadius_px > 0) {
+    if (
+      node.style &&
+      Number.isFinite(node.style.cornerRadius_px) &&
+      node.style.cornerRadius_px > 0
+    ) {
       inShapeClip = true;
       ctx.save();
-      roundRect(ctx, frame.x, frame.y, frame.w, frame.h, node.style.cornerRadius_px);
+      roundRect(
+        ctx,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        node.style.cornerRadius_px
+      );
       ctx.clip();
     }
-  
+
     if (fillColor) {
       ctx.fillStyle = fillColor;
       ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
@@ -158,39 +165,52 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       ctx.lineWidth = strokeW_px;
       ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
     }
-  
+
     if (srcDrawable) {
       if (isVCSDisplayListEncoder) {
-        ctx.drawImage_vcsDrawable(srcDrawable, frame.x, frame.y, frame.w, frame.h);
+        ctx.drawImage_vcsDrawable(
+          srcDrawable,
+          frame.x,
+          frame.y,
+          frame.w,
+          frame.h
+        );
       } else {
-        ctx.drawImage(srcDrawable.domElement, frame.x, frame.y, frame.w, frame.h);
+        ctx.drawImage(
+          srcDrawable.domElement,
+          frame.x,
+          frame.y,
+          frame.w,
+          frame.h
+        );
       }
     }
-  
+
     if (textContent && textContent.length > 0) {
       drawStyledText(ctx, textContent, textStyle, frame, comp);
     }
-  
-    if (inShapeClip) ctx.restore();  
+
+    if (inShapeClip) ctx.restore();
   } // end if (writeContent)
 
   if (recurseChildren) {
     for (const c of node.children) {
       recurseRenderNode(ctx, renderMode, c, comp, imageSources);
-    }  
+    }
   }
 
-  if (writeContent || recurseChildren) {
+  if (writeContent || recurseChildren) {
     ctx.restore();
   }
 }
 
 function drawStyledText(ctx, text, style, frame, comp) {
   // when encoding a display list, prefer more easily parsed format
-  const isVCSDisplayListEncoder = typeof ctx.drawImage_vcsDrawable === 'function';
+  const isVCSDisplayListEncoder =
+    typeof ctx.drawImage_vcsDrawable === 'function';
 
-  ctx.fillStyle = style.textColor || 'white';
-  
+  ctx.fillStyle = style.textColor || 'white';
+
   let fontSize_px;
   if (isFinite(style.fontSize_vh) && style.fontSize_vh > 0) {
     fontSize_px = Math.round(comp.viewportSize.h * style.fontSize_vh);
@@ -209,7 +229,7 @@ function drawStyledText(ctx, text, style, frame, comp) {
 
   // since we don't have access to actual font metrics yet,
   // just take a guess to position the text baseline properly
-  let textY = Math.round(frame.y + fontSize_px*0.8);
+  let textY = Math.round(frame.y + fontSize_px * 0.8);
   let textX = Math.round(frame.x);
 
   if (style.strokeColor && style.strokeWidth_px) {
@@ -220,7 +240,7 @@ function drawStyledText(ctx, text, style, frame, comp) {
 
       // round join generally looks right for text, but this should perhaps be user-controllable
       ctx.lineJoin = 'round';
-      
+
       ctx.strokeText(text, textX, textY);
     }
   }

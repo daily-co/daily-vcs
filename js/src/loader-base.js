@@ -17,60 +17,68 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
           currentTime: 0,
         },
         mediaInput: {
-          activeVideoInputSlots: []
-        }
+          activeVideoInputSlots: [],
+        },
       };
     }
 
     componentDidCatch(error, info) {
-      console.error("\n** An error occurred in a React component:\n  %s\n", error.message, info.componentStack);
+      console.error(
+        '\n** An error occurred in a React component:\n  %s\n',
+        error.message,
+        info.componentStack
+      );
     }
 
     setVideoTime(t) {
       const newT = {
         ...this.state.time,
-        currentTime: t
+        currentTime: t,
       };
-      this.setState({time: newT});
+      this.setState({ time: newT });
     }
 
     setActiveVideoInputSlots(arr) {
       const newObj = {
         ...this.state.mediaInput,
-        activeVideoInputSlots: arr
-      }
-      this.setState({mediaInput: newObj});
+        activeVideoInputSlots: arr,
+      };
+      this.setState({ mediaInput: newObj });
     }
 
     setParamValue(id, value) {
-      const compositionData = {...this.state.compositionData};
-      compositionData.params = {...compositionData.params};
+      const compositionData = { ...this.state.compositionData };
+      compositionData.params = { ...compositionData.params };
 
       compositionData.params[id] = value;
 
-      this.setState({compositionData});
+      this.setState({ compositionData });
     }
 
     selectMode(modeId) {
-      const compositionData = {...this.state.compositionData};
+      const compositionData = { ...this.state.compositionData };
 
-      compositionData.mode = modeId; 
+      compositionData.mode = modeId;
 
-      this.setState({compositionData});
+      this.setState({ compositionData });
     }
 
     render() {
       return (
-        <ViewContexts.CompositionDataContext.Provider value={this.state.compositionData}>
-        <ViewContexts.TimeContext.Provider value={this.state.time}>
-        <ViewContexts.MediaInputContext.Provider value={this.state.mediaInput}>
-          <root>
-            <ContentRoot />
-          </root>
-        </ViewContexts.MediaInputContext.Provider>
-        </ViewContexts.TimeContext.Provider>
+        <ViewContexts.CompositionDataContext.Provider
+          value={this.state.compositionData}
+        >
+          <ViewContexts.TimeContext.Provider value={this.state.time}>
+            <ViewContexts.MediaInputContext.Provider
+              value={this.state.mediaInput}
+            >
+              <root>
+                <ContentRoot />
+              </root>
+            </ViewContexts.MediaInputContext.Provider>
+          </ViewContexts.TimeContext.Provider>
         </ViewContexts.CompositionDataContext.Provider>
-      )
+      );
     }
   }
 
