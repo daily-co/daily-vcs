@@ -115,7 +115,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       }
       case IntrinsicNodeType.IMAGE: {
         if (node.src && node.src.length > 0) {
-          srcDrawable = imageSources?.images[node.src];
+          srcDrawable = imageSources ? imageSources.images[node.src] : null;
           if (!srcDrawable) {
             console.warn("Unable to find specified source image: ", node.src, imageSources.images);
           }
@@ -132,7 +132,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
           textContent = 'Video layer preview / ' + node.src;
         }
         else {
-          srcDrawable = imageSources?.videos[node.src];
+          srcDrawable = imageSources ? imageSources.videos[node.src] : null;
   
           if (!srcDrawable) fillColor = 'blue';  
         }
