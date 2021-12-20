@@ -16,8 +16,8 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
         time: {
           currentTime: 0,
         },
-        videoCall: {
-          activeParticipants: []
+        mediaInput: {
+          activeVideoInputSlots: []
         }
       };
     }
@@ -34,12 +34,12 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
       this.setState({time: newT});
     }
 
-    setActiveParticipants(arr) {
-      const newVideoCall = {
-        ...this.state.videoCall,
-        activeParticipants: arr
+    setActiveVideoInputSlots(arr) {
+      const newObj = {
+        ...this.state.mediaInput,
+        activeVideoInputSlots: arr
       }
-      this.setState({videoCall: newVideoCall});
+      this.setState({mediaInput: newObj});
     }
 
     setParamValue(id, value) {
@@ -63,11 +63,11 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
       return (
         <ViewContexts.CompositionDataContext.Provider value={this.state.compositionData}>
         <ViewContexts.TimeContext.Provider value={this.state.time}>
-        <ViewContexts.VideoCallContext.Provider value={this.state.videoCall}>
+        <ViewContexts.MediaInputContext.Provider value={this.state.mediaInput}>
           <root>
             <ContentRoot />
           </root>
-        </ViewContexts.VideoCallContext.Provider>
+        </ViewContexts.MediaInputContext.Provider>
         </ViewContexts.TimeContext.Provider>
         </ViewContexts.CompositionDataContext.Provider>
       )

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Box, Image, Label, Video} from '#vcs-react/components';
-import {useParams, useVideoTime, useVideoCall} from '#vcs-react/hooks';
+import {useParams, useVideoTime, useMediaInput} from '#vcs-react/hooks';
 
 
 // -- the control interface exposed by this composition --
@@ -99,13 +99,13 @@ function VideoGrid({
   showLabels,
   roundedCorners
 }) {
-  const {activeParticipants} = useVideoCall();
+  const {activeVideoInputSlots} = useMediaInput();
 
-  let maxParticipants = activeParticipants.length;
+  let maxParticipants = activeVideoInputSlots.length;
   let activeIndexes = [];
   let n = 0;
   for (let i = 0; i < maxParticipants; i++) {
-    if (activeParticipants[i]) {
+    if (activeVideoInputSlots[i]) {
       activeIndexes.push(i);
       n++;
     }

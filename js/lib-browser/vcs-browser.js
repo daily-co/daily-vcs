@@ -118,13 +118,13 @@ class DailyVCSCommandAPI {
     return {...this.compositionInterface};
   }
 
-  setActiveParticipants(arr) {
+  setActiveVideoInputSlots(arr) {
     if (!Array.isArray(arr)) {
-      console.error("** setActiveParticipants: invalid object, expected array: " + typeof arr);
+      console.error("** setActiveVideoInputSlots: invalid object, expected array: " + typeof arr);
       return;
     }
-    console.log("setActiveParticipants: ", JSON.stringify(arr));
-    rootContainerRef.current.setActiveParticipants(arr);
+    console.log("setActiveVideoInputSlots: ", JSON.stringify(arr));
+    rootContainerRef.current.setActiveVideoInputSlots(arr);
   }
 
   setParamValue(id, value) {
