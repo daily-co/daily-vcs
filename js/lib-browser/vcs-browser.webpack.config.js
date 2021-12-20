@@ -1,9 +1,9 @@
 const path = require('path');
 const webpack = require('webpack');
-const {getCompPathFromId} = require('../comp-namespace-util.js');
+const { getCompPathFromId } = require('../comp-namespace-util.js');
 
-const breakOnWarningPlugin = function() {
-  this.hooks.done.tap('BreakOnWarning', stats => {
+const breakOnWarningPlugin = function () {
+  this.hooks.done.tap('BreakOnWarning', (stats) => {
     if (stats.compilation.warnings) {
       for (const warn of stats.compilation.warnings) {
         // Babel parse errors within modules end up in Webpack warnings,
@@ -12,7 +12,7 @@ const breakOnWarningPlugin = function() {
           console.error(
             "** Webpack build encountered '%s' warning, will treat as critical:\n",
             warn.name,
-            warn.error,
+            warn.error
           );
           process.exit(2);
         }
@@ -36,12 +36,14 @@ const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
   }
 );
 
-const wwwClientConfig = function(env) {
+const wwwClientConfig = function (env) {
   const isDev = true;
   const compId = env.vcsCompId;
 
   if (!compId || compId.length < 1) {
-    console.error("** Must provide VCS composition id (use webpack CLI arg env=vcsCompId={id})");
+    console.error(
+      '** Must provide VCS composition id (use webpack CLI arg env=vcsCompId={id})'
+    );
     return false;
   }
   if (!(compositionImportPath = getCompPathFromId(compId, 'browser'))) {
@@ -50,9 +52,7 @@ const wwwClientConfig = function(env) {
 
   return {
     mode: isDev ? 'development' : 'production',
-    entry: [
-      path.resolve(__dirname, 'vcs-browser.js'),
-    ],
+    entry: [path.resolve(__dirname, 'vcs-browser.js')],
     target: 'web',
     output: {
       library: {
@@ -81,29 +81,22 @@ const wwwClientConfig = function(env) {
                   ],
                   '@babel/preset-react',
                 ],
-                plugins: [
-                  '@babel/plugin-proposal-class-properties',
-                ],
+                plugins: ['@babel/plugin-proposal-class-properties'],
               },
             },
           ],
         },
-
       ],
     },
-    plugins: [
-      breakOnWarningPlugin,
-      moduleReplacementPlugin,
-    ],
-    externals: [
-    ],
+    plugins: [breakOnWarningPlugin, moduleReplacementPlugin],
+    externals: [],
     optimization: {
       minimize: false,
     },
     resolve: {
       alias: {
-        "#vcs": path.resolve(__dirname, '../src'),
-        "#vcs-react": path.resolve(__dirname, '../src/react'),
+        '#vcs': path.resolve(__dirname, '../src'),
+        '#vcs-react': path.resolve(__dirname, '../src/react'),
       },
     },
   };

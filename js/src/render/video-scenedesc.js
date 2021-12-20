@@ -1,5 +1,4 @@
-import { IntrinsicNodeType } from "../comp-backing-model";
-
+import { IntrinsicNodeType } from '../comp-backing-model';
 
 export function encodeCompVideoSceneDesc(comp, imageSources) {
   const sceneDesc = [];
@@ -30,7 +29,11 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
 
     const attrs = {};
 
-    if (node.style && Number.isFinite(node.style.cornerRadius_px) && node.style.cornerRadius_px > 0) {
+    if (
+      node.style &&
+      Number.isFinite(node.style.cornerRadius_px) &&
+      node.style.cornerRadius_px > 0
+    ) {
       attrs.cornerRadius_px = node.style.cornerRadius_px;
     }
 
@@ -38,7 +41,7 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
       type: srcDrawable.vcsSourceType,
       id: srcDrawable.vcsSourceId,
       frame,
-      attrs
+      attrs,
     });
   }
 

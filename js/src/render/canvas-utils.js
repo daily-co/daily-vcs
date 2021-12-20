@@ -1,4 +1,3 @@
-
 // 'radius' can be either a number or an object specifying individual
 // corner radii using properties {tl, tr, br, bl}.
 export function roundRect(ctx, x, y, width, height, radius) {
@@ -24,14 +23,14 @@ export function roundRect(ctx, x, y, width, height, radius) {
         radius,
         0,
         0,
-        2 * Math.PI,
+        2 * Math.PI
       );
       return;
     }
 
-    radius = {tl: radius, tr: radius, br: radius, bl: radius};
+    radius = { tl: radius, tr: radius, br: radius, bl: radius };
   } else {
-    const defaultRadius = {tl: 0, tr: 0, br: 0, bl: 0};
+    const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
     for (const side in defaultRadius) {
       radius[side] = radius[side] || defaultRadius[side];
     }

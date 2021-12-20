@@ -6,7 +6,6 @@ import { makeVCSRootContainer } from '../src/loader-base';
 // composition path is replaced by our webpack config
 import * as VCSComp from '__VCS_COMP_PATH__';
 
-
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
 
@@ -30,14 +29,14 @@ export function init(canvas, imageSources, updatedCb) {
     g_imageSources.videos.push({
       vcsSourceType: 'video',
       vcsSourceId: i,
-      domElement: imageSources.videos[i]
+      domElement: imageSources.videos[i],
     });
   }
   for (const key in imageSources.images) {
     g_imageSources.images[key] = {
       vcsSourceType: 'defaultAsset',
       vcsSourceId: key,
-      domElement: imageSources.images[key]
+      domElement: imageSources.images[key],
     };
   }
 
@@ -47,14 +46,12 @@ export function init(canvas, imageSources, updatedCb) {
 
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
-  render(
-    makeVCSRootContainer(VCSComp.default, rootContainerRef),
-    g_comp);
+  render(makeVCSRootContainer(VCSComp.default, rootContainerRef), g_comp);
 
   g_startT = Date.now() / 1000;
   g_lastT = g_startT;
 
-  console.log("starting");
+  console.log('starting');
 
   requestAnimationFrame(renderFrame);
 
@@ -63,7 +60,7 @@ export function init(canvas, imageSources, updatedCb) {
 
 function compUpdated(comp) {
   if (!g_extUpdatedCb) return;
-  
+
   const sceneDesc = comp.writeSceneDescription(g_imageSources);
 
   g_extUpdatedCb(sceneDesc);
@@ -75,7 +72,7 @@ function renderFrame() {
   let renderNow = true;
 
   // limit frame rate to React updates
-  if (t - g_lastT >= 1/4) {
+  if (t - g_lastT >= 1 / 4) {
     const videoT = t - g_startT;
 
     rootContainerRef.current.setVideoTime(videoT);
@@ -93,7 +90,6 @@ function renderFrame() {
   requestAnimationFrame(renderFrame);
 }
 
-
 // --- command API ---
 
 class DailyVCSCommandAPI {
@@ -102,8 +98,8 @@ class DailyVCSCommandAPI {
 
     // set default values for params now
     for (const paramDesc of this.compositionInterface.params) {
-      const {id, type, defaultValue} = paramDesc;
-      if (!id || id.length < 1) continue;
+      const { id, type, defaultValue } = paramDesc;
+      if (!id || id.length < 1) continue;
       if (!defaultValue) continue;
 
       if (type === 'boolean') {
@@ -115,20 +111,23 @@ class DailyVCSCommandAPI {
   }
 
   getCompositionInterface() {
-    return {...this.compositionInterface};
+    return { ...this.compositionInterface };
   }
 
   setActiveVideoInputSlots(arr) {
     if (!Array.isArray(arr)) {
-      console.error("** setActiveVideoInputSlots: invalid object, expected array: " + typeof arr);
+      console.error(
+        '** setActiveVideoInputSlots: invalid object, expected array: ' +
+          typeof arr
+      );
       return;
     }
-    console.log("setActiveVideoInputSlots: ", JSON.stringify(arr));
+    console.log('setActiveVideoInputSlots: ', JSON.stringify(arr));
     rootContainerRef.current.setActiveVideoInputSlots(arr);
   }
 
   setParamValue(id, value) {
-    console.log("setParamValue: ", id, value);
+    console.log('setParamValue: ', id, value);
     rootContainerRef.current.setParamValue(id, value);
   }
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
 
 export const TimeContext = React.createContext({
-  currentTime: 0
+  currentTime: 0,
 });

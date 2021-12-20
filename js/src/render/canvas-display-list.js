@@ -26,19 +26,20 @@ export class CanvasDisplayListEncoder {
 function normalizeColorValue(c) {
   if (!c) return '#000';
   if (typeof c !== 'string') {
-    console.error("** Unsupported CSS color value, not a string: " + c);
+    console.error('** Unsupported CSS color value, not a string: ' + c);
     return '#000';
   }
 
-  if (c.indexOf('#') === 0
-    || c.indexOf('rgb') === 0) {
+  if (c.indexOf('#') === 0 || c.indexOf('rgb') === 0) {
     return c;
   }
   const mapped = cssColors[c];
   if (mapped) {
     return mapped;
   }
-  console.error("** Unsupported CSS color value for display list encoding: " + c);
+  console.error(
+    '** Unsupported CSS color value for display list encoding: ' + c
+  );
   return '#fff';
 }
 
@@ -49,7 +50,7 @@ class CanvasEncodingContext {
   }
 
   encodeCmd(cmd, params) {
-    const arr = [ cmd ];
+    const arr = [cmd];
     if (params) arr.push(params);
     this.cmds.push(arr);
   }
@@ -125,10 +126,10 @@ class CanvasEncodingContext {
     // for any image/video objects that it passes as inputs
     const srcDesc = {
       type: srcDrawable.vcsSourceType,
-      id: srcDrawable.vcsSourceId
+      id: srcDrawable.vcsSourceId,
     };
-    
-    this.encodeCmd('drawImage', [ srcDesc ].concat(args));
+
+    this.encodeCmd('drawImage', [srcDesc].concat(args));
   }
 
   beginPath() {
@@ -154,5 +155,4 @@ class CanvasEncodingContext {
   quadraticCurveTo(...args) {
     this.encodeCmd('quadraticCurveTo', args);
   }
-
 }
