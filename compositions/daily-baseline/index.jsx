@@ -214,63 +214,6 @@ function TextOverlay({ content, x, y, rotation, color }) {
   );
 }
 
-function TimedExampleGraphics({
-  onSide,
-  layout: baseLayout,
-  demoText,
-  roundedCorners,
-}) {
-  const t = useVideoTime();
-
-  // change some properties based on time
-  let imageSize = 0.1;
-  if (t % 12 > 5) {
-    imageSize = 0.15;
-  }
-  if (t % 12 > 9) {
-    imageSize = 0.25;
-  }
-  let imageLayoutFn = layoutFuncs.cornerBug_topRight;
-  if (t % 6 >= 3) {
-    imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;
-  }
-
-  const textStyle = {
-    textColor: 'rgba(255, 250, 200, 0.95)',
-    fontFamily: 'Roboto',
-    fontWeight: '300',
-    fontSize_vh: onSide ? 0.05 : 0.07,
-    //strokeColor: 'rgba(0, 0, 0, 0.95)',
-    //strokeWidth_px: 12,
-  };
-  const textLayoutFn = layoutFuncs.pad;
-  const textPad_px = 20;
-
-  const boxStyle = {
-    fillColor: 'rgba(50, 70, 255, 0.7)',
-    //strokeColor: 'rgba(255, 255, 255, 0.8)',
-    //strokeWidth_px: 4,
-  };
-  let boxOuterPad = 0;
-  if (roundedCorners) {
-    boxStyle.cornerRadius_px = DEFAULT_CORNER_RADIUS_PX;
-    boxOuterPad = 20;
-  }
-
-  return (
-    <Box layout={[layoutFuncs.pad, { pad: boxOuterPad }]}>
-      <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
-        <Label style={textStyle} layout={[textLayoutFn, { pad: textPad_px }]}>
-          {demoText}
-        </Label>
-        <Image
-          src="test_square"
-          layout={[imageLayoutFn, { size: imageSize }]}
-        />
-      </Box>
-    </Box>
-  );
-}
 
 // --- layout functions and utils ---
 
@@ -292,56 +235,6 @@ const layoutFuncs = {
 
     x += params.x || 0;
     y += params.y || 0;
-
-    return { x, y, w, h };
-  },
-
-  splitV: (parentFrame, params) => {
-    const pos = params.pos || 0.5;
-    const idx = params.index || 0;
-
-    const frame = { ...parentFrame };
-    if (idx === 0) {
-      frame.h = Math.round(parentFrame.h * pos);
-    } else {
-      frame.h = Math.round(parentFrame.h * (1 - pos));
-      frame.y += parentFrame.h - frame.h;
-    }
-    return frame;
-  },
-
-  splitH: (parentFrame, params) => {
-    const pos = params.pos || 0.5;
-    const idx = params.index || 0;
-
-    const frame = { ...parentFrame };
-    if (idx === 0) {
-      frame.w = Math.round(parentFrame.w * pos);
-    } else {
-      frame.w = Math.round(parentFrame.w * (1 - pos));
-      frame.x += parentFrame.w - frame.w;
-    }
-    return frame;
-  },
-
-  cornerBug_topRight: (parentFrame, params, layoutCtx) => {
-    const margin = cornerBugMargin(layoutCtx);
-    const { w, h } = cornerBugSize(params, layoutCtx);
-
-    let { x, y } = parentFrame;
-    x += parentFrame.w - w - margin;
-    y += margin;
-
-    return { x, y, w, h };
-  },
-
-  cornerBug_bottomLeft: (parentFrame, params, layoutCtx) => {
-    const margin = cornerBugMargin(layoutCtx);
-    const { w, h } = cornerBugSize(params, layoutCtx);
-
-    let { x, y } = parentFrame;
-    x += margin;
-    y += parentFrame.h - h - margin;
 
     return { x, y, w, h };
   },
@@ -408,14 +301,3 @@ const layoutFuncs = {
     return { x, y, w, h };
   },
 };
-
-function cornerBugSize(params, layoutCtx) {
-  // 'size' param is in proportion to viewport height
-  const h = layoutCtx.viewport.h * params.size;
-  const w = h;
-  return { w, h };
-}
-
-function cornerBugMargin(layoutCtx) {
-  return layoutCtx.viewport.h * 0.05;
-}
