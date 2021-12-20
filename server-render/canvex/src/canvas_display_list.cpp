@@ -322,7 +322,14 @@ std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const char* jsonSt
   rapidjson::StringStream ss(jsonStr);
   DisplayListJSONHandler jsonHandler(*dl);
 
-  reader.Parse(ss, jsonHandler);
+  auto result = reader.Parse(ss, jsonHandler);
+  if (!result) {
+    std::stringstream ss;
+    ss << "Display list can't be parsed, probably not valid JSON (error code ";
+    ss << result.Code();
+    ss << " at offset " << result.Offset() << ")";
+    throw std::runtime_error(ss.str());
+  }
 
   return dl;
 }
