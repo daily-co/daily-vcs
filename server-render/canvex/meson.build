@@ -11,11 +11,19 @@ png_dep = dependency('libpng')
 freetype_dep = dependency('freetype2')
 
 system_mac = build_machine.system() == 'darwin'
+build_cpu = build_machine.cpu()
+
+
 
 if system_mac
   # currently only ARM Mac build available of the Skia libs
-  message('Building for macOS ARM')
-  skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
+  if build_cpu == 'x86_64'
+    message('Building for macOS X86')
+    skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-x64'
+  else
+    message('Building for macOS ARM')
+    skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
+  endif
 else
   message('Building for Linux x86_64')
   skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
@@ -27,6 +35,10 @@ skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
 skia_include = include_directories('./canvex-skia')
 
 if system_mac
+  r = run_command('brew', '--prefix', check: false)
+  brew_prefix = r.stdout().strip()
+  errortxt = r.stderr().strip()
+
   # macOS system dependencies
   mac_frameworks = declare_dependency(
     dependencies : [
@@ -35,14 +47,19 @@ if system_mac
       dependency('CoreText'),
     ]
   )
-
-  libjpeg_turbo = cpp.find_library('jpeg', dirs : '/opt/homebrew/opt/jpeg-turbo/lib')
+  jpeg_lib_dir = brew_prefix + '/opt/jpeg-turbo/lib'
+  webp_lib_dir = brew_prefix + '/opt/webp/lib/'
+  jpeg_include_dir = brew_prefix + '/opt/jpeg-turbo/include'
+  
+  libjpeg_turbo = cpp.find_library('jpeg', dirs : jpeg_lib_dir)
+  libwebp_turbo = cpp.find_library('webp', dirs : webp_lib_dir)
   mac_homebrew_deps = declare_dependency(
     dependencies : [
       png_dep,
       libjpeg_turbo,
+      libwebp_turbo,
     ],
-    include_directories : '/opt/homebrew/opt/jpeg-turbo/include',
+    include_directories : jpeg_include_dir,
   )
 
   skia_system_deps = declare_dependency(
