@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Daily VCS proto</title>
+    <title>Daily VCS dev rig</title>
     <script src="../build/daily-vcs-browser.js"></script>
     <style>
 
@@ -148,6 +148,30 @@ body {
   background-color: rgba(90, 90, 90, 0.5);
   color: white;
 }
+#controls .videoInputButtons {
+  display: inline-block;
+  height: 4em;
+}
+#controls .videoInputButtons > div {
+  display: inline-block;
+  margin-left: 4px;
+  width: 2.3em;
+  height: 100%;
+}
+#controls .videoInputButtons > div > div {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+#controls .videoInputButtons > div > div button {
+  width: 100%;
+}
+#controls .videoInputButtons > div > div button.dominant {
+  opacity: 85%;
+}
+#controls .videoInputButtons > div > div button.screenshare {
+  opacity: 78%;
+}
 
     </style>
   </head>
@@ -168,22 +192,7 @@ body {
           <div class="vc">
             <h3>Media input</h3>
             <span>Active video inputs: </span>
-            <button data-index=0 class="selected">1</button>
-            <button data-index=1>2</button>
-            <button data-index=2>3</button>
-            <button data-index=3>4</button>
-            <button data-index=4>5</button>
-            <button data-index=5>6</button>
-            <button data-index=6>7</button>
-            <button data-index=7>8</button>
-            <button data-index=8>9</button>
-            <button data-index=9>10</button>
-            <button data-index=10>11</button>
-            <button data-index=11>12</button>
-            <button data-index=12>13</button>
-            <button data-index=13>14</button>
-            <button data-index=14>15</button>
-            <button data-index=15>16</button>
+            <span class="videoInputButtons"></span>
           </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
@@ -216,35 +225,62 @@ body {
 
 // --- UI state ---
 
-const MAX_PARTICIPANTS = 16;
+const MAX_VIDEO_INPUTS = 16;
 
 const g_activeVideoInputSlots = [];
-for (let i = 0; i < MAX_PARTICIPANTS; i++) {
-  g_activeVideoInputSlots[i] = false;
+let g_dominantIdx = -1;
+
+for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
+  setActiveVideoInput(i, false);
 }
-g_activeVideoInputSlots[0] = true;
+setActiveVideoInput(0, true);
+
+function setActiveVideoInput(idx, active, isScreenshare) {
+  g_activeVideoInputSlots[idx] = {
+    active: !!active,
+    type: isScreenshare ? 'screenshare' : 'camera'
+  };
+}
 
 
 // --- UI actions ---
 
-for (const btn of document.querySelectorAll("#controls .vc button")) {
-  const idx = btn.dataset.index;
-  const active = g_activeVideoInputSlots[idx];
-  btn.setAttribute('class', active ? 'selected' : '');
-
-  btn.addEventListener('click', participantToggled);
-}
-
 function participantToggled(ev) {
   const btn = ev.target;
-  const idx = btn.dataset.index;
+  const idx = parseInt(btn.dataset.index, 10);
 
-  const active = g_activeVideoInputSlots[idx] ? false : true;
+  const active = g_activeVideoInputSlots[idx].active ? false : true;
   btn.setAttribute('class', active ? 'selected' : '');
 
-  g_activeVideoInputSlots[idx] = active;
+  g_activeVideoInputSlots[idx].active = active;
 
   sendActiveVideoInputSlots();
+}
+
+function dominantToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  g_dominantIdx = (idx === g_dominantIdx) ? -1 : idx;
+
+  console.log("dominant now ", g_dominantIdx)
+
+  sendActiveVideoInputSlots();
+  
+  createVideoInputsUI();
+}
+
+function screenshareToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
+
+  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, s);
+
+  sendActiveVideoInputSlots();
+  
+  createVideoInputsUI();
 }
 
 function paramCheckboxToggled(ev) {
@@ -345,6 +381,65 @@ function createModesUI(compInterface, sel) {
     }, false);
 
 }
+
+function createVideoInputsUI() {
+  const mainBox = document.querySelector("#controls .videoInputButtons");
+
+  let child;
+  while ((child = mainBox.firstChild)) {
+    mainBox.removeChild(child);
+  }
+
+  const n = MAX_VIDEO_INPUTS;
+  for (i = 0; i < n; i++) {
+    const active = g_activeVideoInputSlots[i].active;
+    const screenshare = g_activeVideoInputSlots[i].type === 'screenshare';
+    const dominant = g_dominantIdx === i;
+
+    const box = document.createElement('div');
+    const flexbox = document.createElement('div');
+
+    const btn = document.createElement('button');
+    btn.setAttribute('data-index', i);
+    btn.innerText = ""+(i + 1);
+    box.appendChild(btn);
+
+    let cls = '';
+    if (active) cls += 'selected';
+    btn.className = cls;
+    
+    btn.addEventListener('click', participantToggled);
+
+    const domBtn = document.createElement('button');
+    domBtn.setAttribute('data-index', i);
+    domBtn.setAttribute('data-video-dominant', true);
+    domBtn.innerText = "D";
+    box.appendChild(domBtn);
+
+    cls = 'dominant';
+    if (dominant) cls += ' selected';
+    domBtn.className = cls;
+
+    domBtn.addEventListener('click', dominantToggled);
+
+    const sBtn = document.createElement('button');
+    sBtn.setAttribute('data-index', i);
+    sBtn.setAttribute('data-video-screenshare', true);
+    sBtn.innerText = "S";
+    box.appendChild(sBtn);
+
+    cls = 'screenshare';
+    if (screenshare) cls += ' selected';
+    sBtn.className = cls;
+
+    sBtn.addEventListener('click', screenshareToggled);
+
+    flexbox.appendChild(box);
+    mainBox.appendChild(flexbox);
+  }
+}
+
+createVideoInputsUI();
 
 
 // --- setup rendering ---
@@ -498,7 +593,21 @@ function compUpdated(sceneDesc) {
 function sendActiveVideoInputSlots() {
   if (!g_vcsCommandApi) return;
 
-  g_vcsCommandApi.setActiveVideoInputSlots(g_activeVideoInputSlots);
+  const arr = [];
+  for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
+    let obj = g_activeVideoInputSlots[i];
+    if (obj.active) {
+      obj = {...obj};
+      if (i === g_dominantIdx) {
+        obj.dominant = true;
+      }
+      arr.push(obj);
+    } else {
+      arr.push(false);
+    }
+  }
+
+  g_vcsCommandApi.setActiveVideoInputSlots(arr);
 }
 
 function sendParamChange(paramId, value) {
