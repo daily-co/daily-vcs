@@ -147,6 +147,19 @@ export class Composition {
   }
 }
 
+// NaN messes up params value comparison, remove it early
+function cleanLayoutParams(obj) {
+  let obj2;
+  for (const k in obj) {
+    const v = obj[k];
+    if (Number.isNaN(v)) {
+      if (!obj2) obj2 = {...obj};
+      delete obj2[k];
+    }
+  }
+  return obj2 || obj;
+}
+
 function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
   if (!oldFn && !newFn) return true;
 
@@ -213,7 +226,7 @@ class NodeBase {
         this.layoutFunc,
         this.layoutParams,
         newLayout[0],
-        newLayout[1] || {}
+        newLayout[1] ? cleanLayoutParams(newLayout[1]) : {}
       )
     ) {
       //console.log("layout props will be updated for '%s'", newProps.id || '');
@@ -229,8 +242,10 @@ class NodeBase {
     if (newProps.id) this.userGivenId = newProps.id;
 
     if (Array.isArray(newProps.layout)) {
+      const params = newProps.layout[1];
+
       this.layoutFunc = newProps.layout[0];
-      this.layoutParams = newProps.layout[1] || {};
+      this.layoutParams = params ? cleanLayoutParams(params) : {};
       //console.log("new layout for '%s': ", this.userGivenId, this.layoutFunc, JSON.stringify(this.layoutParams));
     } else {
       this.layoutFunc = null;
