@@ -161,8 +161,8 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
     if (resPath_.empty()) {
       std::cerr << "Warning: fontResPath is empty, can't load fonts" << std::endl;
     } else {
-      // FIXME: hardcoded subpath to roboto
-      auto fontPath = resPath_ / "font-roboto" / fontFileName;
+      // FIXME: hardcoded subpath expects to find all fonts in one dir
+      auto fontPath = resPath_ / "fonts" / fontFileName;
       //std::cout << "Loading font at: " << fontPath << std::endl;
       typeface = SkTypeface::MakeFromFile(fontPath.c_str());
       if (!typeface) {

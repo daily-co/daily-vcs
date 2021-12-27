@@ -30,7 +30,7 @@ fn main() {
   let renderRes: CanvexRenderResult;
 
   unsafe {
-    // argument is path to resource dir; defaults to ./res
+    // argument is path to resource dir; defaults to ../../res (i.e. "/vcs/res")
     let canvexResCtx = CanvexResourceCtxCreate(ptr::null());
 
     renderRes = CanvexRenderJSON_RGBA(

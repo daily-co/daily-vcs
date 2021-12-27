@@ -10,6 +10,8 @@ const CanvasRenderMode = {
 const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
 export function renderCompInCanvas(comp, canvas, imageSources) {
+  if (!comp.rootNode) return;
+  
   const canvasW = canvas.width;
   const canvasH = canvas.height;
 

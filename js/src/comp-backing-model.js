@@ -1,10 +1,14 @@
 import { v4 as uuidv4 } from 'uuid';
+
 import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
 import {
   encodeCanvasDisplayList_fg,
   encodeCanvasDisplayList_videoLayersPreview,
 } from '../src/render/canvas';
 import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc';
+
+import { makeAttributedStringDesc } from './text/attributed-string';
+import { performTextLayout, measureTextLayoutBlocks } from './text/text-layout';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)
@@ -65,8 +69,8 @@ export class Composition {
     //console.log("deleted node at %d in array", idx)
   }
 
-  attachRootNode(node) {
-    this.rootNode = node;
+  attachRootNode(rootNode) {
+    this.rootNode = rootNode;
     for (const node of this.nodes) {
       node.container = this;
     }
@@ -99,6 +103,9 @@ export class Composition {
         frame = node.layoutFunc(frame, node.layoutParams, {
           ...layoutCtxBase,
           node,
+          getIntrinsicSize: function () {
+            return node.intrinsicSize ? node.intrinsicSize : { w: -1, h: -1 };
+          },
         });
       }
       node.layoutFrame = frame;
@@ -113,7 +120,7 @@ export class Composition {
   }
 
   writeSceneDescription(imageSources) {
-    if (!this.rootNode) return {};
+    if (!this.rootNode) return null;
 
     // get foreground graphics as a display list
     const encoder = new CanvasDisplayListEncoder(
@@ -153,7 +160,7 @@ function cleanLayoutParams(obj) {
   for (const k in obj) {
     const v = obj[k];
     if (Number.isNaN(v)) {
-      if (!obj2) obj2 = {...obj};
+      if (!obj2) obj2 = { ...obj };
       delete obj2[k];
     }
   }
@@ -209,14 +216,14 @@ class NodeBase {
   }
 
   shouldUpdate(container, oldProps, newProps) {
-    // should return true only if the newProps represent a change that requires a commit
-
-    //console.log("shouldupdate %s, '%s'", this.uuid, newProps.id);
-
+    // should return true only if the newProps represent a change that requires a commit.
     let newLayout = [];
     if (newProps.layout) {
       if (!Array.isArray(newProps.layout)) {
-        console.warn('invalid layout prop passed to node: ', newProps.layout);
+        console.warn(
+          'invalid layout prop passed to node, must be an array (got %s)',
+          typeof newProps.layout
+        );
       } else {
         newLayout = newProps.layout;
       }
@@ -237,6 +244,10 @@ class NodeBase {
   }
 
   commit(container, oldProps, newProps) {
+    // ensure a reference to container is available so nodes can access composition state
+    // (e.g. viewport size) as part of their commit cycle
+    this.container = container;
+
     //console.log("commit %s: ", this.uuid, newProps)
 
     if (newProps.id) this.userGivenId = newProps.id;
@@ -331,7 +342,65 @@ class LabelNode extends StyledNodeBase {
   commit(container, oldProps, newProps) {
     super.commit(container, oldProps, newProps);
 
-    this.text = newProps.text;
+    this.text = newProps.text || '';
+
+    if (this.text.length < 1) {
+      this.attrStringDesc = null;
+    } else {
+      if (!this.container) {
+        console.error('** container missing for text node %s', this.uuid);
+        return;
+      }
+      const viewport = this.container.viewportSize;
+      this.attrStringDesc = makeAttributedStringDesc(
+        this.text,
+        this.style || {},
+        viewport
+      );
+
+      try {
+        this.measureTextSize();
+      } catch (e) {
+        console.error('** exception when measuring text size: ', e);
+      }
+    }
+  }
+
+  measureTextSize() {
+    if (!this.attrStringDesc || !this.attrStringDesc.fragments) {
+      console.error(
+        "** can't measure label size, attrStringDesc missing or invalid: " +
+          this.attrStringDesc
+      );
+      return;
+    }
+    const frame = null; // could set w/h to constrain the text layout
+    const textContainerFrame = {
+      x: 0,
+      y: 0,
+      width: frame && frame.w ? frame.w : Infinity,
+      height: frame && frame.h ? frame.h : Infinity,
+    };
+
+    const blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
+
+    const { totalBox, numLines } = measureTextLayoutBlocks(blocks);
+
+    if (numLines > 1 && frame && frame.w) {
+      // for multiple lines, the width is the given max
+      totalBox.w = frame.w;
+    }
+
+    this.textLayoutBlocks = blocks;
+    this.textNumLines = numLines > 0 ? numLines : 0;
+    this.intrinsicSize = { w: Math.ceil(totalBox.w), h: Math.ceil(totalBox.h) };
+
+    /*console.log(
+      'numlines %d, totalBox: ',
+      this.textNumLines,
+      this.intrinsicSize,
+      this.textLayoutBlocks
+    );*/
   }
 }
 

@@ -4,6 +4,7 @@ import * as fs from 'fs';
 
 import { Composition, render } from './src';
 import { makeVCSRootContainer } from './src/loader-base';
+import { loadFontsAsync } from './lib-node/font-loader';
 
 // CLI arguments.
 // --scenario is mandatory.
@@ -66,24 +67,30 @@ function getVideoTime() {
   return g_currentFrame / fps;
 }
 
-// the backing model for our views.
-// the callback passed here will be called every time React has finished an update.
-const composition = new Composition(compUpdatedCb);
+main();
 
-// bind our React reconciler with the container component and the composition model.
-// when the root container receives a state update, React will reconcile it into composition.
-render(makeVCSRootContainer(ContentRoot, rootContainerRef), composition);
+async function main() {
+  await loadFontsAsync();
 
-if (scenario.initialState) {
-  applyScenarioState(scenario.initialState);
-}
+  // the backing model for our views.
+  // the callback passed here will be called every time React has finished an update.
+  const composition = new Composition(compUpdatedCb);
 
-for (g_currentFrame = 0; g_currentFrame < durationInFrames; g_currentFrame++) {
-  if (scenario.frameWillRenderCb) {
-    applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
+  // bind our React reconciler with the container component and the composition model.
+  // when the root container receives a state update, React will reconcile it into composition.
+  render(makeVCSRootContainer(ContentRoot, rootContainerRef), composition);
+
+  if (scenario.initialState) {
+    applyScenarioState(scenario.initialState);
   }
 
-  rootContainerRef.current.setVideoTime(getVideoTime());
+  for (g_currentFrame = 0; g_currentFrame < durationInFrames; g_currentFrame++) {
+    if (scenario.frameWillRenderCb) {
+      applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
+    }
+
+    rootContainerRef.current.setVideoTime(getVideoTime());
+  }
 }
 
 function compUpdatedCb(comp) {

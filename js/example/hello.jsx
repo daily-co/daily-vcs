@@ -173,7 +173,6 @@ function TimedExampleGraphics({
     //strokeColor: 'rgba(0, 0, 0, 0.95)',
     //strokeWidth_px: 12,
   };
-  const textLayoutFn = layoutFuncs.pad;
   const textPad_px = 20;
 
   const boxStyle = {
@@ -190,9 +189,11 @@ function TimedExampleGraphics({
   return (
     <Box layout={[layoutFuncs.pad, { pad: boxOuterPad }]}>
       <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
-        <Label style={textStyle} layout={[textLayoutFn, { pad: textPad_px }]}>
-          {demoText}
-        </Label>
+        <Box layout={[layoutFuncs.pad, { pad: textPad_px }]}>
+          <Label style={textStyle} layout={[layoutFuncs.demoText_bottomRight]}>
+            {demoText}
+          </Label>
+        </Box>
         <Image
           src="test_square"
           layout={[imageLayoutFn, { size: imageSize }]}
@@ -272,6 +273,19 @@ const layoutFuncs = {
     let { x, y } = parentFrame;
     x += margin;
     y += parentFrame.h - h - margin;
+
+    return { x, y, w, h };
+  },
+
+  demoText_bottomRight: (parentFrame, params, layoutCtx) => {
+    let { x, y, w, h } = parentFrame;
+    const textSize = layoutCtx.getIntrinsicSize();
+    
+    // place in bottom-right corner
+    w = textSize.w;
+    h = textSize.h;
+    x += parentFrame.w - w;
+    y += parentFrame.h - h;
 
     return { x, y, w, h };
   },

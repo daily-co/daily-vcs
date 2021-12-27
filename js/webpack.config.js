@@ -1,6 +1,10 @@
+const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
-const { getCompPathFromId } = require('../comp-namespace-util.js');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+
+const { getCompPathFromId } = require('./comp-namespace-util.js');
 
 const breakOnWarningPlugin = function () {
   this.hooks.done.tap('BreakOnWarning', (stats) => {
@@ -38,13 +42,13 @@ const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
 
 const wwwClientConfig = function (env) {
   const isDev = true;
-  const compId = env.vcsCompId;
+  const compId = env.compid;
 
   if (!compId || compId.length < 1) {
     console.error(
-      '** Must provide VCS composition id (use webpack CLI arg env=vcsCompId={id})'
+      '** Must provide VCS composition id (use webpack CLI arg --env compid={id})'
     );
-    return false;
+    process.exit(2);
   }
   if (!(compositionImportPath = getCompPathFromId(compId, 'browser'))) {
     process.exit(3);
@@ -52,16 +56,32 @@ const wwwClientConfig = function (env) {
 
   return {
     mode: isDev ? 'development' : 'production',
-    entry: [path.resolve(__dirname, 'vcs-browser.js')],
+    entry: {
+      devrig: './lib-browser/vcs-browser.js' //path.resolve(__dirname, '', 'vcs-browser.js'),
+    },
     target: 'web',
     output: {
       library: {
         name: 'DailyVCS',
         type: 'window',
       },
-      path: path.resolve(__dirname, '..', 'build'),
-      filename: 'daily-vcs-browser.js',
+      filename: '[name].bundle.js',
+      path: path.resolve('build'),
+      clean: true,  
     },
+    devServer: {
+      port: 8083,
+      static: {
+        directory: './build'
+      }
+    },
+    /*devServer: {
+      static: {
+        directory: './build',
+      },
+      host: 'dev.local',
+      port: 8083
+    },*/  
     devtool: 'cheap-source-map',
     module: {
       rules: [
@@ -81,23 +101,56 @@ const wwwClientConfig = function (env) {
                   ],
                   '@babel/preset-react',
                 ],
-                plugins: ['@babel/plugin-proposal-class-properties'],
+                plugins: [
+                  '@babel/plugin-proposal-class-properties',
+                  "@babel/plugin-transform-runtime",
+                ],
               },
             },
           ],
         },
       ],
     },
-    plugins: [breakOnWarningPlugin, moduleReplacementPlugin],
+    plugins: [
+      breakOnWarningPlugin,
+      moduleReplacementPlugin,
+
+      // following buffer plugin is needed by textkit (from react-pdf)
+      new webpack.ProvidePlugin({
+        Buffer: ["buffer", "Buffer"],
+        process: "process/browser",
+      }),
+
+      // dev server
+      new HtmlWebpackPlugin({
+        title: 'Daily VCS devrig',
+        template: 'devrig/vcs-rig.html'
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          { from: "./devrig/example-assets", to: "example-assets" },
+          { from: "../res", to: "res" },
+        ],
+      }),  
+    ],
     externals: [],
     optimization: {
       minimize: false,
     },
     resolve: {
       alias: {
-        '#vcs': path.resolve(__dirname, '../src'),
-        '#vcs-react': path.resolve(__dirname, '../src/react'),
+        '#vcs': path.resolve('./src'),
+        '#vcs-react': path.resolve('./src/react'),
       },
+      fallback: {
+        // following fallbacks are needed by textkit (from react-pdf)
+        process: require.resolve("process/browser"),
+        zlib: require.resolve("browserify-zlib"),
+        stream: require.resolve("stream-browserify"),
+        util: require.resolve("util"),
+        buffer: require.resolve("buffer"),
+        asset: require.resolve("assert"),
+      },  
     },
   };
 };

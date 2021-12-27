@@ -19,7 +19,7 @@ struct ResourceCtx {
       resourceDir = adir;
       std::cout << "ResourceCtx set up using given path: " << resourceDir << std::endl;
     } else {
-      resourceDir = std::filesystem::current_path() / "res";
+      resourceDir = std::filesystem::current_path() / "../../res";
       std::cout << "ResourceCtx set up using default relative path: " << resourceDir << std::endl;
     }
   }
