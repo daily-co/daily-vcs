@@ -63,6 +63,10 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
       this.setState({ compositionData });
     }
 
+    static getDerivedStateFromError(error) {
+      return {hasError: true};
+    }  
+
     render() {
       return (
         <ViewContexts.CompositionDataContext.Provider

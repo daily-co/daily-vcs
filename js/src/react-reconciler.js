@@ -152,6 +152,7 @@ function insertBefore(parent, child, before) {
 
 function prepareUpdate(node, type, oldProps, newProps, container) {
   //console.log("prepareUpdate, node %s (%s), type %s", node.uuid, node.userGivenId, type);
+  node.container = container;
   const didChange = node.shouldUpdate(container, oldProps, newProps);
   return didChange ? container : null;
 }
