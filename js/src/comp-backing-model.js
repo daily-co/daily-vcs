@@ -422,6 +422,7 @@ class LabelNode extends StyledNodeBase {
       this.intrinsicSize,
       this.textLayoutBlocks
     );*/
+    //console.log("measured text size '%s': ", this.text, this.intrinsicSize)
   }
 }
 

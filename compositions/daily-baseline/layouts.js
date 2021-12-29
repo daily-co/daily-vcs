@@ -48,7 +48,7 @@ export function fit(parentFrame, params) {
 
 export function placeText(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
-  const textSize = layoutCtx.getIntrinsicSize();
+  const textSize = layoutCtx.useIntrinsicSize();
 
   w = textSize.w;
   h = textSize.h;
