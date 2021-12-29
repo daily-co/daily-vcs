@@ -90,6 +90,23 @@ export class Composition {
     }
   }
 
+  _makeLayoutCtxHooks(node) {
+    // record use of these hooks by a layout function.
+    // this data could be used for caching of layout results
+    // (but we're not currently doing it because it's fast enough to just recompute...)
+    const deps = node.layoutFuncDeps;
+    function addDep(dep) {
+      if (!deps.includes(dep)) deps.push(dep);
+    }
+
+    return {
+      useIntrinsicSize: function () {
+        addDep('intrinsicSize');
+        return node.intrinsicSize ? node.intrinsicSize : { w: -1, h: -1 };
+      },
+    }
+  }
+
   _performLayout() {
     if (!this.rootNode) return;
 
@@ -97,15 +114,18 @@ export class Composition {
       viewport: { x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h },
     };
 
+    const makeLayoutCtxHooks = this._makeLayoutCtxHooks;
+
     function recurseLayout(node, parentFrame) {
       let frame = { ...parentFrame };
+
+      node.layoutFuncDeps = [];
+
       if (node.layoutFunc) {
         frame = node.layoutFunc(frame, node.layoutParams, {
           ...layoutCtxBase,
-          node,
-          getIntrinsicSize: function () {
-            return node.intrinsicSize ? node.intrinsicSize : { w: -1, h: -1 };
-          },
+          ...makeLayoutCtxHooks(node),
+          node
         });
       }
       node.layoutFrame = frame;
@@ -213,6 +233,7 @@ class NodeBase {
 
     this.layoutFunc = null;
     this.layoutParams = {};
+    this.layoutFuncDeps = []; // hooks used by the layout function
   }
 
   shouldUpdate(container, oldProps, newProps) {

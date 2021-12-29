@@ -8,7 +8,6 @@ export const compositionInterface = {
     name: 'Hello Daily',
     description: 'An example composition in a single file',
   },
-  modes: ['grid'],
   params: [
     {
       id: 'showGraphics',
@@ -279,7 +278,8 @@ const layoutFuncs = {
 
   demoText_bottomRight: (parentFrame, params, layoutCtx) => {
     let { x, y, w, h } = parentFrame;
-    const textSize = layoutCtx.getIntrinsicSize();
+    
+    const textSize = layoutCtx.useIntrinsicSize();
     
     // place in bottom-right corner
     w = textSize.w;
