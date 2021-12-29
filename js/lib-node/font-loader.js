@@ -1,8 +1,9 @@
 import fontSetup from '../src/text/font-setup';
 import * as Path from 'path';
+import { logToHostInfo } from './log';
 
 // FIXME: figure out better way to get resource path?
-const kResDir = Path.resolve(__dirname, '../../res/fonts')
+const kResDir = Path.resolve(__dirname, '../../res/fonts');
 
 // callback for font loading
 fontSetup.platformConfig.loadFontSourceAsync = async function (
@@ -13,19 +14,15 @@ fontSetup.platformConfig.loadFontSourceAsync = async function (
   // load local font using the helper available via fontkit
 
   const filePath = Path.join(kResDir, fontSrc.src);
-  console.log("loading fontsrc: ", filePath);
+  logToHostInfo('loading fontsrc: ', filePath);
 
   return new Promise((resolve, reject) =>
-    fontkit.open(filePath, (err, data) =>
-      err ? reject(err) : resolve(data),
-    ),
+    fontkit.open(filePath, (err, data) => (err ? reject(err) : resolve(data)))
   );
 };
 
 // main entry point for font setup
-export async function loadFontsAsync(
-  wantedFamilies
-) {
+export async function loadFontsAsync(wantedFamilies) {
   const robotoVariants = [
     { fileName: 'Roboto-Regular.ttf' },
     { fileName: 'Roboto-Bold.ttf', fontWeight: 700 },
@@ -54,12 +51,10 @@ export async function loadFontsAsync(
   ];
 
   const knownFamilies = [
-    // -- BASE FONT: Roboto.
-    // this is supported as a family.
     {
       family: 'Roboto',
       variants: robotoVariants,
-    }, // end of Roboto family
+    },
   ];
 
   let fontDescs = [];
@@ -76,9 +71,6 @@ export async function loadFontsAsync(
     wantedFamilies = ['Roboto'];
   }
 
-  //console.log('known font families: ', knownFamilies);
-  console.log('loading font families: ', wantedFamilies);
-
   for (const { family, variants } of knownFamilies) {
     if (!wantedFamilies.includes(family)) continue;
 
@@ -94,7 +86,7 @@ export async function loadFontsAsync(
     }
   }
 
-  console.log('fonts registered: ', fontSetup.getRegisteredFonts());
+  //logToHostInfo('fonts registered: ', fontSetup.getRegisteredFonts());
 
   const allFonts = fontSetup.getRegisteredFonts();
   let fontsToLoad = [];
@@ -103,11 +95,11 @@ export async function loadFontsAsync(
     const sources = fontObj.sources;
     fontsToLoad = fontsToLoad.concat(sources);
   }
-  //console.log('fonts to load: ', fontsToLoad);
+  //logToHostInfo('fonts to load: ', fontsToLoad);
   const fontPromises = [];
   for (const font of fontsToLoad) {
     fontPromises.push(fontSetup.load(font));
   }
   await Promise.all(fontPromises);
-  console.log('fonts loaded');
+  logToHostInfo('%d fonts loaded', fontsToLoad.length);
 }

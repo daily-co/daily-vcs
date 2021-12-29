@@ -117,8 +117,6 @@ export function makeAttributedStringDesc(
 
   //fragments = embedEmojis(fragments);
 
-  console.log("my font from %s, %s: ", fontFamily, fontWeight, font)
-
   return {
     fragments,
     font,

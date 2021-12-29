@@ -47,8 +47,7 @@
     "test-scenario": "yarn run ts-node -T vcs-test-runner.js --scenario",
     "line-protocol": "yarn run ts-node -T vcs-line-protocol-main.js --compid",
     "import-test": "yarn run ts-node -T import-test.mjs --compid",
-    "hello-browser": "yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env compid=example:hello; echo 'Now open devrig/vcs-rig.html in your web browser.'",
-    "build-browser": "wrap () { yarn webpack --config lib-browser/vcs-browser.webpack.config.js --env compid=\"$*\" | cat; }; wrap",
-    "hello-serve": "yarn webpack serve --config lib-browser/vcs-browser.webpack.config.js --env compid=example:hello"
+    "build-browser": "wrap () { yarn webpack --env compid=\"$*\" | cat; }; wrap",
+    "hello-browser": "yarn webpack serve --open --env compid=example:hello"
   }
 }
