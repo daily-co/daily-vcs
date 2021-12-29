@@ -581,7 +581,9 @@ async function start() {
   sendActiveVideoInputSlots();
 }
 
-start();
+window.addEventListener('load', function(ev) {
+  start();
+});
 
 
 // --- callback received from composition ---

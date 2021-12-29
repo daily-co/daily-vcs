@@ -46,9 +46,12 @@ function getCompPathFromId(compId, targetId) {
       compDir = Path.resolve(vcsBaseDir, 'js/example');
       jsxPath = `${compDir}/${compFilename}.jsx`;
       break;
-
+    
+    // recognized namespaces in our 'compositions' directory
+    case 'dev':
+    case 'experiment':
     case 'daily': {
-      compDir = Path.resolve(vcsBaseDir, `compositions/daily-${compFilename}`);
+      compDir = Path.resolve(vcsBaseDir, `compositions/${compNamespace}-${compFilename}`);
 
       if (targetId === 'node') {
         // we want to load code from outside the current package root,
