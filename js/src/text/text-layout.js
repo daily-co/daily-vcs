@@ -38,32 +38,20 @@ export function performTextLayout(attrStringDesc, containerDesc) {
 
 export function measureTextLayoutBlocks(blocks) {
   let totalBox = {x: null, y: null, w: 0, h: 0};
-  let pspacing = 0;
   let numLines = 0;
 
-  for (const paragraphLinesArr of blocks) {
-    totalBox.h += pspacing;
+  let lastParagraphSpacing = 0;
 
-    /*console.log(
-      '-- measuring paragraph with %d lines; acc numlines %d',
-      paragraphLinesArr.length,
-      numLines,
-    );*/
+  for (const paragraphLinesArr of blocks) {
+    totalBox.h += lastParagraphSpacing;
 
     for (const lineDesc of paragraphLinesArr) {
-      const {box, string, runs} = lineDesc;
-      /*console.log('...  linedesc box: ', box);
-      console.log(
-        '     runs count %d, string len %d: ',
-        runs.length,
-        string.length,
-        string,
-      );*/
+      const {box, runs} = lineDesc;
+
       let w = box.width;
       if (runs.length > 0) {
         w = 0;
         for (const run of runs) {
-          //console.log("   .. run: ", util.inspect(run, {depth: 2}));
           for (const glyphPos of run.positions) {
             w += glyphPos.xAdvance;
           }
@@ -74,11 +62,10 @@ export function measureTextLayoutBlocks(blocks) {
       if (totalBox.x === null) totalBox.x = box.x;
       if (totalBox.y === null) totalBox.y = box.y;
 
-      pspacing = runs.length > 0 ? runs[0].attributes.paragraphSpacing : 0;
+      lastParagraphSpacing = runs.length > 0 ? runs[0].attributes.paragraphSpacing : 0;
       numLines++;
     }
   }
 
-  //console.log('measured text box: ', totalBox);
   return {totalBox, numLines};
 };

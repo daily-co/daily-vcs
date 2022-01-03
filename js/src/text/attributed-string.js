@@ -1,5 +1,7 @@
 import {getNumericFontWeightFromCSSValue} from './font';
-import Font from './font-setup';
+import fontSetup from './font-setup';
+
+const kFallbackFont = fontSetup.fallbackFontFamily;
 
 function computeStyleAttributes(styledObj, viewport) {
   let size_px = Number.isFinite(styledObj.fontSize_px)
@@ -17,8 +19,8 @@ function computeStyleAttributes(styledObj, viewport) {
     lineHeight_px = lineHeight_rel * size_px;
   }
 
-  // always render with non-fractional font size values
-  // for better alignment between render targets and their different text drawing
+  // always render with non-fractional font size values for better alignment
+  // between render targets and their different text drawing.
   size_px = Math.ceil(size_px);
   if (lineHeight_px > 0) {
     lineHeight_px = Math.ceil(lineHeight_px);
@@ -28,12 +30,12 @@ function computeStyleAttributes(styledObj, viewport) {
 
   if (styledObj.fontPSName && styledObj.fontPSName.length > 0) {
     // if "fontPSName" is specified, it means the caller knows the exact
-    // PostScript name for the font they want, so omit family-based lookup
+    // PostScript name for the font they want, so omit family-based lookup.
     fontFamily = styledObj.fontPSName;
     fontWeight = 400;
     fontStyle = 'normal';
   } else {
-    fontFamily = styledObj.fontFamily || 'Roboto';
+    fontFamily = styledObj.fontFamily || kFallbackFont;
     fontStyle = styledObj.fontStyle || 'normal';
 
     fontWeight = parseFloat(styledObj.fontWeight);
@@ -64,7 +66,9 @@ function computeStyleAttributes(styledObj, viewport) {
   };
 }
 
-
+// returned 'fragments' array is the pieces needed to construct a Fontkit AttributedString object.
+// we're returning also the font object, since our attributed strings are currently single-style
+// (no inline fonts in fragments, yet).
 export function makeAttributedStringDesc(
   string,
   styledObj,
@@ -81,17 +85,9 @@ export function makeAttributedStringDesc(
     textAlign,
   } = computeStyleAttributes(styledObj, viewport);
 
-  /*console.log(
-    "attributed text font '%s', size_px %d, weight '%s', style '%s'",
-    fontFamily,
-    size_px,
-    fontWeight,
-    fontStyle,
-  );*/
-
   let font;
   try {
-    font = Font.getFont({fontFamily, fontWeight, fontStyle});
+    font = fontSetup.getFont({fontFamily, fontWeight, fontStyle});
   } catch (e) {
     console.error(
       "** couldn't get font '%s' / %s / %s, will default",
@@ -99,23 +95,29 @@ export function makeAttributedStringDesc(
       fontWeight,
       fontStyle,
     );
-    font = Font.getFont({fontFamily: 'Roboto', fontWeight: 400});
+    font = fontSetup.getFont({fontFamily: kFallbackFont, fontWeight: 400});
+    if (!font) {
+      console.assert(`Fallback font ${kFallbackFont} is not available, engine is misconfigured`);
+    }
   }
   const attributes = {
-    font: font.data || fontFamily,
+    font: font.data, // textkit expects the data in the 'font' property
     fontSize: size_px,
     lineHeight: lineHeight_px,
     align: textAlign,
-    //paragraphSpacing: 12,  // TESTING
-    //indent: 40,  // TESTING
   };
+  /*
+  other attributes available include:
+    - paragraphSpacing
+    - indent
+  */
 
   fragments.push({
     string,
     attributes,
   });
 
-  //fragments = embedEmojis(fragments);
+  // TODO: emoji replacement should be handled here
 
   return {
     fragments,
