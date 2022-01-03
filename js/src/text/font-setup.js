@@ -10,6 +10,10 @@ import {Font, platformConfig} from './font.js';
 // every font must be explicitly loaded.
 const kStandardFonts = [];
 
+// need to assume some font is available on every target.
+// in practice we're loading Roboto everywhere.
+const kFallbackFont = 'Roboto';
+
 let g_fonts = {};
 
 let hyphenationCallback = (word) => {
@@ -112,4 +116,5 @@ export default {
   reset,
   registerHyphenationCallback,
   getHyphenationCallback,
+  fallbackFontFamily: kFallbackFont
 };
