@@ -51,14 +51,50 @@ body {
   background-color: black;
   overflow: hidden;
   width: 640px;
-  height: 360px;
+  height: auto;
 }
 #deco {
   flex: none;
   margin-top: 1px;
   height: 62px;
   background-image: url('example-assets/atari_vcs_woodgrain_texture.png');
+  display: flex;
+  flex-direction: row;
+  color: rgba(255, 255, 240, 0.7);
 }
+#deco > div {
+  margin-top: 5px;
+  padding: 1rem;
+}
+#compInfo {
+  flex: 0 0 1;
+  text-shadow: rgba(0, 0, 0, 0.4) 1px 1px;
+  font-size: 1.05rem;
+}
+#compInfo .name {
+  font-weight: 600;
+  margin-bottom: 0.25em;
+  display: inline-block;
+}
+#compInfo .description {
+  font-weight: 300;
+  font-size: 0.9em;
+  opacity: 0.95;
+  display: inline-block;
+  margin-left: 2em;
+}
+#compOutput {
+  flex: 1 0 auto;
+  text-align: right;
+}
+#compOutput button {
+  background: transparent;
+  color: white;
+}
+#compOutput button.selected {
+  background-color: coral;
+}
+
 #controls {
   flex: 1 0 auto;
   background-color: #474749;
@@ -89,26 +125,6 @@ body {
 }
 #demoassets {
   display: none;
-}
-#compInfo {
-  position: relative;
-  padding: 1rem;
-  margin-top: 5px;
-  color: rgba(255, 255, 240, 0.7);
-  text-shadow: rgba(0, 0, 0, 0.4) 1px 1px;
-  font-size: 1.05rem;
-}
-#compInfo .name {
-  font-weight: 600;
-  margin-bottom: 0.25em;
-  display: inline-block;
-}
-#compInfo .description {
-  font-weight: 300;
-  font-size: 0.9em;
-  opacity: 0.95;
-  display: inline-block;
-  margin-left: 2em;
 }
 #controls h3 {
   margin: 0;
@@ -181,6 +197,12 @@ body {
             <div class="name"></div>
             <div class="description"></div>
           </div>
+          <div id="compOutput">
+            <span>Output:</span>
+            <span>
+              <button class="selected" data-outputid="landscape">16:9</button><button data-outputid="square">Square</button><button data-outputid="portrait">9:16</button>
+            </span>
+          </div>
         </div>
         <div id="controls">
           <div class="vc">
@@ -230,6 +252,8 @@ function setActiveVideoInput(idx, active, isScreenshare) {
     type: isScreenshare ? 'screenshare' : 'camera'
   };
 }
+
+let g_paramValues = {};
 
 
 // --- UI actions ---
@@ -294,7 +318,7 @@ function paramCheckboxToggled(ev) {
   }
   const newValue = btn.checked === true;
 
-  sendParamChange(paramId, newValue);
+  sendParam(paramId, newValue);
 }
 
 function paramTextEdited(ev) {
@@ -306,7 +330,7 @@ function paramTextEdited(ev) {
   }
   const newValue = field.value || '';
 
-  sendParamChange(paramId, newValue);
+  sendParam(paramId, newValue);
 }
 
 function paramEnumSelected(ev) {
@@ -319,7 +343,7 @@ function paramEnumSelected(ev) {
   const opt = sel.options[sel.selectedIndex];
   const newValue = opt.value || '';
 
-  sendParamChange(paramId, newValue);
+  sendParam(paramId, newValue);
 }
 
 function createParamsUI(compInterface, box) {
@@ -462,9 +486,11 @@ createVideoInputsUI();
 
 // --- setup rendering ---
 
-const g_canvas = document.getElementById("renderCanvas");
+let g_viewportSize = { w: 1280, h: 720 };
 
-let g_vcsCommandApi;
+let g_canvas = document.getElementById("renderCanvas");
+
+let g_vcsApi;
 
 
 async function setupLiveVideo() {
@@ -559,14 +585,14 @@ async function start() {
     images: testImages,
   };
 
-  console.log("--- awaiting DailyVCS.initAsync ---");
+  console.log("--- awaiting DailyVCS start ---");
 
-  g_vcsCommandApi = await DailyVCS.initAsync(g_canvas, g_defaultSources, compUpdated);
+  await recreateVCSCanvasOutput();
 
-  console.log("### init done.")
+  console.log("### start done.")
 
   // print composition info
-  const compInterface = g_vcsCommandApi.getCompositionInterface();
+  const compInterface = g_vcsApi.getCompositionInterface();
   const {displayMeta} = compInterface;
 
   console.log("composition metadata: ", displayMeta);
@@ -576,14 +602,84 @@ async function start() {
 
   // create composition UI
   createParamsUI(compInterface, document.querySelector("#controls .compInterface .params"));
-
-  // send initial data
-  sendActiveVideoInputSlots();
 }
 
 window.addEventListener('load', function(ev) {
   start();
 });
+
+for (const el of document.querySelectorAll("#compOutput button")) {
+  el.addEventListener('click', outputIdChanged);
+}
+
+function outputIdChanged(ev) {
+  const btn = ev.target;
+  const outputId = btn.dataset.outputid;
+
+  const btns = {
+    landscape: document.querySelector("#compOutput button[data-outputid='landscape']"),
+    square:    document.querySelector("#compOutput button[data-outputid='square']"),
+    portrait:  document.querySelector("#compOutput button[data-outputid='portrait']"),
+  };
+  for (const key in btns) {
+    btns[key].className = '';
+  }
+  btns[outputId].className = 'selected';
+
+  let newViewport;
+  switch (outputId) {
+    case 'landscape':
+      newViewport = {w: 1280, h: 720}; break;
+
+    case 'square':
+      newViewport = {w: 720, h: 720}; break;      
+
+    case 'portrait':
+      newViewport = {w: 720, h: 1280}; break;
+  }
+  g_viewportSize = newViewport;
+
+  let parent = g_canvas.parentElement;
+  let scale = 0.5;
+
+  parent.removeChild(g_canvas);
+
+  g_canvas = document.createElement('canvas');
+  g_canvas.width = g_viewportSize.w * scale;
+  g_canvas.height = g_viewportSize.h * scale;
+  parent.appendChild(g_canvas);
+
+  parent.style = `width: ${g_canvas.width}px;`;
+
+  recreateVCSCanvasOutput();
+}
+
+async function recreateVCSCanvasOutput() {
+  let enablePreload = true;
+
+  if (g_vcsApi) {
+    stopVCS();
+
+    enablePreload = false; // don't preload again
+  }
+
+  g_vcsApi = await DailyVCS.startCanvasOutputAsync(
+    g_viewportSize.w, g_viewportSize.h,
+    g_canvas, g_defaultSources, compUpdated,
+    {enablePreload});
+
+  sendActiveVideoInputSlots();
+
+  for (const key in g_paramValues) {
+    sendParam(key, g_paramValues[key]);
+  }
+}
+
+function stopVCS() {
+  console.log("stopping existing VCS renderer");
+
+  g_vcsApi.stop();
+}
 
 
 // --- callback received from composition ---
@@ -616,7 +712,7 @@ function compUpdated(sceneDesc) {
 // --- commands sent to composition ---
 
 function sendActiveVideoInputSlots() {
-  if (!g_vcsCommandApi) return;
+  if (!g_vcsApi) return;
 
   const arr = [];
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
@@ -632,25 +728,22 @@ function sendActiveVideoInputSlots() {
     }
   }
 
-  g_vcsCommandApi.setActiveVideoInputSlots(arr);
+  g_vcsApi.setActiveVideoInputSlots(arr);
 }
 
-function sendParamChange(paramId, value) {
-  if (!g_vcsCommandApi) return;
+function sendParam(paramId, value) {
+  if (!g_vcsApi) return;
 
-  g_vcsCommandApi.setParamValue(paramId, value);
-}
+  g_vcsApi.setParamValue(paramId, value);
 
-function sendModeChange(modeId) {
-  if (!g_vcsCommandApi) return;
-
-  g_vcsCommandApi.selectMode(modeId);
+  // retain a copy of param values so we can reset renderer to the same state
+  g_paramValues[paramId] = value;
 }
 
 function sendUpdateImageSources(srcs) {
-  if (!g_vcsCommandApi) return;
+  if (!g_vcsApi) return;
 
-  g_vcsCommandApi.updateImageSources(srcs);
+  g_vcsApi.updateImageSources(srcs);
 }
 
 </script>
