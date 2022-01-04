@@ -21,14 +21,14 @@ export const IntrinsicNodeType = {
 };
 
 export class Composition {
-  constructor(cb) {
+  constructor(viewportSize, cb) {
+    this.viewportSize = viewportSize;
+
     this.nodes = [];
     this.rootNode = null;
 
     this.uncommitted = true;
     this.commitFinishedCb = cb;
-
-    this.viewportSize = { w: 1280, h: 720 };
   }
 
   createNode(type, props) {

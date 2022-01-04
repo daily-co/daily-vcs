@@ -55,14 +55,6 @@ export function makeVCSRootContainer(ContentRoot, rootContainerRef) {
       this.setState({ compositionData });
     }
 
-    selectMode(modeId) {
-      const compositionData = { ...this.state.compositionData };
-
-      compositionData.mode = modeId;
-
-      this.setState({ compositionData });
-    }
-
     static getDerivedStateFromError(error) {
       return {hasError: true};
     }  
