@@ -57,7 +57,8 @@ export function placeText(parentFrame, params, layoutCtx) {
   let yOff = params.yOffset || 0;
 
   switch (params.hAlign) {
-    default: case 'left':
+    default:
+    case 'left':
       break;
 
     case 'right':
@@ -71,7 +72,8 @@ export function placeText(parentFrame, params, layoutCtx) {
   }
 
   switch (params.vAlign) {
-    default: case 'top':
+    default:
+    case 'top':
       break;
 
     case 'bottom':
@@ -156,7 +158,6 @@ export function grid(parentFrame, params, layoutCtx) {
     innerMargin,
   });
 }
-
 
 // -- utils --
 

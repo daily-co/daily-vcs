@@ -26,9 +26,7 @@ export const compositionInterface = {
       id: 'mode',
       type: 'enum',
       defaultValue: 'single',
-      values: [
-        'single', 'split', 'grid', 'dominant'
-      ],
+      values: ['single', 'split', 'grid', 'dominant'],
     },
     // -- video grid params --
     {
@@ -155,7 +153,9 @@ export default function DailyBaselineVCS() {
   let graphics;
   if (params.showTextOverlay) {
     const fontSize_vh_pct = parseFloat(params.textFontSize_percentageOfViewH);
-    const strokeColor = params.textStrokeColor ? params.textStrokeColor.trim() : null;
+    const strokeColor = params.textStrokeColor
+      ? params.textStrokeColor.trim()
+      : null;
     const useStroke = strokeColor && strokeColor.length > 0;
 
     const overlayProps = {
@@ -166,7 +166,7 @@ export default function DailyBaselineVCS() {
       yOffset: parseInt(params.textOffset_y, 10),
       rotation: parseFloat(params.textRotationInDegrees),
       fontWeight: params.textFontWeight,
-      fontSize_vh: (fontSize_vh_pct > 0) ? fontSize_vh_pct / 100 : null,
+      fontSize_vh: fontSize_vh_pct > 0 ? fontSize_vh_pct / 100 : null,
       color: params.textColor,
       strokeColor,
       useStroke,

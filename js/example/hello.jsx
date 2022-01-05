@@ -167,7 +167,8 @@ function TimedExampleGraphics({
   }
 
   let fontSize_vh = onSide ? 0.05 : 0.07;
-  if (outputAsp < 1) {  // use smaller relative font size if output is portrait
+  if (outputAsp < 1) {
+    // use smaller relative font size if output is portrait
     fontSize_vh *= 0.5;
   }
 
