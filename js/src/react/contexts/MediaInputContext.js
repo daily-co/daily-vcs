@@ -8,10 +8,13 @@ export const MediaInputContext = React.createContext({
     h: 0,
   },
 
-  // an array of booleans.
+  // an array of truthy or falsy objects.
   // describes which video inputs are active.
   // depending on the application, these inputs may represent video call
   // participants, video files, or something else.
-  // additional metadata will be provided elsewhere (e.g. participant names).
+  // the array is expected to be filled out to match the maximum number of inputs
+  // available on the host application. (e.g. if host supports 16 inputs but
+  // none of them is connected, this array would contain 16 null/false values.)
+  // additional metadata may be provided by passing an object value for a slot.
   activeVideoInputSlots: [],
 });
