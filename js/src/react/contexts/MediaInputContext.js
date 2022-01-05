@@ -1,6 +1,12 @@
 import * as React from 'react';
 
 export const MediaInputContext = React.createContext({
+  // the output viewport.
+  // doesn't change during a rendering session.
+  viewportSize: {
+    w: 0,
+    h: 0,
+  },
 
   // an array of booleans.
   // describes which video inputs are active.

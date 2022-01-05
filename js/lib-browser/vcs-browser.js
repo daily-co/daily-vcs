@@ -18,13 +18,23 @@ export async function startCanvasOutputAsync(
   updatedCb,
   opts
 ) {
-  const {enablePreload} = opts || {};
+  const { enablePreload } = opts || {};
 
-  console.assert(w > 0 && h > 0, `startCanvasOutputAsync: Invalid viewport size specified: ${w}, ${h}`);
+  console.assert(
+    w > 0 && h > 0,
+    `startCanvasOutputAsync: Invalid viewport size specified: ${w}, ${h}`
+  );
 
   const vcs = new VCSBrowserOutput(w, h);
 
-  console.log("created renderer %s: viewport size %d * %d, canvas %d * %d", vcs.uuid, w, h, canvas.width, canvas.height);
+  console.log(
+    'created renderer %s: viewport size %d * %d, canvas %d * %d',
+    vcs.uuid,
+    w,
+    h,
+    canvas.width,
+    canvas.height
+  );
 
   if (enablePreload !== undefined) {
     vcs.enableAssetPreload = enablePreload;
@@ -37,7 +47,7 @@ export async function startCanvasOutputAsync(
 
 class VCSBrowserOutput {
   constructor(w, h) {
-    this.viewportSize = {w, h};
+    this.viewportSize = { w, h };
 
     this.uuid = uuidv4();
 
@@ -151,7 +161,11 @@ class VCSBrowserOutput {
     // bind our React reconciler with the container component and the composition model.
     // when the root container receives a state update, React will reconcile it into composition.
     render(
-      makeVCSRootContainer(VCSComp.default, this.rootContainerRef),
+      makeVCSRootContainer(
+        VCSComp.default,
+        this.rootContainerRef,
+        this.viewportSize
+      ),
       this.comp
     );
 
@@ -242,6 +256,6 @@ class VCSBrowserOutput {
 
   stop() {
     this.stopped = true;
-    console.log("stopped VCS output %s", this.uuid);
+    console.log('stopped VCS output %s', this.uuid);
   }
 }

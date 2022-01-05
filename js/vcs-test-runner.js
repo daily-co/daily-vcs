@@ -60,7 +60,7 @@ imageSources.images['test_square'] = {
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
 
-let g_viewportSize = {w: 1280, h: 720};
+let g_viewportSize = { w: 1280, h: 720 };
 if (scenario.outputSize && scenario.outputSize.w && scenario.outputSize.h) {
   g_viewportSize = scenario.outputSize;
 }
@@ -83,13 +83,20 @@ async function main() {
 
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
-  render(makeVCSRootContainer(ContentRoot, rootContainerRef), composition);
+  render(
+    makeVCSRootContainer(ContentRoot, rootContainerRef, g_viewportSize),
+    composition
+  );
 
   if (scenario.initialState) {
     applyScenarioState(scenario.initialState);
   }
 
-  for (g_currentFrame = 0; g_currentFrame < durationInFrames; g_currentFrame++) {
+  for (
+    g_currentFrame = 0;
+    g_currentFrame < durationInFrames;
+    g_currentFrame++
+  ) {
     if (scenario.frameWillRenderCb) {
       applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
     }
