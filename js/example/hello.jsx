@@ -150,6 +150,8 @@ function TimedExampleGraphics({
   roundedCorners,
 }) {
   const t = useVideoTime();
+  const { viewportSize } = useMediaInput();
+  const outputAsp = viewportSize.w / viewportSize.h; // output aspect ratio
 
   // change some properties based on time
   let imageSize = 0.1;
@@ -164,11 +166,16 @@ function TimedExampleGraphics({
     imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;
   }
 
+  let fontSize_vh = onSide ? 0.05 : 0.07;
+  if (outputAsp < 1) {  // use smaller relative font size if output is portrait
+    fontSize_vh *= 0.5;
+  }
+
   const textStyle = {
     textColor: 'rgba(255, 250, 200, 0.95)',
     fontFamily: 'Roboto',
     fontWeight: '300',
-    fontSize_vh: onSide ? 0.05 : 0.07,
+    fontSize_vh,
     //strokeColor: 'rgba(0, 0, 0, 0.95)',
     //strokeWidth_px: 12,
   };
@@ -278,9 +285,9 @@ const layoutFuncs = {
 
   demoText_bottomRight: (parentFrame, params, layoutCtx) => {
     let { x, y, w, h } = parentFrame;
-    
+
     const textSize = layoutCtx.useIntrinsicSize();
-    
+
     // place in bottom-right corner
     w = textSize.w;
     h = textSize.h;
@@ -299,8 +306,8 @@ const layoutFuncs = {
     }
 
     const outputAsp = viewport.w / viewport.h;
-    
-    const margin_vh = (outputAsp >= 1) ? 0.05 : 0.02; // use smaller margin on portrait
+
+    const margin_vh = outputAsp >= 1 ? 0.05 : 0.02; // use smaller margin on portrait
     const outerMargin = total > 1 ? viewport.h * margin_vh : 0;
     const innerMargin = total > 1 ? viewport.h * margin_vh : 0;
 
