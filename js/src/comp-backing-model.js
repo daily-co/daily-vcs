@@ -22,6 +22,11 @@ export const IntrinsicNodeType = {
 
 export class Composition {
   constructor(viewportSize, cb) {
+    console.assert(viewportSize.w > 0 && viewportSize.h > 0, `** invalid Composition viewportSize arg: ${viewportSize}`);
+    if (cb) {
+      console.assert(typeof cb === 'function', `** invalid Composition cb arg: ${cb}`);
+    }
+
     this.viewportSize = viewportSize;
 
     this.nodes = [];
