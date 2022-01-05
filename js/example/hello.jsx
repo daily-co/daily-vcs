@@ -298,14 +298,16 @@ const layoutFuncs = {
       return { ...parentFrame };
     }
 
-    const outerMargin = total > 1 ? viewport.h * 0.05 : 0;
-    const innerMargin = total > 1 ? viewport.h * 0.05 : 0;
+    const outputAsp = viewport.w / viewport.h;
+    
+    const margin_vh = (outputAsp >= 1) ? 0.05 : 0.02; // use smaller margin on portrait
+    const outerMargin = total > 1 ? viewport.h * margin_vh : 0;
+    const innerMargin = total > 1 ? viewport.h * margin_vh : 0;
 
     const numCols = total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
     const numRows = Math.ceil(total / numCols);
 
-    // for proto, hardcoded video item aspect ratio
-    const videoAsp = 16 / 9;
+    const videoAsp = outputAsp; // assume aspect ratio for video items is same as output
     const parentAsp = parentFrame.w / parentFrame.h;
     const contentAsp = (numCols * videoAsp) / numRows;
 
