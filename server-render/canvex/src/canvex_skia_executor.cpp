@@ -42,6 +42,17 @@ static void renderDisplayListInSkCanvas(
   ) {
   canvas->clear(SK_ColorTRANSPARENT);
 
+  const auto canvasSize = canvas->getBaseLayerSize();
+
+  // check display list's encoded w/h and scale Skia context accordingly so that rendering fills given buffer.
+  // if dl's size is zero, assume caller doesn't want this output scaling.
+  if (dl.width > 0 && dl.height > 0
+    && (dl.width != (int)canvasSize.width() || dl.width != (int)canvasSize.height())) {
+    double scaleX = canvasSize.width() / (double)dl.width;
+    double scaleY = canvasSize.height() / (double)dl.height;
+    canvas->scale(scaleX, scaleY);
+  }
+
   CanvexContext ctx(canvas, resourceDir);
 
   // basic status tracking
@@ -355,9 +366,6 @@ bool RenderDisplayListToRGBABuffer(
   const std::filesystem::path& resourceDir,
   GraphicsExecutionStats* stats  // optional stats
 ) {
-  // TODO: check display list's encoded w/h and scale Skia context accordingly
-  // so that rendering fills given buffer?
-
   auto imageInfo = SkImageInfo::Make(w, h, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 

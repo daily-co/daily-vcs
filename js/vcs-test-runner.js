@@ -60,6 +60,11 @@ imageSources.images['test_square'] = {
 // this will receive the instance of our root container component
 const rootContainerRef = React.createRef();
 
+let g_viewportSize = {w: 1280, h: 720};
+if (scenario.outputSize && scenario.outputSize.w && scenario.outputSize.h) {
+  g_viewportSize = scenario.outputSize;
+}
+
 let g_currentFrame = 0;
 const fps = 30.0;
 
@@ -74,7 +79,7 @@ async function main() {
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.
-  const composition = new Composition(compUpdatedCb);
+  const composition = new Composition(g_viewportSize, compUpdatedCb);
 
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.

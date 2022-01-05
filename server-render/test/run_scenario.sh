@@ -52,7 +52,9 @@ do
   tmpimage="$tmpdir/$filename.png"
   expimage="$path/$filename.png"
 
-  ( cd ../canvex && build/canvex_render_frame 1280 720 "$f" "$tmpimage" )
+  # ( cd ../canvex && build/canvex_render_frame 1280 720 "$f" "$tmpimage" )
+
+  node canvex-render-frame-util.js ../canvex "$f" "$tmpimage"
 
   # compare rendered image with expected output
   cmp "$tmpimage" "$expimage"
