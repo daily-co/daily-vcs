@@ -106,6 +106,7 @@ export function splitVertical(parentFrame, params) {
 export function column(parentFrame, params, layoutCtx) {
   const { index, total } = params;
   const { viewport } = layoutCtx;
+  const outputAsp = viewport.w / viewport.h;
 
   const outerMargin = total > 1 ? viewport.h * 0.05 : 0;
   const innerMargin = total > 1 ? viewport.h * 0.05 : 0;
@@ -113,8 +114,8 @@ export function column(parentFrame, params, layoutCtx) {
   const numCols = 1;
   const numRows = total;
 
-  // FIXME: hardcoded video item aspect ratio
-  const videoAsp = 16 / 9;
+  // assume video item aspect ratio is same as output
+  const videoAsp = outputAsp;
 
   return computeGridItem({
     parentFrame,
@@ -130,6 +131,7 @@ export function column(parentFrame, params, layoutCtx) {
 export function grid(parentFrame, params, layoutCtx) {
   const { index, total } = params;
   const { viewport } = layoutCtx;
+  const outputAsp = viewport.w / viewport.h;
 
   if (total < 1 || !isFinite(total)) {
     return { ...parentFrame };
@@ -141,8 +143,8 @@ export function grid(parentFrame, params, layoutCtx) {
   const numCols = total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
   const numRows = Math.ceil(total / numCols);
 
-  // FIXME: hardcoded video item aspect ratio
-  const videoAsp = 16 / 9;
+  // assume video item aspect ratio is same as output
+  const videoAsp = outputAsp;
 
   return computeGridItem({
     parentFrame,
