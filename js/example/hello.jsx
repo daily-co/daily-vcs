@@ -1,6 +1,11 @@
 import * as React from 'react';
 import { Box, Image, Label, Video } from '#vcs-react/components';
-import { useParams, useVideoTime, useMediaInput, useActiveVideo } from '#vcs-react/hooks';
+import {
+  useParams,
+  useVideoTime,
+  useMediaInput,
+  useActiveVideo,
+} from '#vcs-react/hooks';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {

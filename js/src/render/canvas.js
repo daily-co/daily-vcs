@@ -11,7 +11,7 @@ const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
 export function renderCompInCanvas(comp, canvas, imageSources) {
   if (!comp.rootNode) return;
-  
+
   const canvasW = canvas.width;
   const canvasH = canvas.height;
 
@@ -133,7 +133,9 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
           fillColor = kVideoPreviewColors[idx % kVideoPreviewColors.length];
           textContent = 'Video layer preview / ' + node.src;
         } else {
-          srcDrawable = videoSlots ? videoSlots.find(v => v.vcsSourceId === node.src) : null;
+          srcDrawable = videoSlots
+            ? videoSlots.find((v) => v.vcsSourceId === node.src)
+            : null;
 
           if (!srcDrawable) fillColor = 'blue';
         }
