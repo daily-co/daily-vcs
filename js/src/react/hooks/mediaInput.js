@@ -5,6 +5,11 @@ export function useMediaInput() {
   return React.useContext(MediaInputContext);
 }
 
+export function useViewportSize() {
+  const { viewportSize } = React.useContext(MediaInputContext);
+  return viewportSize;
+}
+
 export function useActiveVideo() {
   const { activeVideoInputSlots } = React.useContext(MediaInputContext);
 
@@ -18,7 +23,7 @@ export function useActiveVideo() {
     if (!slot) continue;
 
     const videoId = slot.id !== undefined ? slot.id : i;
-    
+
     activeIds.push(videoId);
 
     if (slot.type === 'screenshare') {
