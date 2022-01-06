@@ -3,7 +3,7 @@ import { Box, Image, Label, Video } from '#vcs-react/components';
 import {
   useParams,
   useVideoTime,
-  useMediaInput,
+  useViewportSize,
   useActiveVideo,
 } from '#vcs-react/hooks';
 
@@ -145,7 +145,7 @@ function TimedExampleGraphics({
   roundedCorners,
 }) {
   const t = useVideoTime();
-  const { viewportSize } = useMediaInput();
+  const viewportSize = useViewportSize();
   const outputAsp = viewportSize.w / viewportSize.h; // output aspect ratio
 
   // change some properties based on time
