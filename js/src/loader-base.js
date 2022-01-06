@@ -48,6 +48,7 @@ export function makeVCSRootContainer(
         ...this.state.mediaInput,
         activeVideoInputSlots: arr,
       };
+      console.log("active slots now: ", arr)
       this.setState({ mediaInput: newObj });
     }
 

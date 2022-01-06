@@ -122,23 +122,24 @@ class VCSBrowserOutput {
   }
 
   updateImageSources(imageSources) {
-    this.imageSources = { videos: [], images: {} };
+    this.imageSources = { videoSlots: [], compositionAssetImages: {} };
 
     // the image sources we've received are raw DOM elements.
     // for display list encoding, we need metadata about each source,
     // so wrap them in these drawable objects.
-    for (let i = 0; i < imageSources.videos.length; i++) {
-      this.imageSources.videos.push({
+    for (let i = 0; i < imageSources.videoSlots.length; i++) {
+      const { id, element } = imageSources.videoSlots[i];
+      this.imageSources.videoSlots.push({
         vcsSourceType: 'video',
-        vcsSourceId: i,
-        domElement: imageSources.videos[i],
+        vcsSourceId: (id !== undefined) ? id : i,
+        domElement: element,
       });
     }
-    for (const key in imageSources.images) {
-      this.imageSources.images[key] = {
-        vcsSourceType: 'defaultAsset',
+    for (const key in imageSources.compositionAssetImages) {
+      this.imageSources.compositionAssetImages[key] = {
+        vcsSourceType: 'compositionAsset',
         vcsSourceId: key,
-        domElement: imageSources.images[key],
+        domElement: imageSources.compositionAssetImages[key],
       };
     }
   }

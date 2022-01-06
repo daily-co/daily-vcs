@@ -69,7 +69,6 @@ export async function loadFontsAsync(
   }
 
   //console.log('known font families: ', knownFamilies);
-  console.log('loading font families: ', wantedFamilies);
 
   for (const { family, variants } of knownFamilies) {
     if (!wantedFamilies.includes(family)) continue;

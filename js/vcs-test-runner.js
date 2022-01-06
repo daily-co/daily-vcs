@@ -45,14 +45,14 @@ const ContentRoot = require(Path.resolve('.', srcCompPath)).default;
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
 // so image/video references can be resolved.
-const imageSources = { videos: [], images: {} };
+const imageSources = { videoSlots: [], compositionAssetImages: {} };
 for (let i = 0; i < 16; i++) {
-  imageSources.videos.push({
+  imageSources.videoSlots.push({
     vcsSourceType: 'video',
     vcsSourceId: i,
   });
 }
-imageSources.images['test_square'] = {
+imageSources.compositionAssetImages['test_square'] = {
   vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
 };

@@ -14,7 +14,7 @@ fontSetup.platformConfig.loadFontSourceAsync = async function (
   // load local font using the helper available via fontkit
 
   const filePath = Path.join(kResDir, fontSrc.src);
-  logToHostInfo('loading fontsrc: ', filePath);
+  //logToHostInfo('loading fontsrc: ', filePath);
 
   return new Promise((resolve, reject) =>
     fontkit.open(filePath, (err, data) => (err ? reject(err) : resolve(data)))

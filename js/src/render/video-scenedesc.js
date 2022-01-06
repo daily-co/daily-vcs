@@ -13,7 +13,10 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
 
   switch (node.constructor.nodeType) {
     case IntrinsicNodeType.VIDEO: {
-      srcDrawable = imageSources.videos[node.src];
+      srcDrawable = {
+        vcsSourceType: 'video',
+        vcsSourceId: node.src,
+      };
       break;
     }
   }
