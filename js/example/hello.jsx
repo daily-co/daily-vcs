@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Image, Label, Video } from '#vcs-react/components';
-import { useParams, useVideoTime, useMediaInput } from '#vcs-react/hooks';
+import { useParams, useVideoTime, useMediaInput, useActiveVideo } from '#vcs-react/hooks';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -90,17 +90,7 @@ export default function HelloDailyVCS() {
 const DEFAULT_CORNER_RADIUS_PX = 25;
 
 function VideoGrid({ layout, showLabels, roundedCorners }) {
-  const { activeVideoInputSlots } = useMediaInput();
-
-  let maxParticipants = activeVideoInputSlots.length;
-  let activeIndexes = [];
-  let n = 0;
-  for (let i = 0; i < maxParticipants; i++) {
-    if (activeVideoInputSlots[i]) {
-      activeIndexes.push(i);
-      n++;
-    }
-  }
+  const { activeIds } = useActiveVideo();
 
   const labelStyle = {
     textColor: 'white',
@@ -112,14 +102,14 @@ function VideoGrid({ layout, showLabels, roundedCorners }) {
     cornerRadius_px: roundedCorners ? DEFAULT_CORNER_RADIUS_PX : 0,
   };
 
-  const items = activeIndexes.map((srcIdx, i) => {
+  const items = activeIds.map((videoId, i) => {
     const key = 'videogrid_item' + i;
 
     let participantLabel;
     if (showLabels && n > 1) {
       participantLabel = (
         <Label style={labelStyle} layout={[layoutFuncs.offset, { y: -18 }]}>
-          {`Participant ${srcIdx + 1}`}
+          {`Video input ${videoId + 1}`}
         </Label>
       );
     }
@@ -128,9 +118,9 @@ function VideoGrid({ layout, showLabels, roundedCorners }) {
       <Box
         key={key}
         id={key}
-        layout={[layoutFuncs.grid, { index: i, total: n }]}
+        layout={[layoutFuncs.grid, { index: i, total: activeIds.length }]}
       >
-        <Video src={srcIdx} style={videoStyle} />
+        <Video src={videoId} style={videoStyle} />
         {participantLabel}
       </Box>
     );

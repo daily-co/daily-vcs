@@ -246,10 +246,16 @@ for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
 }
 setActiveVideoInput(0, true);
 
+function getVideoInputIdForSlotIndex(idx) {
+  if (idx === 0) return 'devlivecam0';
+  return 'devinput'+idx;
+}
+
 function setActiveVideoInput(idx, active, isScreenshare) {
   g_activeVideoInputSlots[idx] = {
+    id: getVideoInputIdForSlotIndex(idx),
     active: !!active,
-    type: isScreenshare ? 'screenshare' : 'camera'
+    type: isScreenshare ? 'screenshare' : 'camera',
   };
 }
 
@@ -554,24 +560,6 @@ const demoPeople = [
   document.getElementById('demoperson_missfury'),
   document.getElementById('demoperson_moongirl'),
   document.getElementById('demoperson_yellowkid'),
-
-  document.getElementById('demoperson_missfury'),
-  document.getElementById('demoperson_moongirl'),
-  document.getElementById('demoperson_yellowkid'),
-
-  document.getElementById('demoperson_missfury'),
-  document.getElementById('demoperson_moongirl'),
-  document.getElementById('demoperson_yellowkid'),
-
-  document.getElementById('demoperson_missfury'),
-  document.getElementById('demoperson_moongirl'),
-  document.getElementById('demoperson_yellowkid'),
-
-  document.getElementById('demoperson_missfury'),
-  document.getElementById('demoperson_moongirl'),
-  document.getElementById('demoperson_yellowkid'),
-
-  document.getElementById('demoperson_missfury'),
 ];
 
 let g_defaultSources = {}; // initialized in start
@@ -580,9 +568,23 @@ async function start() {
   const liveVideoEl = await setupLiveVideo();
   const testImages = await loadTestImages();
 
+  // build the video sources map.
+  // live video goes in the first slot, rest are public domain images.
+  const videoInputElements = [];
+  videoInputElements[0] = {
+    id: getVideoInputIdForSlotIndex(0),
+    element: liveVideoEl,
+  };
+  for (let i = 1; i < MAX_VIDEO_INPUTS; i++) {
+    videoInputElements.push({
+      id: getVideoInputIdForSlotIndex(i),
+      element: demoPeople[ (i - 1) % demoPeople.length ]
+    });
+  }
+
   g_defaultSources = {
-    videos: [liveVideoEl].concat(demoPeople),
-    images: testImages,
+    videoSlots: videoInputElements,
+    compositionAssetImages: testImages,
   };
 
   console.log("--- awaiting DailyVCS start ---");

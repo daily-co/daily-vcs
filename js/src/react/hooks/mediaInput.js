@@ -14,15 +14,18 @@ export function useActiveVideo() {
   let maxSimultaneousVideoInputs = activeVideoInputSlots.length;
 
   for (let i = 0; i < maxSimultaneousVideoInputs; i++) {
-    if (activeVideoInputSlots[i]) {
-      const videoId = i; // video ids are just indexes to the 'slots' array
-      activeIds.push(videoId);
-      if (activeVideoInputSlots[i].type === 'screenshare') {
-        activeScreenshareIds.push(videoId);
-      }
-      if (dominantId === null && activeVideoInputSlots[i].dominant) {
-        dominantId = videoId;
-      }
+    const slot = activeVideoInputSlots[i];
+    if (!slot) continue;
+
+    const videoId = slot.id !== undefined ? slot.id : i;
+    
+    activeIds.push(videoId);
+
+    if (slot.type === 'screenshare') {
+      activeScreenshareIds.push(videoId);
+    }
+    if (dominantId === null && slot.dominant) {
+      dominantId = videoId;
     }
   }
 

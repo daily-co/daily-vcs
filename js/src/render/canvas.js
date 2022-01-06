@@ -101,6 +101,9 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     let textContent = node.text;
     let textStyle = node.style;
 
+    const videoSlots = imageSources ? imageSources.videoSlots : [];
+    const images = imageSources ? imageSources.compositionAssetImages : {};
+
     switch (node.constructor.nodeType) {
       case IntrinsicNodeType.BOX: {
         fillColor = node.style.fillColor || null;
@@ -110,12 +113,12 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       }
       case IntrinsicNodeType.IMAGE: {
         if (node.src && node.src.length > 0) {
-          srcDrawable = imageSources ? imageSources.images[node.src] : null;
+          srcDrawable = images ? images[node.src] : null;
           if (!srcDrawable) {
             console.warn(
               'Unable to find specified source image: ',
               node.src,
-              imageSources.images
+              images
             );
           }
         }
@@ -130,7 +133,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
           fillColor = kVideoPreviewColors[idx % kVideoPreviewColors.length];
           textContent = 'Video layer preview / ' + node.src;
         } else {
-          srcDrawable = imageSources ? imageSources.videos[node.src] : null;
+          srcDrawable = videoSlots ? videoSlots.find(v => v.vcsSourceId === node.src) : null;
 
           if (!srcDrawable) fillColor = 'blue';
         }
