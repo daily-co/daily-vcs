@@ -4,7 +4,12 @@ import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
 import { DEFAULT_LABEL_FONT_SIZE_PX } from '../constants';
 
-export default function VideoGrid({ showLabels, videoStyle, videoLabelStyle }) {
+export default function VideoGrid({
+  showLabels,
+  scaleMode,
+  videoStyle,
+  videoLabelStyle,
+}) {
   const { activeIds } = useActiveVideo();
 
   const items = activeIds.map((srcIdx, i) => {
@@ -30,7 +35,7 @@ export default function VideoGrid({ showLabels, videoStyle, videoLabelStyle }) {
         id={key}
         layout={[layoutFuncs.grid, { index: i, total: activeIds.length }]}
       >
-        <Video src={srcIdx} style={videoStyle} />
+        <Video src={srcIdx} style={videoStyle} scaleMode={scaleMode} />
         {participantLabel}
       </Box>
     );

@@ -7,6 +7,7 @@ const DOMINANT_SPLIT_PROP = 0.8;
 
 export default function VideoDominant({
   showLabels,
+  scaleMode,
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
@@ -50,6 +51,7 @@ export default function VideoDominant({
           src={videoId}
           style={videoStyle}
           layout={[layoutFuncs.fit, { contentAspectRatio }]}
+          scaleMode={scaleMode}
         />,
         participantLabel,
       ];

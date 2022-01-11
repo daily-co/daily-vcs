@@ -39,6 +39,9 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
     ) {
       attrs.cornerRadius_px = node.style.cornerRadius_px;
     }
+    if (node.scaleMode) {
+      attrs.scaleMode = node.scaleMode;
+    }
 
     sceneDesc.push({
       type: srcDrawable.vcsSourceType,

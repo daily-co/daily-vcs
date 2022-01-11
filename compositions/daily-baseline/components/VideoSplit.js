@@ -5,6 +5,7 @@ import * as layoutFuncs from '../layouts';
 
 export default function VideoSplit({
   showLabels,
+  scaleMode,
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
@@ -34,15 +35,12 @@ export default function VideoSplit({
         );
       }
 
-      // TODO: get the real video aspect ratio
-      const contentAspectRatio = 16 / 9;
-
       content = [
         <Video
           key={key + '_video'}
           src={videoId}
           style={videoStyle}
-          layout={[layoutFuncs.fit, { contentAspectRatio }]}
+          scaleMode={scaleMode}
         />,
         participantLabel,
       ];
@@ -61,4 +59,3 @@ export default function VideoSplit({
 
   return <Box id="videosplit">{[makeItem(0), makeItem(1)]}</Box>;
 }
-

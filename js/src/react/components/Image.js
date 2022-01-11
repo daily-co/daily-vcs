@@ -8,6 +8,7 @@ export function Image(props) {
       style={props.style || {}}
       transform={props.transform || {}}
       src={props.src}
+      scaleMode={props.scaleMode || 'fit'}
     />
   );
 }

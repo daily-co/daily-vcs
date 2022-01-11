@@ -41,9 +41,7 @@ const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
 );
 
 const wwwClientConfig = function (env) {
-  const isDev = true;
   const compId = env.compid;
-
   if (!compId || compId.length < 1) {
     console.error(
       '** Must provide VCS composition id (use webpack CLI arg --env compid={id})'
@@ -52,6 +50,16 @@ const wwwClientConfig = function (env) {
   }
   if (!(compositionImportPath = getCompPathFromId(compId, 'browser'))) {
     process.exit(3);
+  }
+
+  let isDev = true;
+
+  const compFilenameBase = compId.replace(/:/g, '_');
+
+  const useCompFilename = env.use_comp_filename;
+  if (useCompFilename) {
+    console.log("Exporting with comp filename, will use production mode");
+    isDev = false;
   }
 
   return {
@@ -65,9 +73,9 @@ const wwwClientConfig = function (env) {
         name: 'DailyVCS',
         type: 'window',
       },
-      filename: '[name].bundle.js',
+      filename: useCompFilename ? `${compFilenameBase}.bundle.js` : '[name].bundle.js', 
       path: path.resolve('build'),
-      clean: true,  
+      clean: true,
     },
     devServer: {
       port: 8083,
@@ -75,14 +83,7 @@ const wwwClientConfig = function (env) {
         directory: './build'
       }
     },
-    /*devServer: {
-      static: {
-        directory: './build',
-      },
-      host: 'dev.local',
-      port: 8083
-    },*/  
-    devtool: 'cheap-source-map',
+    devtool: isDev ? 'cheap-source-map' : false,
     module: {
       rules: [
         {
@@ -124,7 +125,8 @@ const wwwClientConfig = function (env) {
       // dev server
       new HtmlWebpackPlugin({
         title: 'Daily VCS devrig',
-        template: 'devrig/vcs-rig.html'
+        template: 'devrig/vcs-rig.html',
+        filename: useCompFilename ? `${compFilenameBase}.html` : 'index.html',
       }),
       new CopyWebpackPlugin({
         patterns: [

@@ -32,12 +32,69 @@ body {
   height: 100%;
   flex: 1 0 0;
   background-color: black;
-  color: #ddd;
+  color: #ccc;
   overflow-x: hidden;
   overflow-y: scroll;
 }
-#sceneDescPrintOut {
+#rightSplit .tabBar {
+  text-align: center;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
+}
+#rightSplit .tabBar button {
+  background: transparent;
+  color: #ddd;
+  border-width: 1px;
+}
+#rightSplit .tabBar button.selected {
+  background-color: coral;
+  color: white;
+}
+#rightSplit .tabContent {
+  display: none;
   padding: 1em;
+  padding-left: 1.5em;
+  padding-right: 1.5em;
+}
+#rightSplit .tabContent.visible {
+  display: block;
+}
+
+#rightSplit .tabContent button {
+  margin-right: 1em;
+  background-color: #ccc;
+  font-weight: bold;
+  border-width: 1px;
+}
+#rightSplit .tabContent button.disabled {
+  background-color: black;
+  color: #888;
+}
+#rightSplit .tabContent button.selected {
+  background-color: coral;
+  color: white;
+}
+
+#apicallControls {
+  text-align: center;
+}
+
+#apicallRecOut {
+  margin-top: 4em;
+  font-size: 12px;
+  line-height: 18px;
+}
+#apicallRecOut pre {
+  font-family: Menlo, monospace;
+}
+#apicallRecOut > div {
+  width: 100%;
+  height: auto;
+  background: none;
+  color: white;
+}
+
+#sceneDescPrintOut {
   font-size: 12px;
   font-family: Menlo, monospace;
 }
@@ -96,7 +153,6 @@ body {
 }
 
 #controls {
-  flex: 1 0 auto;
   background-color: #474749;
   color: #eee;
   padding: 1rem;
@@ -218,8 +274,40 @@ body {
         </div>  
       </div>
       <div id="rightSplit">
-        <div id="sceneDescPrintOut">
-          Loading...
+        <div class="tabBar">
+          <button data-id="help" class="selected">Help</button><button data-id="apicall">API Call Builder</button><button data-id="debug">Debug</button>
+        </div>
+        <div class="tabContent visible" data-id="help">
+          <p>Welcome to the Daily VCS simulator.</p>
+          <p>This page lets you interact with the VCS composition whose name is displayed just below the preview.</p>
+          <p>16 video inputs are available. The first input is your live webcam image.
+            For the rest, public domain comic images are provided as stand-ins.
+          </p>
+          <p>Two metadata flags can be toggled:</p>
+          <ul>
+            <li><b>D</b> = 'dominant' (e.g. active speaker)</li>
+            <li><b>S</b> = 'screenshare'</li>
+          </ul>
+          <p>'Composition interface' contains controls for all the params declared by the composition.
+            Try changing these values to get an understanding of the options that this composition supports.
+          </p>
+          <p>
+            You can make a recording of these param changes and export it as Daily API JavaScript code.
+            Look under 'API Call Builder'.
+          </p>
+          <div id="browserInfo" style="font-weight: bold;"></div>
+        </div>
+        <div class="tabContent" data-id="apicall">
+          <div id="apiCallControls">
+            <button id="btn-apicall-rec">Record</button>
+            <button id="btn-apicall-stop" class="disabled">Stop</button>
+            <button id="btn-apicall-clear">Clear</button>
+            <button id="btn-apicall-capture">Capture all</button>
+          </div>
+          <div id="apicallRecOut"></div>
+        </div>
+        <div class="tabContent" data-id="debug">
+          <div id="sceneDescPrintOut"></div>
         </div>
       </div>
     </div>
@@ -233,6 +321,12 @@ body {
   </body>
 
 <script>
+
+const isChrome = /Chrome\//.test(navigator.userAgent);
+if ( !isChrome) {
+  document.getElementById('browserInfo').innerText =
+    "NOTE: This page is only tested on Chrome right now. Your browser may not render it correctly. Sorry...!";
+}
 
 // --- UI state ---
 
@@ -301,13 +395,17 @@ function screenshareToggled(ev) {
 
   // for any screenshares, replace the default source with a screenshare input
   let sources = {...g_defaultSources};
-  sources.videos = g_defaultSources.videos.slice();
+  sources.videoSlots = g_defaultSources.videoSlots.slice();
 
   const ssImageEl = document.getElementById('screenshare_standin');
   for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
     if (g_activeVideoInputSlots[i].type !== 'screenshare') continue;
 
-    sources.videos.splice(i, 1, ssImageEl);
+    const obj = {
+      id: getVideoInputIdForSlotIndex(i),
+      element: ssImageEl
+    };
+    sources.videoSlots.splice(i, 1, obj);
   }
 
   sendUpdateImageSources(sources);
@@ -371,10 +469,13 @@ function createParamsUI(compInterface, box) {
         posLeft = true;
         break;
 
+      case 'number': // TODO: implement number value picker
       case 'text':
         el = document.createElement('input');
         el.setAttribute('type', 'text');
-        if (defaultValue) el.setAttribute('value', defaultValue);
+        if (defaultValue || typeof defaultValue == 'number') {
+          el.setAttribute('value', defaultValue);
+        }
 
         el.addEventListener('change', paramTextEdited);
         break;
@@ -383,8 +484,10 @@ function createParamsUI(compInterface, box) {
         el = document.createElement('select');
         createEnumUI(paramDesc.values || [], id, el);
 
-        if (defaultValue) {
-          // TODO: select default item
+        if (defaultValue && paramDesc.values) {
+          // select default item
+          const idx = paramDesc.values.indexOf(defaultValue);
+          if (idx >= 0) el.selectedIndex = idx;
         }
         
         el.addEventListener('change', paramEnumSelected);
@@ -610,8 +713,121 @@ window.addEventListener('load', function(ev) {
   start();
 });
 
+let g_recordingApiCalls = false;
+let g_apiRecObj = {};
+
+const apicallRecBtn = document.getElementById('btn-apicall-rec');
+const apicallStopBtn = document.getElementById('btn-apicall-stop');
+const apicallCaptureBtn = document.getElementById('btn-apicall-capture');
+const apicallRecOut = document.getElementById('apicallRecOut');
+
+apicallRecBtn.addEventListener('click', function(ev) {
+  apicallRecBtn.className = 'disabled';
+  apicallStopBtn.className = 'selected';
+  g_recordingApiCalls = true;
+});
+
+apicallStopBtn.addEventListener('click', function(ev) {
+  apicallRecBtn.className = '';
+  apicallStopBtn.className = 'disabled';
+  g_recordingApiCalls = false;
+});
+
+apicallCaptureBtn.addEventListener('click', function(ev) {
+  captureCurrentValuesToApicallRec();
+});
+
+function captureCurrentValuesToApicallRec() {
+  const params = g_apiRecObj.params || {};
+
+  // default values
+  const compInterface = g_vcsApi.getCompositionInterface();
+  for (const paramDesc of compInterface.params) {
+    const {id, type, defaultValue} = paramDesc;
+    if (defaultValue) {
+      params[id] = defaultValue;
+    } else if (type === 'boolean') {
+      params[id] = false;
+    }
+  }
+
+  // current values from UI
+  for (const key in g_paramValues) {
+    params[key] = g_paramValues[key];
+  }
+
+  g_apiRecObj.params = params;
+
+  printApicallRec();
+}
+
+function clearApicallRec() {
+  const box = apicallRecOut;
+  while ((child = box.firstChild)) {
+    box.removeChild(child);
+  }
+  g_apiRecObj = {};
+}
+
+function printApicallRec() {
+  const box = apicallRecOut;
+  while ((child = box.firstChild)) {
+    box.removeChild(child);
+  }
+
+  let json = JSON.stringify(g_apiRecObj.params, null, 2);
+
+  json = json.replace(/\n/g, '\n    '); // indent correctly for api call
+
+  const apicallStr = "call.updateLiveStreaming({\n"
+      + "  layout: {\n"
+      + "    composition_params: " + json
+      + "\n"
+      + "  }\n"
+      + "});\n"
+
+  const div = document.createElement('pre');
+  //div.innerHTML = json.replace(/(?:\r\n|\r|\n)/g, '<br>');
+  div.innerText = apicallStr;
+
+  box.appendChild(div);
+}
+
+document.getElementById('btn-apicall-clear').addEventListener('click', function(ev) {
+  clearApicallRec();
+});
+
 for (const el of document.querySelectorAll("#compOutput button")) {
   el.addEventListener('click', outputIdChanged);
+}
+
+for (const el of document.querySelectorAll("#rightSplit .tabBar button")) {
+  el.addEventListener('click', tabBarButtonClicked);
+}
+
+function tabBarButtonClicked(ev) {
+  const btn = ev.target;
+  const id = btn.dataset.id;
+
+  const btns = {
+    help:    document.querySelector("#rightSplit .tabBar button[data-id='help']"),
+    apicall: document.querySelector("#rightSplit .tabBar button[data-id='apicall']"),
+    debug:   document.querySelector("#rightSplit .tabBar button[data-id='debug']"),
+  };
+  for (const key in btns) {
+    btns[key].className = '';
+  }
+  btns[id].className = 'selected';
+
+  const tabs = {
+    help:    document.querySelector("#rightSplit .tabContent[data-id='help']"),
+    apicall: document.querySelector("#rightSplit .tabContent[data-id='apicall']"),
+    debug:   document.querySelector("#rightSplit .tabContent[data-id='debug']"),
+  };
+  for (const key in tabs) {
+    tabs[key].className = 'tabContent ';
+  }
+  tabs[id].className = 'tabContent visible';
 }
 
 function outputIdChanged(ev) {
@@ -740,6 +956,15 @@ function sendParam(paramId, value) {
 
   // retain a copy of param values so we can reset renderer to the same state
   g_paramValues[paramId] = value;
+
+  if (g_recordingApiCalls) {
+    const params = g_apiRecObj.params || {};
+
+    params[paramId] = value;
+
+    g_apiRecObj.params = params;
+    printApicallRec();
+  }
 }
 
 function sendUpdateImageSources(srcs) {
