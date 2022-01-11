@@ -70,7 +70,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
   }
 
-  const frame = node.layoutFrame;
+  let frame = node.layoutFrame;
 
   if (writeContent || recurseChildren) {
     ctx.save();
@@ -98,6 +98,8 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     let strokeColor;
     let strokeW_px;
     let srcDrawable;
+    let scaleMode = node.scaleMode;
+    let contentAsp;
     let textContent = node.text;
     let textStyle = node.style;
 
@@ -143,6 +145,29 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       }
     }
 
+    // apply scaling or crop, but only if we have a drawable from where to derive the content size.
+    let srcDrawableRegion;
+    if (srcDrawable && srcDrawable.domElement) {
+      const domEl = srcDrawable.domElement;
+      let contentW, contentH;
+      if (domEl.videoWidth) {
+        contentW = domEl.videoWidth;
+        contentH = domEl.videoHeight;
+      } else if (domEl.width) {
+        contentW = domEl.width;
+        contentH = domEl.height;
+      }
+
+      if (contentW > 0 && contentH > 0) {
+        if (scaleMode === 'fit') {
+          frame = fitToFrame(frame, contentW, contentH);
+        }
+        else if (scaleMode === 'fill') {
+          srcDrawableRegion = cropToFill(frame, contentW, contentH);
+        }
+      }
+    }
+
     // if rounded corners requested, use a clip path while rendering this node's content
     let inShapeClip = false;
     if (
@@ -183,13 +208,27 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
           frame.h
         );
       } else {
-        ctx.drawImage(
-          srcDrawable.domElement,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h
-        );
+        if (srcDrawableRegion) {
+          // we're cropping the input
+          ctx.drawImage(srcDrawable.domElement,
+            srcDrawableRegion.x,
+            srcDrawableRegion.y,
+            srcDrawableRegion.w,
+            srcDrawableRegion.h,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h
+          );
+        } else {
+          ctx.drawImage(
+            srcDrawable.domElement,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h
+          );  
+        }
       }
     }
 
@@ -253,4 +292,53 @@ function drawStyledText(ctx, text, style, frame, comp) {
   }
 
   ctx.fillText(text, textX, textY);
+}
+
+// returns the new frame
+function fitToFrame(frame, contentW, contentH) {
+  let boxAsp = frame.w / frame.h;
+  let contentAsp = contentW / contentH;
+
+  if (boxAsp === contentAsp) {
+    return frame;
+  }
+
+  let x, y, w, h;
+  if (boxAsp > contentAsp) {
+    // box is wider, i.e. pillarbox
+    h = frame.h;
+    w = frame.h * contentAsp;
+    y = frame.y;
+    x = frame.x + (frame.w - w) / 2;
+  } else {
+    // box is taller, i.e. letterbox
+    w = frame.w;
+    h = frame.w / contentAsp;
+    x = frame.x;
+    y = frame.y + (frame.h - h) / 2;
+  }
+
+  return {x, y, w, h};
+}
+
+// returns the new content region
+function cropToFill(frame, contentW, contentH) {
+  let boxAsp = frame.w / frame.h;
+  let contentAsp = contentW / contentH;
+
+  let x = 0, y = 0, w = contentW, h = contentH;
+
+  if (boxAsp === contentAsp) {
+    // don't modify, content fits without cropping
+  } else if (boxAsp > contentAsp) {
+    // box is wider, crop top and bottom
+    h = contentW / boxAsp;
+    y += (contentH - h) / 2;
+  } else {
+    // box is taller, crop left and right
+    w = contentH * boxAsp;
+    x += (contentW - w) / 2;
+  }
+
+  return {x, y, w, h};
 }

@@ -7,6 +7,7 @@ export function Video(props) {
       layout={props.layout}
       style={props.style || {}}
       src={props.src}
+      scaleMode={props.scaleMode || 'fill'}
     />
   );
 }

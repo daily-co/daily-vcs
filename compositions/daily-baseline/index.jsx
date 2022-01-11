@@ -25,7 +25,7 @@ export const compositionInterface = {
     {
       id: 'mode',
       type: 'enum',
-      defaultValue: 'single',
+      defaultValue: 'grid',
       values: ['single', 'split', 'grid', 'dominant'],
     },
     // -- video grid params --
@@ -44,6 +44,12 @@ export const compositionInterface = {
       type: 'boolean',
       defaultValue: false,
     },
+    {
+      id: 'videoScaleMode',
+      type: 'enum',
+      defaultValue: 'crop',
+      values: ['crop', 'fit'],
+    },
     // -- text overlay params --
     {
       id: 'showTextOverlay',
@@ -57,28 +63,30 @@ export const compositionInterface = {
     },
     {
       id: 'textAlign_horizontal',
-      type: 'text',
+      type: 'enum',
       defaultValue: 'center',
+      values: ['left', 'right', 'center'],
     },
     {
       id: 'textAlign_vertical',
-      type: 'text',
+      type: 'enum',
       defaultValue: 'center',
+      values: ['top', 'bottom', 'center'],
     },
     {
       id: 'textOffset_x',
-      type: 'text',
+      type: 'number',
       defaultValue: 0,
     },
     {
       id: 'textOffset_y',
-      type: 'text',
+      type: 'number',
       defaultValue: 0,
     },
     {
       id: 'textRotationInDegrees',
-      type: 'text',
-      defaultValue: '0',
+      type: 'number',
+      defaultValue: 0,
     },
     {
       id: 'textFontWeight',
@@ -87,8 +95,8 @@ export const compositionInterface = {
     },
     {
       id: 'textFontSize_percentageOfViewH',
-      type: 'text',
-      defaultValue: '7',
+      type: 'number',
+      defaultValue: 7,
     },
     {
       id: 'textColor',
@@ -130,6 +138,7 @@ export default function DailyBaselineVCS() {
     placeholderStyle,
     videoLabelStyle,
     showLabels: params.showParticipantLabels,
+    scaleMode: params.videoScaleMode,
   };
   let video;
   switch (params.mode) {

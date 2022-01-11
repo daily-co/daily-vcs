@@ -439,6 +439,8 @@ class ImageNode extends StyledNodeBase {
 
     if (oldProps.src !== newProps.src) return true;
 
+    if (oldProps.scaleMode !== newProps.scaleMode) return true;
+
     return false;
   }
 
@@ -446,6 +448,8 @@ class ImageNode extends StyledNodeBase {
     super.commit(container, oldProps, newProps);
 
     this.src = newProps.src;
+
+    this.scaleMode = newProps.scaleMode;
   }
 }
 
