@@ -8,6 +8,7 @@ import {
   DEFAULT_CORNER_RADIUS_PX,
 } from './constants';
 
+import CustomOverlay from './components/CustomOverlay';
 import TextOverlay from './components/TextOverlay';
 import VideoDominant from './components/VideoDominant';
 import VideoGrid from './components/VideoGrid';
@@ -159,7 +160,7 @@ export default function DailyBaselineVCS() {
       break;
   }
 
-  let graphics;
+  let graphics = [];
   if (params.showTextOverlay) {
     const fontSize_vh_pct = parseFloat(params.textFontSize_percentageOfViewH);
     const strokeColor = params.textStrokeColor
@@ -180,8 +181,9 @@ export default function DailyBaselineVCS() {
       strokeColor,
       useStroke,
     };
-    graphics = <TextOverlay {...overlayProps} />;
+    graphics.push(<TextOverlay key={0} {...overlayProps} />);
   }
+  graphics.push(<CustomOverlay key={1} />);
 
   return (
     <Box id="main">

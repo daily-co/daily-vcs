@@ -10,7 +10,7 @@ export default function VideoSplit({
   videoLabelStyle,
   placeholderStyle,
 }) {
-  const { activeIds } = useActiveVideo();
+  const { activeIds, displayNamesById } = useActiveVideo();
 
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
@@ -30,7 +30,7 @@ export default function VideoSplit({
             style={videoLabelStyle}
             layout={[layoutFuncs.offset, { x: 10, y: 10 }]}
           >
-            {`Video input id ${videoId}`}
+            {displayNamesById[videoId] || ''}
           </Label>
         );
       }

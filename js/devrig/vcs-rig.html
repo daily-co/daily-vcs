@@ -216,7 +216,7 @@ body {
 }
 #controls .videoInputButtons {
   display: inline-block;
-  height: 4em;
+  height: 6em;
 }
 #controls .videoInputButtons > div {
   display: inline-block;
@@ -237,6 +237,9 @@ body {
 }
 #controls .videoInputButtons > div > div button.screenshare {
   opacity: 78%;
+}
+#controls .videoInputButtons > div > div button.randomname {
+  opacity: 70%;
 }
 
     </style>
@@ -283,10 +286,11 @@ body {
           <p>16 video inputs are available. The first input is your live webcam image.
             For the rest, public domain comic images are provided as stand-ins.
           </p>
-          <p>Two metadata flags can be toggled:</p>
+          <p>Video input controls are:</p>
           <ul>
-            <li><b>D</b> = 'dominant' (e.g. active speaker)</li>
-            <li><b>S</b> = 'screenshare'</li>
+            <li><b>D</b> = toggle 'dominant' (e.g. active speaker)</li>
+            <li><b>S</b> = toggle 'screenshare'</li>
+            <li><b>RN</b> = randomize participant name</li>
           </ul>
           <p>'Composition interface' contains controls for all the params declared by the composition.
             Try changing these values to get an understanding of the options that this composition supports.
@@ -350,6 +354,7 @@ function setActiveVideoInput(idx, active, isScreenshare) {
     id: getVideoInputIdForSlotIndex(idx),
     active: !!active,
     type: isScreenshare ? 'screenshare' : 'camera',
+    displayName: 'Participant ' + (idx+1)
   };
 }
 
@@ -357,6 +362,23 @@ let g_paramValues = {};
 
 
 // --- UI actions ---
+
+function randomizeParticipantName(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  let s = 'Random ' + Math.floor(Math.random() * 100000);
+  if (Math.random() > 0.7) {
+    s += " longer user name";
+  }
+  else if (Math.random() > 0.6) {
+    s += " person";
+  }
+
+  g_activeVideoInputSlots[idx].displayName = s;
+
+  sendActiveVideoInputSlots();
+}
 
 function participantToggled(ev) {
   const btn = ev.target;
@@ -412,6 +434,7 @@ function screenshareToggled(ev) {
   
   createVideoInputsUI();
 }
+
 
 function paramCheckboxToggled(ev) {
   const btn = ev.target;
@@ -584,6 +607,18 @@ function createVideoInputsUI() {
     sBtn.className = cls;
 
     sBtn.addEventListener('click', screenshareToggled);
+
+    const nameBtn = document.createElement('button');
+    nameBtn.setAttribute('data-index', i);
+    nameBtn.setAttribute('data-video-randomname', true);
+    nameBtn.innerText = "RN";
+    box.appendChild(nameBtn);
+
+    cls = 'randomname';
+    if (screenshare) cls += ' selected';
+    nameBtn.className = cls;
+
+    nameBtn.addEventListener('click', randomizeParticipantName);
 
     flexbox.appendChild(box);
     mainBox.appendChild(flexbox);

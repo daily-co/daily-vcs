@@ -10,9 +10,9 @@ export default function VideoGrid({
   videoStyle,
   videoLabelStyle,
 }) {
-  const { activeIds } = useActiveVideo();
+  const { activeIds, displayNamesById } = useActiveVideo();
 
-  const items = activeIds.map((srcIdx, i) => {
+  const items = activeIds.map((videoId, i) => {
     const key = 'videogrid_item' + i;
     let participantLabel;
     if (showLabels && activeIds.length > 1) {
@@ -24,7 +24,7 @@ export default function VideoGrid({
             { y: -Math.round(DEFAULT_LABEL_FONT_SIZE_PX / 2) },
           ]}
         >
-          {`Video input id ${srcIdx}`}
+          {displayNamesById[videoId] || ''}
         </Label>
       );
     }
@@ -35,7 +35,7 @@ export default function VideoGrid({
         id={key}
         layout={[layoutFuncs.grid, { index: i, total: activeIds.length }]}
       >
-        <Video src={srcIdx} style={videoStyle} scaleMode={scaleMode} />
+        <Video src={videoId} style={videoStyle} scaleMode={scaleMode} />
         {participantLabel}
       </Box>
     );
