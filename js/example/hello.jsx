@@ -95,7 +95,7 @@ export default function HelloDailyVCS() {
 const DEFAULT_CORNER_RADIUS_PX = 25;
 
 function VideoGrid({ layout, showLabels, roundedCorners }) {
-  const { activeIds } = useActiveVideo();
+  const { activeIds,  displayNamesById } = useActiveVideo();
 
   const labelStyle = {
     textColor: 'white',
@@ -114,7 +114,7 @@ function VideoGrid({ layout, showLabels, roundedCorners }) {
     if (showLabels && n > 1) {
       participantLabel = (
         <Label style={labelStyle} layout={[layoutFuncs.offset, { y: -18 }]}>
-          {`Video input ${videoId + 1}`}
+          {displayNamesById[videoId] || ''}
         </Label>
       );
     }

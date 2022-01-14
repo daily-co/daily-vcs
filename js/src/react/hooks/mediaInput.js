@@ -16,6 +16,7 @@ export function useActiveVideo() {
   let activeIds = [];
   let activeScreenshareIds = [];
   let dominantId = null;
+  let displayNamesById = {};
   let maxSimultaneousVideoInputs = activeVideoInputSlots.length;
 
   for (let i = 0; i < maxSimultaneousVideoInputs; i++) {
@@ -32,12 +33,14 @@ export function useActiveVideo() {
     if (dominantId === null && slot.dominant) {
       dominantId = videoId;
     }
+    displayNamesById[videoId] = slot.displayName;
   }
 
   return {
     activeIds,
     activeScreenshareIds,
     dominantId,
+    displayNamesById,
     maxSimultaneousVideoInputs,
   };
 }

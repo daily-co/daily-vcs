@@ -13,7 +13,7 @@ export default function VideoDominant({
   placeholderStyle,
   dominantOnLeft,
 }) {
-  const { activeIds, activeScreenshareIds, dominantId } = useActiveVideo();
+  const { activeIds, activeScreenshareIds, dominantId, displayNamesById } = useActiveVideo();
 
   const splitPos = dominantOnLeft
     ? DOMINANT_SPLIT_PROP
@@ -37,7 +37,7 @@ export default function VideoDominant({
             style={videoLabelStyle}
             layout={[layoutFuncs.offset, { x: 10, y: 10 }]}
           >
-            {`Video input id ${videoId}`}
+            {displayNamesById[videoId] || ''}
           </Label>
         );
       }
