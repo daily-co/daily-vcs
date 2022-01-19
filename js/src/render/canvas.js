@@ -89,6 +89,14 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
   }
 
+  let inLayoutframeClip = false;
+  if (node.clip) {
+    ctx.save();
+    ctx.rect(frame.x, frame.y, frame.w, frame.h);
+    ctx.clip();
+    inLayoutframeClip = true;
+  }
+
   if (writeContent) {
     // encode asset references explicitly when writing a display list
     const isVCSDisplayListEncoder =
@@ -246,6 +254,10 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   }
 
   if (writeContent || recurseChildren) {
+    ctx.restore();
+  }
+
+  if (inLayoutframeClip) {
     ctx.restore();
   }
 }

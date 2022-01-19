@@ -612,11 +612,8 @@ function createVideoInputsUI() {
     nameBtn.setAttribute('data-index', i);
     nameBtn.setAttribute('data-video-randomname', true);
     nameBtn.innerText = "RN";
+    nameBtn.className = 'randomname';
     box.appendChild(nameBtn);
-
-    cls = 'randomname';
-    if (screenshare) cls += ' selected';
-    nameBtn.className = cls;
 
     nameBtn.addEventListener('click', randomizeParticipantName);
 
