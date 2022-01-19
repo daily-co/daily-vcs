@@ -4,7 +4,8 @@ import * as ViewContexts from '../src/react/contexts';
 export function makeVCSRootContainer(
   ContentRoot,
   rootContainerRef,
-  viewportSize
+  viewportSize,
+  errorCb
 ) {
   // a root component that wraps the view we loaded from the external JSX source,
   // and provides the React Context interface for feeding external data from a JSON file.
@@ -13,6 +14,7 @@ export function makeVCSRootContainer(
       super();
 
       this.state = {
+        hasError: false,
         compositionData: {
           mode: '',
           params: {},
@@ -27,12 +29,19 @@ export function makeVCSRootContainer(
       };
     }
 
+    static getDerivedStateFromError(error) {
+      return { hasError: true };
+    }
+
     componentDidCatch(error, info) {
       console.error(
         '\n** An error occurred in a React component:\n  %s\n',
         error.message,
         info.componentStack
       );
+      if (errorCb) {
+        errorCb(error, info);
+      }
     }
 
     setVideoTime(t) {
@@ -48,7 +57,6 @@ export function makeVCSRootContainer(
         ...this.state.mediaInput,
         activeVideoInputSlots: arr,
       };
-      console.log("active slots now: ", arr)
       this.setState({ mediaInput: newObj });
     }
 
@@ -61,11 +69,10 @@ export function makeVCSRootContainer(
       this.setState({ compositionData });
     }
 
-    static getDerivedStateFromError(error) {
-      return { hasError: true };
-    }
-
     render() {
+      if (this.state.hasError) {
+        return null;
+      }
       return (
         <ViewContexts.CompositionDataContext.Provider
           value={this.state.compositionData}

@@ -904,6 +904,14 @@ function outputIdChanged(ev) {
   recreateVCSCanvasOutput();
 }
 
+function vcsErrorCb(error, info) {
+  alert("A runtime error occurred within the composition. Playback has been stopped."
+        +"\n\nYou can view the detailed error in the browser Dev Tools console.\n"
+        +"Message and component stack:"
+        +"\n'"+error.message+"'"
+        +info.componentStack);
+}
+
 async function recreateVCSCanvasOutput() {
   let enablePreload = true;
 
@@ -916,7 +924,7 @@ async function recreateVCSCanvasOutput() {
   g_vcsApi = await DailyVCS.startCanvasOutputAsync(
     g_viewportSize.w, g_viewportSize.h,
     g_canvas, g_defaultSources, compUpdated,
-    {enablePreload});
+    {enablePreload, errorCb: vcsErrorCb});
 
   sendActiveVideoInputSlots();
 
