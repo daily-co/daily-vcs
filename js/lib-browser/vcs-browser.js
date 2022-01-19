@@ -18,14 +18,14 @@ export async function startCanvasOutputAsync(
   updatedCb,
   opts
 ) {
-  const { enablePreload } = opts || {};
+  const { enablePreload, errorCb } = opts || {};
 
   console.assert(
     w > 0 && h > 0,
     `startCanvasOutputAsync: Invalid viewport size specified: ${w}, ${h}`
   );
 
-  const vcs = new VCSBrowserOutput(w, h);
+  const vcs = new VCSBrowserOutput(w, h, errorCb);
 
   console.log(
     'created renderer %s: viewport size %d * %d, canvas %d * %d',
@@ -46,7 +46,7 @@ export async function startCanvasOutputAsync(
 }
 
 class VCSBrowserOutput {
-  constructor(w, h) {
+  constructor(w, h, errorCb) {
     this.viewportSize = { w, h };
 
     this.uuid = uuidv4();
@@ -70,6 +70,8 @@ class VCSBrowserOutput {
     this.preloadContainerEl = null;
 
     this.getAssetUrlCb = null;
+
+    this.errorCb = errorCb;
   }
 
   // --- asset loading utilities ---
@@ -131,7 +133,7 @@ class VCSBrowserOutput {
       const { id, element } = imageSources.videoSlots[i];
       this.imageSources.videoSlots.push({
         vcsSourceType: 'video',
-        vcsSourceId: (id !== undefined) ? id : i,
+        vcsSourceId: id !== undefined ? id : i,
         domElement: element,
       });
     }
@@ -165,7 +167,8 @@ class VCSBrowserOutput {
       makeVCSRootContainer(
         VCSComp.default,
         this.rootContainerRef,
-        this.viewportSize
+        this.viewportSize,
+        this.errorCb
       ),
       this.comp
     );

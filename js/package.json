@@ -48,7 +48,7 @@
     "test-scenario": "yarn run ts-node -T vcs-test-runner.js --scenario",
     "line-protocol": "yarn run ts-node -T vcs-line-protocol-main.js --compid",
     "import-test": "yarn run ts-node -T import-test.mjs --compid",
-    "build-browser": "wrap () { yarn webpack --env compid=\"$*\" | cat; }; wrap",
+    "build-browser": "wrap () { yarn webpack --env use_comp_filename --env compid=\"$*\" | cat; }; wrap",
     "hello-browser": "yarn webpack serve --open --env compid=example:hello"
   }
 }
