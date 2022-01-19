@@ -2,7 +2,6 @@ import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
-import { DEFAULT_LABEL_FONT_SIZE_PX } from '../constants';
 
 export default function VideoGrid({
   showLabels,
@@ -20,9 +19,10 @@ export default function VideoGrid({
         <Label
           style={videoLabelStyle}
           layout={[
-            layoutFuncs.offset,
-            { y: -Math.round(DEFAULT_LABEL_FONT_SIZE_PX / 2) },
+            layoutFuncs.gridLabel,
+            { textH: videoLabelStyle.fontSize_px },
           ]}
+          clip
         >
           {displayNamesById[videoId] || ''}
         </Label>

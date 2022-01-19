@@ -239,6 +239,8 @@ class NodeBase {
     this.layoutFunc = null;
     this.layoutParams = {};
     this.layoutFuncDeps = []; // hooks used by the layout function
+
+    this.clip = false;
   }
 
   shouldUpdate(container, oldProps, newProps) {
@@ -266,6 +268,8 @@ class NodeBase {
       return true;
     }
 
+    if (oldProps.clip !== newProps.clip) return true;
+
     return false;
   }
 
@@ -288,6 +292,8 @@ class NodeBase {
       this.layoutFunc = null;
       this.layoutParams = {};
     }
+
+    this.clip = newProps.clip;
   }
 
   delete() {

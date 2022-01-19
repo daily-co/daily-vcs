@@ -7,6 +7,7 @@ export function Box(props) {
       layout={props.layout}
       style={props.style || {}}
       transform={props.transform || {}}
+      clip={props.clip || false}
     >
       {props.children}
     </box>

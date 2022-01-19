@@ -140,6 +140,10 @@ class CanvasEncodingContext {
     this.encodeCmd('closePath');
   }
 
+  rect(...args) {
+    this.encodeCmd('rect', args);
+  }
+
   ellipse(...args) {
     this.encodeCmd('ellipse', args);
   }

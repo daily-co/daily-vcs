@@ -11,6 +11,7 @@ export function Label(props) {
       layout={props.layout}
       style={props.style || {}}
       transform={props.transform || {}}
+      clip={props.clip || false}
       text={text}
     />
   );

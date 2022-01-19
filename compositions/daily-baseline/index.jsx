@@ -48,8 +48,8 @@ export const compositionInterface = {
     {
       id: 'videoScaleMode',
       type: 'enum',
-      defaultValue: 'crop',
-      values: ['crop', 'fit'],
+      defaultValue: 'fill',
+      values: ['fill', 'fit'],
     },
     // -- text overlay params --
     {

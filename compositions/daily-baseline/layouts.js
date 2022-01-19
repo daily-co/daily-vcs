@@ -139,14 +139,39 @@ export function grid(parentFrame, params, layoutCtx) {
     return { ...parentFrame };
   }
 
-  const outerMargin = total > 1 ? viewport.h * 0.05 : 0;
-  const innerMargin = total > 1 ? viewport.h * 0.05 : 0;
-
   const numCols = total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
   const numRows = Math.ceil(total / numCols);
 
+  let outerMargins = {x: 0, y: 0}, innerMargins = {x: 0, y: 0};
+  if (total > 1) {
+    let marginRel;  // a relative margin depending on aspect ratio
+    if (outputAsp > 1) {
+      marginRel = Math.round(viewport.h * 0.05);
+    } else if (outputAsp <= 1) {
+      marginRel = viewport.w * 0.04;
+    }
+    innerMargins.x = innerMargins.y = marginRel;
+    //outerMargins.x = outerMargins.y = marginRel;
+
+    if (numCols === numRows) {
+      // when layout is tight, leave space in vertical margins for participant labels
+      if (outputAsp > 1) {
+        outerMargins.y = Math.round(marginRel * 0.7);
+      } else {
+        outerMargins.y = Math.round(marginRel * 1);
+      }
+    }
+  }
+
   // assume video item aspect ratio is same as output
   const videoAsp = outputAsp;
+
+  // apply outer margins by insetting frame
+  parentFrame = {...parentFrame};
+  parentFrame.x += outerMargins.x;
+  parentFrame.y += outerMargins.y;
+  parentFrame.w -= outerMargins.x * 2;
+  parentFrame.h -= outerMargins.y * 2;
 
   return computeGridItem({
     parentFrame,
@@ -154,9 +179,17 @@ export function grid(parentFrame, params, layoutCtx) {
     numCols,
     numRows,
     videoAsp,
-    outerMargin,
-    innerMargin,
+    innerMargins,
   });
+}
+
+export function gridLabel(parentFrame, params) {
+  const { textH = 0 } = params;
+  let { x, y, w, h } = parentFrame;
+
+  y += h + Math.round(textH * 0.1);
+
+  return { x, y, w, h };
 }
 
 // -- utils --
@@ -167,8 +200,7 @@ function computeGridItem({
   numCols,
   numRows,
   videoAsp,
-  outerMargin,
-  innerMargin,
+  innerMargins,
 }) {
   const parentAsp = parentFrame.w / parentFrame.h;
   const contentAsp = (numCols * videoAsp) / numRows;
@@ -179,33 +211,36 @@ function computeGridItem({
   // item size depends on whether our content is wider or narrower than the parent frame
   if (contentAsp >= parentAsp) {
     itemW =
-      (parentFrame.w - 2 * outerMargin - (numCols - 1) * innerMargin) / numCols;
+      (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
     itemH = itemW / videoAsp;
 
     // center grid vertically
-    x += outerMargin;
-    y += (parentFrame.h - (numRows * itemH + innerMargin * (numRows - 1))) / 2;
+    y += (parentFrame.h - (numRows * itemH + innerMargins.y * (numRows - 1))) / 2;
   } else {
     itemH =
-      (parentFrame.h - 2 * outerMargin - (numRows - 1) * innerMargin) / numRows;
+      (parentFrame.h - (numRows - 1) * innerMargins.y) / numRows;
     itemW = itemH * videoAsp;
 
     // center grid horizontally
-    y += outerMargin;
-    x += (parentFrame.w - (numCols * itemW + innerMargin * (numCols - 1))) / 2;
+    x += (parentFrame.w - (numCols * itemW + innerMargins.x * (numCols - 1))) / 2;
   }
 
   const col = index % numCols;
   const row = Math.floor(index / numCols);
 
   x += col * itemW;
-  x += col * innerMargin;
+  x += col * innerMargins.x;
 
   y += row * itemH;
-  y += row * innerMargin;
+  y += row * innerMargins.y;
 
   w = itemW;
   h = itemH;
+
+  x = Math.round(x);
+  y = Math.round(y);
+  w = Math.ceil(w);
+  h = Math.ceil(h);
 
   //console.log("computing grid %d / %d, rows/cols %d, %d: ", index, total, numRows, numCols, x, y);
 
