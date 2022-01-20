@@ -110,14 +110,30 @@ export function column(parentFrame, params, layoutCtx) {
   const { viewport } = layoutCtx;
   const outputAsp = viewport.w / viewport.h;
 
-  const outerMargin = total > 1 ? viewport.h * 0.05 : 0;
-  const innerMargin = total > 1 ? viewport.h * 0.05 : 0;
+  let outerMargins = {x: 0, y: 0}, innerMargins = {x: 0, y: 0};
+  if (total > 1) {
+    let marginRel;  // a relative margin depending on aspect ratio
+    if (outputAsp > 1) {
+      marginRel = Math.round(viewport.h * 0.02);
+    } else if (outputAsp <= 1) {
+      marginRel = viewport.w * 0.04;
+    }
+    innerMargins.x = innerMargins.y = marginRel;
+    outerMargins.x = outerMargins.y = marginRel*0.75;
+  }
 
   const numCols = 1;
-  const numRows = total;
+  const numRows = 5;
 
   // assume video item aspect ratio is same as output
   const videoAsp = outputAsp;
+
+  // apply outer margins by insetting frame
+  parentFrame = {...parentFrame};
+  parentFrame.x += outerMargins.x;
+  parentFrame.y += outerMargins.y;
+  parentFrame.w -= outerMargins.x * 2;
+  parentFrame.h -= outerMargins.y * 2;
 
   return computeGridItem({
     parentFrame,
@@ -125,8 +141,7 @@ export function column(parentFrame, params, layoutCtx) {
     numCols,
     numRows,
     videoAsp,
-    outerMargin,
-    innerMargin,
+    innerMargins,
   });
 }
 
@@ -151,7 +166,6 @@ export function grid(parentFrame, params, layoutCtx) {
       marginRel = viewport.w * 0.04;
     }
     innerMargins.x = innerMargins.y = marginRel;
-    //outerMargins.x = outerMargins.y = marginRel;
 
     if (numCols === numRows) {
       // when layout is tight, leave space in vertical margins for participant labels
