@@ -270,6 +270,9 @@ class NodeBase {
 
     if (oldProps.clip !== newProps.clip) return true;
 
+    if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform))
+      return true;
+
     return false;
   }
 
@@ -294,6 +297,13 @@ class NodeBase {
     }
 
     this.clip = newProps.clip;
+
+    // we should compute a 2D transformation matrix at this point
+    // and encapsulate any scale / rotate / anchor point props there
+    // to make rendering easier (so that targets don't have to compute this
+    // same stuff over again).
+    // for now, just pass through the object received from the composition.
+    this.transform = newProps.transform;
   }
 
   delete() {
@@ -336,9 +346,6 @@ class StyledNodeBase extends NodeBase {
 
     if (!isEqualStyleOrTransform(oldProps.style, newProps.style)) return true;
 
-    if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform))
-      return true;
-
     return false;
   }
 
@@ -346,13 +353,6 @@ class StyledNodeBase extends NodeBase {
     super.commit(container, oldProps, newProps);
 
     this.style = newProps.style;
-
-    // we should compute a 2D transformation matrix at this point
-    // and encapsulate any scale / rotate / anchor point props there
-    // to make rendering easier (so that targets don't have to compute this
-    // same stuff over again).
-    // for now, just pass through the object received from the composition.
-    this.transform = newProps.transform;
   }
 }
 

@@ -94,7 +94,22 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   let inLayoutframeClip = false;
   if (node.clip) {
     ctx.save();
-    ctx.rect(frame.x, frame.y, frame.w, frame.h);
+    if (
+      node.style &&
+      Number.isFinite(node.style.cornerRadius_px) &&
+      node.style.cornerRadius_px > 0
+    ) {
+      roundRect(
+        ctx,
+        frame.x,
+        frame.y,
+        frame.w,
+        frame.h,
+        node.style.cornerRadius_px
+      );
+    } else {
+      ctx.rect(frame.x, frame.y, frame.w, frame.h);
+    }
     ctx.clip();
     inLayoutframeClip = true;
   }
@@ -287,7 +302,11 @@ function drawStyledText(ctx, text, style, frame, comp) {
   const isVCSDisplayListEncoder =
     typeof ctx.drawImage_vcsDrawable === 'function';
 
-  ctx.fillStyle = style.textColor || 'white';
+  let color = style.textColor || 'white';
+  if (Array.isArray(color)) {
+    color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] !== undefined ? color[3] : 1})`;
+  }
+  ctx.fillStyle = color;
 
   let fontSize_px;
   if (isFinite(style.fontSize_vh) && style.fontSize_vh > 0) {
