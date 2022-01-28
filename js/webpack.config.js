@@ -144,6 +144,7 @@ const wwwClientConfig = function (env) {
       alias: {
         '#vcs': path.resolve('./src'),
         '#vcs-react': path.resolve('./src/react'),
+        react: path.resolve('./node_modules/react'),
       },
       fallback: {
         // following fallbacks are needed by textkit (from react-pdf)

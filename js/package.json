@@ -10,7 +10,7 @@
     "@babel/plugin-transform-regenerator": "^7.16.5",
     "copy-webpack-plugin": "^10.2.0",
     "html-webpack-plugin": "^5.5.0",
-    "react": "^17.0.2",
+    "react": "17.0.2",
     "react-devtools-core": "^4.16.0",
     "react-reconciler": "^0.26.2",
     "scheduler": "^0.20.2",
@@ -37,6 +37,9 @@
     "stream-browserify": "^3.0.0",
     "util": "^0.12.4",
     "uuid": "^8.3.2"
+  },
+  "resolutions": {
+    "react": "17.0.2"
   },
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
