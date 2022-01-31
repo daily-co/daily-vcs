@@ -5,11 +5,11 @@ import { DEFAULT_FONT } from '../constants';
 
 export default function TextOverlay({
   content,
-  vAlign,
-  hAlign,
-  xOffset,
-  yOffset,
-  rotation,
+  align_vertical,
+  align_horizontal,
+  offset_x,
+  offset_y,
+  rotationInDegrees,
   color,
   fontSize_vh,
   fontWeight,
@@ -25,14 +25,19 @@ export default function TextOverlay({
     strokeWidth_px: useStroke ? 12 : 0,
   };
   let textTrs;
-  if (rotation) {
+  if (Number.isFinite(rotationInDegrees)) {
     textTrs = {
-      rotate_deg: rotation,
+      rotate_deg: rotationInDegrees,
     };
   }
 
   const layoutFn = layoutFuncs.placeText;
-  const layoutParams = { vAlign, hAlign, xOffset, yOffset };
+  const layoutParams = {
+    vAlign: align_vertical,
+    hAlign: align_horizontal,
+    xOffset: offset_x,
+    yOffset: offset_y
+  };
 
   return (
     <Label
