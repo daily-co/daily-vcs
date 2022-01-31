@@ -131,6 +131,7 @@ const wwwClientConfig = function (env) {
       new CopyWebpackPlugin({
         patterns: [
           { from: "./devrig/example-assets", to: "example-assets" },
+          { from: "./devrig/ui-assets", to: "ui-assets" },
           { from: "../res", to: "res" },
         ],
       }),  

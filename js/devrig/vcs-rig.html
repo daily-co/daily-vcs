@@ -4,12 +4,24 @@
     <style>
 
 body {
+  --highlight-color: #1BEBB9;
+  --bg-color: #121A24;
+  --bg-color-lighter1: #1F2D3D;
+  --bg-color-lighter2: #2B3F56;
+  --splitter-color: #2B3F56;
+  --control-outline-color: #2B3F56;
+  --grey-text-color: #6B7785;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  font-size: 15px;
-  background-color: #272627;
-  color: black;
+  font-size: 13px;
+  font-weight: 400;
+  background: var(--bg-color);
+  color: white;
   margin: 0;
   padding: 0;
+}
+table {
+  font-size: inherit;
+  border-spacing: 0;
 }
 
 #mainContainer {
@@ -21,7 +33,7 @@ body {
 
 #leftSplit {
   width: 63%;
-  min-width: 800px;
+  min-width: 900px;
   height: 100%;
   flex: 0 0 auto;
   display: flex;
@@ -31,30 +43,32 @@ body {
 #rightSplit {
   height: 100%;
   flex: 1 0 0;
-  background-color: black;
+  border-left: 1px solid var(--splitter-color);
   color: #ccc;
   overflow-x: hidden;
   overflow-y: scroll;
 }
 #rightSplit .tabBar {
   text-align: center;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
+  padding-top: 2em;
+  padding-bottom: 0;
+  border-bottom: 1px solid var(--splitter-color);
 }
 #rightSplit .tabBar button {
   background: transparent;
   color: #ddd;
-  border-width: 1px;
+  border: none;
+  cursor: pointer;
 }
 #rightSplit .tabBar button.selected {
-  background-color: coral;
   color: white;
+  font-weight: 600;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--highlight-color);
 }
 #rightSplit .tabContent {
   display: none;
-  padding: 1em;
-  padding-left: 1.5em;
-  padding-right: 1.5em;
+  padding: 2em;
 }
 #rightSplit .tabContent.visible {
   display: block;
@@ -62,17 +76,24 @@ body {
 
 #rightSplit .tabContent button {
   margin-right: 1em;
-  background-color: #ccc;
   font-weight: bold;
-  border-width: 1px;
+  background: var(--bg-color);
+  color: white;
+  border: 1px solid var(--control-outline-color);
+  padding: 5px;
+  padding-right: 10px;
+  padding-left: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+
 }
 #rightSplit .tabContent button.disabled {
   background-color: black;
   color: #888;
 }
 #rightSplit .tabContent button.selected {
-  background-color: coral;
-  color: white;
+  background-color: var(--highlight-color);
+  color: black;
 }
 
 #apicallControls {
@@ -113,71 +134,71 @@ body {
 #deco {
   flex: none;
   margin-top: 1px;
-  height: 62px;
-  background-image: url('example-assets/atari_vcs_woodgrain_texture.png');
+  height: 58px;
+  background: #1F2D3D;
   display: flex;
   flex-direction: row;
-  color: rgba(255, 255, 240, 0.7);
 }
 #deco > div {
   margin-top: 5px;
-  padding: 1rem;
+  padding: 14px;
 }
 #compInfo {
   flex: 0 0 1;
   text-shadow: rgba(0, 0, 0, 0.4) 1px 1px;
-  font-size: 1.05rem;
+  font-size: 1rem;
 }
 #compInfo .name {
   font-weight: 600;
+  letter-spacing: 0.2px;
   margin-bottom: 0.25em;
   display: inline-block;
 }
 #compInfo .description {
   font-weight: 300;
-  font-size: 0.9em;
-  opacity: 0.95;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+  opacity: 0.9;
   display: inline-block;
   margin-left: 2em;
 }
-#compOutput {
+#deco > div#compOutput {
   flex: 1 0 auto;
   text-align: right;
+  font-size: 13px;
+  margin-top: 3px;
 }
+
 #compOutput button {
-  background: transparent;
+  background: var(--bg-color);
   color: white;
+  border: none;
+  padding: 5px;
+  padding-right: 10px;
+  padding-left: 10px;
+  border-radius: 5px;
+  margin-left: 5px;
 }
 #compOutput button.selected {
-  background-color: coral;
+  background-color: var(--highlight-color);
+  color: black;
 }
 
 #controls {
-  background-color: #474749;
-  color: #eee;
   padding: 1rem;
-  font-size: 14px;
   overflow-y: scroll;
+}
+#controls div {
+  box-sizing: border-box;
 }
 #controls button {
   padding: 1px 6px;
 }
 #controls button.selected {
-  background-color: coral;
+  background-color: var(--highlight-color);
 }
-#controls input[type=checkbox] {
-  appearance: none;
-  display: inline-block;
-  width: 1.1em;
-  height: 1.1em;
-  border: 1px solid gray;
+#controls button:focus {
   outline: none;
-  vertical-align: middle;
-  position: relative;
-  top: -2px;
-}
-#controls input[type=checkbox]:checked {
-  background-color: coral;
 }
 #demoassets {
   display: none;
@@ -185,35 +206,129 @@ body {
 #controls h3 {
   margin: 0;
   margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 14px;
+  font-weight: 590;
+  color: var(--highlight-color);
 }
 #controls h4 {
   margin-top: 0.5rem;
   margin-right: 1rem;
-  margin-bottom: 0;
-  font-weight: normal;
+  margin-bottom: 0.5rem;
+  color: var(--grey-text-color);
+  font-weight: 600;
 }
 #controls .compInterface {
   margin-top: 1.5em;
 }
-#controls .compInterface > div.params {
-  margin-left: 1rem;
+#controls .compInterface .paramsContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 30px;
+}
+#controls .compInterface .params {
+  --label-width: 170px;
+  --label-width-with-margin: 180px;
 }
 #controls .compInterface .params > div {
-  margin-top: 0.35em;
+  margin-top: 2px;
+  height: 30px;
+  position: relative;
 }
-#controls .compInterface .params > div > input[type=text] {
+#controls .compInterface .params label {
+  width: var(--label-width);
   display: inline-block;
-  width: 30em;
-  margin-left: 1em;
-  background-color: rgba(90, 90, 90, 0.5);
+  overflow: hidden;
+  position: relative;
+  top: 4px;
+}
+#controls .compInterface .params input {
+  background-color: transparent;
+  border: 1px solid var(--control-outline-color);
+  border-radius: 5px;
   color: white;
+  padding: 2px;
+  outline: none;
+}
+#controls .compInterface .params input[type=text] {
+  display: inline-block;
+  width: calc(100% - var(--label-width-with-margin));
 }
 #controls .compInterface .params select {
-  min-width: 20em;
-  margin-left: 1em;
+  display: inline-block;
+  width: calc(100% - var(--label-width-with-margin));
+  background-color: transparent;
+  border: 1px solid var(--control-outline-color);
+  border-radius: 5px;
+  color: white;
+  padding: 2px;
+  outline: none;
 }
+#controls .compInterface .params input[type=checkbox] {
+  margin: 0;
+  appearance: none;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  outline: none;
+}
+#controls .compInterface .params input[type=checkbox]:checked {
+  background-color: var(--highlight-color);
+}
+
+#controls .mediaInput {
+  display: flex;
+  flex-direction: row;
+}
+#controls .mediaInput .labels {
+  width: 160px;
+}
+#controls .mediaInput .labels > div {
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  padding-top: 8px;
+}
+#controls .mediaInput .buttonContainer {
+  display: flex;
+  flex-direction: row;
+}
+#controls .mediaInput .buttonColumn {
+  width: 32px;
+  flex: 1;
+  background-color: var(--bg-color-lighter2);
+  border-radius: 6px;
+  margin-right: 4px;
+}
+#controls .mediaInput .buttonColumn > button {
+  margin: 3px;
+  padding: 0;
+  height: 26px;
+  width: 26px;
+  border: 0;
+  border-radius: 4px;
+  background-color: var(--bg-color-lighter1);
+  background-size: 60%;
+  background-repeat: no-repeat;
+  background-position: center;
+  color: white;
+}
+#controls .mediaInput .buttonColumn > button.selected {
+  background-color: var(--highlight-color);
+  color: black;
+}
+#controls .mediaInput .buttonColumn > button:active {
+  background-color: var(--highlight-color);
+}
+#controls .mediaInput .buttonColumn > button.randomname {
+  background-image: url('ui-assets/randomize.png');
+}
+#controls .mediaInput .buttonColumn .checkboxOff {
+  background-image: url('ui-assets/checkboxOff.png');
+}
+#controls .mediaInput .buttonColumn .checkboxOn {
+  background-image: url('ui-assets/checkboxOn.png');
+}
+
 #controls .videoInputButtons {
   display: inline-block;
   height: 6em;
@@ -266,32 +381,34 @@ body {
         <div id="controls">
           <div class="vc">
             <h3>Media input</h3>
-            <span>Active video inputs: </span>
-            <span class="videoInputButtons"></span>
+            <div class="mediaInput">
+              <div class="labels">
+                <div>Active video inputs</div>
+                <div>Make dominant</div>
+                <div>Toggle screenshare</div>
+                <div>Randomize name</div>
+              </div>
+              <div class="buttonContainer"></div>
+            </div>
           </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
-            <h4>Params:</h4>
-            <div class="params"></div>
+            <div class="paramsContainer">
+            </div>
           </div>
         </div>  
       </div>
       <div id="rightSplit">
         <div class="tabBar">
-          <button data-id="help" class="selected">Help</button><button data-id="apicall">API Call Builder</button><button data-id="debug">Debug</button>
+          <button data-id="help" class="selected">Help</button><button data-id="apicall">API Call Builder</button>
         </div>
         <div class="tabContent visible" data-id="help">
           <p>Welcome to the Daily VCS simulator.</p>
           <p>This page lets you interact with the VCS composition whose name is displayed just below the preview.</p>
-          <p>16 video inputs are available. The first input is your live webcam image.
+          <p>20 video inputs are available. The first input is your live webcam image.
             For the rest, public domain comic images are provided as stand-ins.
           </p>
-          <p>Video input controls are:</p>
-          <ul>
-            <li><b>D</b> = toggle 'dominant' (e.g. active speaker)</li>
-            <li><b>S</b> = toggle 'screenshare'</li>
-            <li><b>RN</b> = randomize participant name</li>
-          </ul>
+          <p>(Tip: Shift+click on a video input to toggle all inputs up to that number.)</p>
           <p>'Composition interface' contains controls for all the params declared by the composition.
             Try changing these values to get an understanding of the options that this composition supports.
           </p>
@@ -334,7 +451,7 @@ if ( !isChrome) {
 
 // --- UI state ---
 
-const MAX_VIDEO_INPUTS = 16;
+const MAX_VIDEO_INPUTS = 20;
 
 const g_activeVideoInputSlots = [];
 let g_dominantIdx = -1;
@@ -363,6 +480,35 @@ let g_paramValues = {};
 
 // --- UI actions ---
 
+const decoEl = document.getElementById("deco");
+let isAtari = false;
+decoEl.addEventListener('click', function(ev) {
+  if (!ev.altKey) return;
+  if (isAtari) {
+    decoEl.style = '';
+  } else {
+    decoEl.style = "background-image: url('example-assets/atari_vcs_woodgrain_texture.png')";
+  }
+  isAtari = !isAtari;
+  ev.preventDefault();
+});
+
+const tabBarEl = document.querySelector(".tabBar");
+let showingDebug = false;
+tabBarEl.addEventListener('click', function(ev) {
+  if (!ev.altKey) return;
+  if (!showingDebug) {
+    const debugBtn = document.createElement('button');
+    debugBtn.setAttribute('data-id', 'debug');
+    debugBtn.innerText = "Debug";
+    debugBtn.addEventListener('click', tabBarButtonClicked);
+    tabBarEl.appendChild(debugBtn);
+    showingDebug = true;
+    //<button data-id="debug">Debug</button>
+  }
+  ev.preventDefault();
+});
+
 function randomizeParticipantName(ev) {
   const btn = ev.target;
   const idx = parseInt(btn.dataset.index, 10);
@@ -381,13 +527,26 @@ function randomizeParticipantName(ev) {
 }
 
 function participantToggled(ev) {
-  const btn = ev.target;
+  let btn = ev.target;
   const idx = parseInt(btn.dataset.index, 10);
 
   const active = g_activeVideoInputSlots[idx].active ? false : true;
-  btn.setAttribute('class', active ? 'selected' : '');
 
-  g_activeVideoInputSlots[idx].active = active;
+  let newCls = 'participant';
+  if (active) newCls += ' selected';
+  const baseCls = 'participant';
+  
+  if (!ev.shiftKey) {
+    btn.className = newCls;
+    g_activeVideoInputSlots[idx].active = active;
+  } else {
+    // if shift pressed, toggle all inputs up to this one
+    for (let i = 1; i <= idx; i++) {
+      btn = videoInputsUI_btnContainer.querySelector(`button.participant[data-index='${i}']`);
+      btn.className = newCls;
+      g_activeVideoInputSlots[i].active = active;
+    }
+  }
 
   sendActiveVideoInputSlots();
 }
@@ -473,65 +632,132 @@ function paramEnumSelected(ev) {
   sendParam(paramId, newValue);
 }
 
-function createParamsUI(compInterface, box) {
+function createParamsUI(compInterface, groupsContainerEl) {
+  // collect param groups
+  const groups = [];
+  groups.push({
+    name: '',
+    isMain: true,
+    items: []
+  });
   for (const paramDesc of compInterface.params) {
-    const {id, type, defaultValue} = paramDesc;
-    let el;
-    let posLeft = false;
-    switch (type) {
-      default:
-        console.warn("** unsupported param type from composition: '%s'", type);
-        break;
+    const {id} = paramDesc;
+    let idx;
+    if ((idx = id.indexOf('.')) > 0) {
+      const groupName = id.substr(0, idx);
+      const subid = id.substr(idx + 1);
+      let group = groups.find(g => g.name === groupName);
+      if (!group) {
+        group = { name: groupName, items: []};
+        groups.push(group);
+      }
+      group.items.push(paramDesc);
+    } else {
+      groups[0].items.push(paramDesc);
+    }
+  }
+  for (const group of groups) {
+    if (group.items.length < 1) continue;
 
-      case 'boolean':
-        el = document.createElement('input');
-        el.setAttribute('type', 'checkbox');
-        if (defaultValue) el.setAttribute('checked', true);
+    const groupBox = document.createElement('div');
+    groupsContainerEl.appendChild(groupBox);
 
-        el.addEventListener('change', paramCheckboxToggled);
-        posLeft = true;
-        break;
-
-      case 'number': // TODO: implement number value picker
-      case 'text':
-        el = document.createElement('input');
-        el.setAttribute('type', 'text');
-        if (defaultValue || typeof defaultValue == 'number') {
-          el.setAttribute('value', defaultValue);
-        }
-
-        el.addEventListener('change', paramTextEdited);
-        break;
-
-      case 'enum':
-        el = document.createElement('select');
-        createEnumUI(paramDesc.values || [], id, el);
-
-        if (defaultValue && paramDesc.values) {
-          // select default item
-          const idx = paramDesc.values.indexOf(defaultValue);
-          if (idx >= 0) el.selectedIndex = idx;
-        }
-        
-        el.addEventListener('change', paramEnumSelected);
-        break;
+    if (group.isMain && groups.length > 1) {
+      // put main params box above groups
+      groupBox.style = "grid-column: 1/3; width: calc(50% - 10px);";
     }
 
-    if (el) {
-      el.setAttribute('data-param-id', id);
+    const head = document.createElement('h4');
+    groupBox.appendChild(head);
+    head.innerText = (group.isMain)
+                ? (groups.length > 1 ? 'Main params' : 'Params')
+                : `Param group: ${group.name}`;
 
-      const div = document.createElement('div');
-      const label = document.createElement('label');
-      label.innerText = id || '<No id provided>';
-      
-      if (posLeft) {
-        div.appendChild(el);
-        div.appendChild(label);
-      } else {
-        div.appendChild(label);
-        div.appendChild(el);
+    const box = document.createElement('div');
+    groupBox.appendChild(box);
+    box.className = 'params';
+
+    for (const paramDesc of group.items) {
+      const {id, type, defaultValue} = paramDesc;
+      let displayName = id;
+      if (!group.isMain) {
+        const idx = id.indexOf('.');
+        displayName = id.substr(idx + 1);
       }
-      box.appendChild(div);
+      let el;
+      let posLeft = false;
+      switch (type) {
+        default:
+          console.warn("** unsupported param type from composition: '%s'", type);
+          break;
+
+        case 'boolean': {
+          el = document.createElement('input');
+          el.setAttribute('type', 'checkbox');
+          if (defaultValue) el.setAttribute('checked', true);
+
+          el.addEventListener('change', paramCheckboxToggled);
+
+          // wrapper to prevent weird margin collapse with checkbox
+          const div = document.createElement('div');
+          div.setAttribute('style', 'display: inline-block; position: absolute;');
+          div.appendChild(el);
+          el.setAttribute('data-param-id', id);
+          el = div;
+          break;
+        }
+
+        case 'number':
+        el = document.createElement('input');
+          el.setAttribute('type', 'number');
+          if (defaultValue || typeof defaultValue == 'number') {
+            el.setAttribute('value', defaultValue);
+          }
+          if (Number.isFinite(paramDesc.step) && paramDesc.step > 0) {
+            el.setAttribute('step', paramDesc.step);
+          }
+          el.addEventListener('change', paramTextEdited);
+          break;
+
+        case 'text':
+          el = document.createElement('input');
+          el.setAttribute('type', 'text');
+          if (defaultValue || typeof defaultValue == 'number') {
+            el.setAttribute('value', defaultValue);
+          }
+          el.addEventListener('change', paramTextEdited);
+          break;
+
+        case 'enum':
+          el = document.createElement('select');
+          createEnumUI(paramDesc.values || [], id, el);
+
+          if (defaultValue && paramDesc.values) {
+            // select default item
+            const idx = paramDesc.values.indexOf(defaultValue);
+            if (idx >= 0) el.selectedIndex = idx;
+          }
+          
+          el.addEventListener('change', paramEnumSelected);
+          break;
+      }
+
+      if (el) {
+        el.setAttribute('data-param-id', id);
+
+        const div = document.createElement('div');
+        const label = document.createElement('label');
+        label.innerText = displayName || '<No id provided>';
+        
+        if (posLeft) {
+          div.appendChild(el);
+          div.appendChild(label);
+        } else {
+          div.appendChild(label);
+          div.appendChild(el);
+        }
+        box.appendChild(div);
+      }
     }
   }
 }
@@ -556,13 +782,18 @@ function createEnumUI(enumValues, paramId, sel) {
   }
 }
 
-function createVideoInputsUI() {
-  const mainBox = document.querySelector("#controls .videoInputButtons");
-
+function removeChildren(box) {
   let child;
-  while ((child = mainBox.firstChild)) {
-    mainBox.removeChild(child);
+  while ((child = box.firstChild)) {
+    box.removeChild(child);
   }
+}
+
+const videoInputsUI_btnContainer = document.querySelector("#controls .mediaInput .buttonContainer");
+
+function createVideoInputsUI() {
+  const mainBox = videoInputsUI_btnContainer;
+  removeChildren(mainBox);
 
   const n = MAX_VIDEO_INPUTS;
   for (i = 0; i < n; i++) {
@@ -571,15 +802,15 @@ function createVideoInputsUI() {
     const dominant = g_dominantIdx === i;
 
     const box = document.createElement('div');
-    const flexbox = document.createElement('div');
+    box.className = 'buttonColumn';
 
     const btn = document.createElement('button');
     btn.setAttribute('data-index', i);
     btn.innerText = ""+(i + 1);
     box.appendChild(btn);
 
-    let cls = '';
-    if (active) cls += 'selected';
+    let cls = 'participant';
+    if (active) cls += ' selected';
     btn.className = cls;
     
     btn.addEventListener('click', participantToggled);
@@ -587,11 +818,12 @@ function createVideoInputsUI() {
     const domBtn = document.createElement('button');
     domBtn.setAttribute('data-index', i);
     domBtn.setAttribute('data-video-dominant', true);
-    domBtn.innerText = "D";
+    domBtn.innerText = "";
     box.appendChild(domBtn);
 
     cls = 'dominant';
-    if (dominant) cls += ' selected';
+    if (dominant) cls += ' selected checkboxOn';
+    else cls += ' checkboxOff';
     domBtn.className = cls;
 
     domBtn.addEventListener('click', dominantToggled);
@@ -599,11 +831,12 @@ function createVideoInputsUI() {
     const sBtn = document.createElement('button');
     sBtn.setAttribute('data-index', i);
     sBtn.setAttribute('data-video-screenshare', true);
-    sBtn.innerText = "S";
+    sBtn.innerText = "";
     box.appendChild(sBtn);
 
     cls = 'screenshare';
-    if (screenshare) cls += ' selected';
+    if (screenshare) cls += ' selected checkboxOn';
+    else cls += ' checkboxOff';
     sBtn.className = cls;
 
     sBtn.addEventListener('click', screenshareToggled);
@@ -611,14 +844,13 @@ function createVideoInputsUI() {
     const nameBtn = document.createElement('button');
     nameBtn.setAttribute('data-index', i);
     nameBtn.setAttribute('data-video-randomname', true);
-    nameBtn.innerText = "RN";
+    nameBtn.innerText = "";
     nameBtn.className = 'randomname';
     box.appendChild(nameBtn);
 
     nameBtn.addEventListener('click', randomizeParticipantName);
 
-    flexbox.appendChild(box);
-    mainBox.appendChild(flexbox);
+    mainBox.appendChild(box);
   }
 }
 
@@ -738,7 +970,7 @@ async function start() {
   document.querySelector("#compInfo .description").innerHTML = displayMeta.description;
 
   // create composition UI
-  createParamsUI(compInterface, document.querySelector("#controls .compInterface .params"));
+  createParamsUI(compInterface, document.querySelector("#controls .compInterface .paramsContainer"));
 }
 
 window.addEventListener('load', function(ev) {
@@ -776,7 +1008,7 @@ function captureCurrentValuesToApicallRec() {
   const compInterface = g_vcsApi.getCompositionInterface();
   for (const paramDesc of compInterface.params) {
     const {id, type, defaultValue} = paramDesc;
-    if (defaultValue) {
+    if (defaultValue || (type === 'number' && Number.isFinite(defaultValue))) {
       params[id] = defaultValue;
     } else if (type === 'boolean') {
       params[id] = false;
@@ -847,7 +1079,7 @@ function tabBarButtonClicked(ev) {
     debug:   document.querySelector("#rightSplit .tabBar button[data-id='debug']"),
   };
   for (const key in btns) {
-    btns[key].className = '';
+    if (btns[key]) btns[key].className = '';
   }
   btns[id].className = 'selected';
 
@@ -921,10 +1153,12 @@ async function recreateVCSCanvasOutput() {
     enablePreload = false; // don't preload again
   }
 
+  const fps = 5; // frame rate for React videoTime updates
+
   g_vcsApi = await DailyVCS.startCanvasOutputAsync(
     g_viewportSize.w, g_viewportSize.h,
     g_canvas, g_defaultSources, compUpdated,
-    {enablePreload, errorCb: vcsErrorCb});
+    {enablePreload, errorCb: vcsErrorCb, fps});
 
   sendActiveVideoInputSlots();
 

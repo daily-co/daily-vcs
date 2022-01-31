@@ -18,14 +18,14 @@ export async function startCanvasOutputAsync(
   updatedCb,
   opts
 ) {
-  const { enablePreload, errorCb } = opts || {};
+  const { enablePreload, errorCb, fps } = opts || {};
 
   console.assert(
     w > 0 && h > 0,
     `startCanvasOutputAsync: Invalid viewport size specified: ${w}, ${h}`
   );
 
-  const vcs = new VCSBrowserOutput(w, h, errorCb);
+  const vcs = new VCSBrowserOutput(w, h, fps, errorCb);
 
   console.log(
     'created renderer %s: viewport size %d * %d, canvas %d * %d',
@@ -46,7 +46,7 @@ export async function startCanvasOutputAsync(
 }
 
 class VCSBrowserOutput {
-  constructor(w, h, errorCb) {
+  constructor(w, h, fps, errorCb) {
     this.viewportSize = { w, h };
 
     this.uuid = uuidv4();
@@ -64,6 +64,7 @@ class VCSBrowserOutput {
     this.startT = 0;
     this.lastT = 0;
     this.stopped = false;
+    this.fps = fps || 15;
 
     // asset preloading
     this.enableAssetPreload = true;
@@ -217,7 +218,7 @@ class VCSBrowserOutput {
     let renderNow = true;
 
     // limit frame rate to React updates
-    if (t - this.lastT >= 1 / 4) {
+    if (t - this.lastT >= 1 / this.fps) {
       const videoT = t - this.startT;
 
       this.rootContainerRef.current.setVideoTime(videoT);

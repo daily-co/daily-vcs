@@ -1,3 +1,5 @@
+import { PositionEdge, PositionCorner } from './constants';
+
 // --- layout functions and utils ---
 
 export function pad(parentFrame, params) {
@@ -105,31 +107,56 @@ export function splitVertical(parentFrame, params) {
   return { x, y, w, h };
 }
 
+export function splitHorizontal(parentFrame, params) {
+  let { index, pos = 0.5 } = params;
+  let { x, y, w, h } = parentFrame;
+
+  if (index === 0) {
+    h *= pos;
+  } else {
+    h *= 1 - pos;
+    y += parentFrame.h * pos;
+  }
+
+  return { x, y, w, h };
+}
+
+export function splitAcrossLongerDimension(parentFrame, params, layoutCtx) {
+  const { viewport } = layoutCtx;
+  const asp = viewport.w / viewport.h;
+  if (asp >= 1) {
+    return splitVertical(parentFrame, params);
+  } else {
+    return splitHorizontal(parentFrame, params);
+  }
+}
+
 export function column(parentFrame, params, layoutCtx) {
-  const { index, total } = params;
+  const { index, total, makeRow = false } = params;
   const { viewport } = layoutCtx;
   const outputAsp = viewport.w / viewport.h;
 
-  let outerMargins = {x: 0, y: 0}, innerMargins = {x: 0, y: 0};
+  let outerMargins = { x: 0, y: 0 },
+    innerMargins = { x: 0, y: 0 };
   if (total > 1) {
-    let marginRel;  // a relative margin depending on aspect ratio
+    let marginRel; // a relative margin depending on aspect ratio
     if (outputAsp > 1) {
       marginRel = Math.round(viewport.h * 0.02);
     } else if (outputAsp <= 1) {
       marginRel = viewport.w * 0.04;
     }
     innerMargins.x = innerMargins.y = marginRel;
-    outerMargins.x = outerMargins.y = marginRel*0.75;
+    outerMargins.x = outerMargins.y = marginRel * 0.75;
   }
 
-  const numCols = 1;
-  const numRows = 5;
+  const numCols = (makeRow) ? total : 1;
+  const numRows = (makeRow) ? 1 : total;
 
   // assume video item aspect ratio is same as output
   const videoAsp = outputAsp;
 
   // apply outer margins by insetting frame
-  parentFrame = {...parentFrame};
+  parentFrame = { ...parentFrame };
   parentFrame.x += outerMargins.x;
   parentFrame.y += outerMargins.y;
   parentFrame.w -= outerMargins.x * 2;
@@ -154,12 +181,14 @@ export function grid(parentFrame, params, layoutCtx) {
     return { ...parentFrame };
   }
 
-  const numCols = total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
+  const numCols =
+    total > 16 ? 5 : total > 9 ? 4 : total > 4 ? 3 : total > 1 ? 2 : 1;
   const numRows = Math.ceil(total / numCols);
 
-  let outerMargins = {x: 0, y: 0}, innerMargins = {x: 0, y: 0};
+  let outerMargins = { x: 0, y: 0 },
+    innerMargins = { x: 0, y: 0 };
   if (total > 1) {
-    let marginRel;  // a relative margin depending on aspect ratio
+    let marginRel; // a relative margin depending on aspect ratio
     if (outputAsp > 1) {
       marginRel = Math.round(viewport.h * 0.05);
     } else if (outputAsp <= 1) {
@@ -181,7 +210,7 @@ export function grid(parentFrame, params, layoutCtx) {
   const videoAsp = outputAsp;
 
   // apply outer margins by insetting frame
-  parentFrame = {...parentFrame};
+  parentFrame = { ...parentFrame };
   parentFrame.x += outerMargins.x;
   parentFrame.y += outerMargins.y;
   parentFrame.w -= outerMargins.x * 2;
@@ -206,6 +235,35 @@ export function gridLabel(parentFrame, params) {
   return { x, y, w, h };
 }
 
+export function pip(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+  const {
+    positionCorner = PositionCorner.TOP_LEFT,
+    aspectRatio = 1,
+    height_vh = 0.2,
+    margin_vh = 0,
+  } = params;
+  const { viewport } = layoutCtx;
+  const margin = margin_vh * viewport.h;
+
+  h = Math.round(height_vh * viewport.h);
+  w = Math.round(aspectRatio * h);
+
+  if (positionCorner === PositionCorner.TOP_LEFT || positionCorner === PositionCorner.TOP_RIGHT) {
+    y += margin;
+  } else {
+    y += parentFrame.h - h - margin;
+  }
+
+  if (positionCorner === PositionCorner.TOP_LEFT || positionCorner === PositionCorner.BOTTOM_LEFT) {
+    x += margin;
+  } else {
+    x += parentFrame.w - w - margin;
+  }
+
+  return { x, y, w, h };
+}
+
 // -- utils --
 
 function computeGridItem({
@@ -224,19 +282,19 @@ function computeGridItem({
 
   // item size depends on whether our content is wider or narrower than the parent frame
   if (contentAsp >= parentAsp) {
-    itemW =
-      (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
+    itemW = (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
     itemH = itemW / videoAsp;
 
     // center grid vertically
-    y += (parentFrame.h - (numRows * itemH + innerMargins.y * (numRows - 1))) / 2;
+    y +=
+      (parentFrame.h - (numRows * itemH + innerMargins.y * (numRows - 1))) / 2;
   } else {
-    itemH =
-      (parentFrame.h - (numRows - 1) * innerMargins.y) / numRows;
+    itemH = (parentFrame.h - (numRows - 1) * innerMargins.y) / numRows;
     itemW = itemH * videoAsp;
 
     // center grid horizontally
-    x += (parentFrame.w - (numCols * itemW + innerMargins.x * (numCols - 1))) / 2;
+    x +=
+      (parentFrame.w - (numCols * itemW + innerMargins.x * (numCols - 1))) / 2;
   }
 
   const col = index % numCols;

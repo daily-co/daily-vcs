@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Box, Label, Video } from '#vcs-react/components';
+import { useActiveVideo } from '#vcs-react/hooks';
 import * as Rand from 'random-seed';
 
 export const compositionInterface = {
@@ -12,9 +13,18 @@ export const compositionInterface = {
 };
 
 export default function GraphicsTestComposition() {
+  const { activeIds } = useActiveVideo();
+
+  let video;
+  if (activeIds.length > 0) {
+    video = <Video src={activeIds[0]} />;
+  }
+
   return (
     <Box id="main">
-      <Video src={0} />
+      <Box>
+        {video}
+      </Box>
       <RandomGraphics />
     </Box>
   );
