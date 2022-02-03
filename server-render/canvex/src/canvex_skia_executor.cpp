@@ -379,7 +379,7 @@ bool RenderDisplayListToRawBuffer(
       break;
   }
 
-  auto imageInfo = SkImageInfo::Make(w, h, skFormat, kPremul_SkAlphaType);
+  auto imageInfo = SkImageInfo::Make(w, h, skFormat, kUnpremul_SkAlphaType);
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 
   renderDisplayListInSkCanvas(dl, canvas, resourceDir);
