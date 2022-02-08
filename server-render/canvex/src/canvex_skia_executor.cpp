@@ -1,3 +1,4 @@
+#include "../include/canvex_c_api.h"
 #include "canvex_skia_executor.h"
 #include "canvex_skia_context.h"
 #include "skia_includes.h"
@@ -365,9 +366,11 @@ bool RenderDisplayListToRawBuffer(
   uint32_t h,
   uint32_t rowBytes,
   const std::filesystem::path& resourceDir,
-  GraphicsExecutionStats* stats  // optional stats
+  GraphicsExecutionStats* stats, // optional stats
+  Alpha alpha
 ) {
   SkColorType skFormat;
+  SkImageInfo imageInfo;
 
   switch (format) {
     case Rgba:
@@ -379,7 +382,16 @@ bool RenderDisplayListToRawBuffer(
       break;
   }
 
-  auto imageInfo = SkImageInfo::Make(w, h, skFormat, kUnpremul_SkAlphaType);
+  switch (alpha) {
+    case Alpha::PREMULTIPLIED:
+      imageInfo = SkImageInfo::Make(w, h, skFormat, kPremul_SkAlphaType);
+      break;
+
+    case Alpha::NON_PREMULTIPLIED:
+      imageInfo = SkImageInfo::Make(w, h, skFormat, kUnpremul_SkAlphaType);
+      break;
+  }
+
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 
   renderDisplayListInSkCanvas(dl, canvas, resourceDir);

@@ -51,7 +51,8 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  Alpha dstAlpha
 ) {
   if (!json) {
     return CanvexRenderError_InvalidArgument_JSONInput;
@@ -84,7 +85,8 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   if (!RenderDisplayListToRawBuffer(*displayList, format,
     dstImageData, dstImageW, dstImageH, dstImageRowBytes,
     ctx->resourceDir,
-    nullptr)) {
+    nullptr,
+    dstAlpha)) {
     return CanvexRenderError_GraphicsUnspecifiedError;
   }
 
@@ -97,10 +99,11 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  Alpha dstAlpha
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
   );
 }
 
@@ -110,9 +113,10 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  Alpha dstAlpha
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
   );
 }

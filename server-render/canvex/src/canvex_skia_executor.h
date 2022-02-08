@@ -1,4 +1,5 @@
 #pragma once
+#include "../include/canvex_c_api.h"
 #include "canvas_display_list.h"
 #include <filesystem>
 
@@ -29,7 +30,8 @@ bool RenderDisplayListToRawBuffer(
   uint32_t h,
   uint32_t rowBytes,
   const std::filesystem::path& resourceDir,
-  GraphicsExecutionStats* stats  // optional stats
+  GraphicsExecutionStats* stats, // optional stats
+  Alpha alpha
 );
 
 } // namespace canvex
