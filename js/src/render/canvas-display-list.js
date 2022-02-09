@@ -25,6 +25,12 @@ export class CanvasDisplayListEncoder {
 // instead normalize the named colors here and always write rgb[a].
 function normalizeColorValue(c) {
   if (!c) return '#000';
+
+  // allow rgb[a] arrays because they're useful for computed colors
+  if (Array.isArray(c)) {
+    return `rgba(${c[0]}, ${c[1]}, ${c[2]}, ${c[3] !== undefined ? c[3] : 1})`;
+  }
+
   if (typeof c !== 'string') {
     console.error('** Unsupported CSS color value, not a string: ' + c);
     return '#000';

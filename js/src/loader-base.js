@@ -14,10 +14,16 @@ export function makeVCSRootContainer(
     constructor() {
       super();
 
+      // params need to be filtered for group paths ("groupName.paramName")
+      const params = {};
+      for (const key in paramValues) {
+        this.applyParamValueToObj(params, key, paramValues[key]);
+      }
+
       this.state = {
         hasError: false,
         compositionData: {
-          params: paramValues || {},
+          params,
         },
         time: {
           currentTime: 0,
@@ -60,22 +66,26 @@ export function makeVCSRootContainer(
       this.setState({ mediaInput: newObj });
     }
 
-    setParamValue(id, value) {
-      const compositionData = { ...this.state.compositionData };
-      compositionData.params = { ...compositionData.params };
-
-      compositionData.params[id] = value;
+    applyParamValueToObj(obj, id, value) {
+      obj[id] = value;
 
       // if the param is of format "group.subid", make a convenience object for the group
       const idx = id.indexOf('.');
       if (idx > 0 && idx < id.length - 1) {
         const group = id.substr(0, idx);
         const subid = id.substr(idx + 1);
-        if (typeof compositionData.params[group] !== 'object') {
-          compositionData.params[group] = {};
+        if (typeof obj[group] !== 'object') {
+          obj[group] = {};
         }
-        compositionData.params[group][subid] = value;
+        obj[group][subid] = value;
       }
+    }
+
+    setParamValue(id, value) {
+      const compositionData = { ...this.state.compositionData };
+      compositionData.params = { ...compositionData.params };
+
+      this.applyParamValueToObj(compositionData.params, id, value);
 
       this.setState({ compositionData });
     }
