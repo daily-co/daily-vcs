@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Daily VCS dev rig</title>
+    <title>Daily VCS Simulator</title>
     <style>
 
 body {
@@ -1203,7 +1203,7 @@ async function recreateVCSCanvasOutput() {
     enablePreload = false; // don't preload again
   }
 
-  const fps = 5; // frame rate for React videoTime updates
+  const fps = 15; // frame rate for React videoTime updates
 
   g_vcsApi = await DailyVCS.startDOMOutputAsync(
     g_outputContainer,

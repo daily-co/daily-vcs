@@ -15,7 +15,7 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
   const {
     updateCb,
     errorCb,
-    fps = 10,
+    fps = 15,
     scaleFactor = 1,
     enablePreload,
     enableSceneDescOutput,
@@ -155,6 +155,17 @@ class VCSBrowserOutput {
     }
   }
 
+  resetOutputScalingCSS() {
+    this.videoBox.style = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
+    this.fgCanvas.style = 'position: absolute; width: 100%; height: auto;';
+  }
+
+  setScaleFactor(v) {
+    if (!Number.isFinite(v)) return;
+    this.scaleFactor = v;
+    this.resetOutputScalingCSS();
+  }
+
   async initRenderingAsync(rootEl, imageSources) {
     // the interface definition object.
     // initializing fonts and other preloads needs this.
@@ -175,14 +186,12 @@ class VCSBrowserOutput {
     // create elements to contain rendering
     this.videoBox = document.createElement('div');
     this.fgCanvas = document.createElement('canvas');
+    this.fgCanvas.width = this.viewportSize.w;
+    this.fgCanvas.height = this.viewportSize.h;
     rootEl.appendChild(this.videoBox);
     rootEl.appendChild(this.fgCanvas);
 
-    this.videoBox.style = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
-
-    this.fgCanvas.width = this.viewportSize.w;
-    this.fgCanvas.height = this.viewportSize.h;
-    this.fgCanvas.style = 'position: absolute; width: 100%; height: auto;';
+    this.resetOutputScalingCSS();
 
     this.updateImageSources(imageSources);
 

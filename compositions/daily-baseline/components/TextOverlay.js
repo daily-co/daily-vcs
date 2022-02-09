@@ -16,7 +16,7 @@ export default function TextOverlay({
   fontWeight,
   fontStyle,
   strokeColor,
-  useStroke
+  useStroke,
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
@@ -39,7 +39,7 @@ export default function TextOverlay({
     vAlign: align_vertical,
     hAlign: align_horizontal,
     xOffset: offset_x,
-    yOffset: offset_y
+    yOffset: offset_y,
   };
 
   return (

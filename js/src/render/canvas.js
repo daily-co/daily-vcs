@@ -74,6 +74,11 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
 
   let frame = node.layoutFrame;
 
+  const hasCornerRadius =
+    node.style &&
+    Number.isFinite(node.style.cornerRadius_px) &&
+    node.style.cornerRadius_px > 0;
+
   if (writeContent || recurseChildren) {
     ctx.save();
 
@@ -94,11 +99,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   let inLayoutframeClip = false;
   if (node.clip) {
     ctx.save();
-    if (
-      node.style &&
-      Number.isFinite(node.style.cornerRadius_px) &&
-      node.style.cornerRadius_px > 0
-    ) {
+    if (hasCornerRadius) {
       roundRect(
         ctx,
         frame.x,
@@ -193,13 +194,12 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     // if rounded corners requested, use a clip path while rendering this node's content
-    const hasCornerRadius =
-      node.style &&
-      Number.isFinite(node.style.cornerRadius_px) &&
-      node.style.cornerRadius_px > 0;
-
     let inShapeClip = false;
-    if (hasCornerRadius && (fillColor || srcDrawable || textContent)) {
+    if (
+      !inLayoutframeClip &&
+      hasCornerRadius &&
+      (fillColor || srcDrawable || textContent)
+    ) {
       inShapeClip = true;
       ctx.save();
       roundRect(
@@ -214,7 +214,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     if (fillColor) {
-      ctx.fillStyle = fillColor;
+      ctx.fillStyle = ensureCssColor(fillColor);
       ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
     }
 
@@ -261,7 +261,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
 
     // stroke needs to be rendered after clip
     if (strokeColor && Number.isFinite(strokeW_px) && strokeW_px > 0) {
-      ctx.strokeStyle = strokeColor;
+      ctx.strokeStyle = ensureCssColor(strokeColor);
       ctx.lineWidth = strokeW_px;
 
       if (hasCornerRadius) {
@@ -297,16 +297,22 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   }
 }
 
+function ensureCssColor(color) {
+  if (Array.isArray(color)) {
+    return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${
+      color[3] !== undefined ? color[3] : 1
+    })`;
+  }
+  return color;
+}
+
 function drawStyledText(ctx, text, style, frame, comp) {
   // when encoding a display list, prefer more easily parsed format
   const isVCSDisplayListEncoder =
     typeof ctx.drawImage_vcsDrawable === 'function';
 
   let color = style.textColor || 'white';
-  if (Array.isArray(color)) {
-    color = `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${color[3] !== undefined ? color[3] : 1})`;
-  }
-  ctx.fillStyle = color;
+  ctx.fillStyle = ensureCssColor(color);
 
   let fontSize_px;
   if (isFinite(style.fontSize_vh) && style.fontSize_vh > 0) {
@@ -332,7 +338,7 @@ function drawStyledText(ctx, text, style, frame, comp) {
   if (style.strokeColor && style.strokeWidth_px) {
     const strokeW = parseFloat(style.strokeWidth_px);
     if (Number.isFinite(strokeW) && strokeW > 0) {
-      ctx.strokeStyle = style.strokeColor;
+      ctx.strokeStyle = ensureCssColor(style.strokeColor);
       ctx.lineWidth = strokeW;
 
       // round join generally looks right for text, but this should perhaps be user-controllable
