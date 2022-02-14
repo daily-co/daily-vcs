@@ -424,8 +424,10 @@ table {
             <button id="btn-apicall-stop" class="disabled">Stop</button>
             <button id="btn-apicall-clear">Clear</button>
             <button id="btn-apicall-capture">Capture all</button>
+            <button id="btn-apicall-screenshot">Screenshot</button>
           </div>
           <div id="apicallRecOut"></div>
+          <div id="apicallScreenshot"></div>
         </div>
         <div class="tabContent" data-id="debug">
           <div id="sceneDescPrintOut"></div>
@@ -763,10 +765,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
 }
 
 function createEnumUI(enumValues, paramId, sel) {
-  let child;
-  while ((child = sel.firstChild)) {
-    sel.removeChild(child);
-  }
+  removeChildren(sel);
 
   let firstId;
   for (const val of enumValues) {
@@ -983,7 +982,45 @@ let g_apiRecObj = {};
 const apicallRecBtn = document.getElementById('btn-apicall-rec');
 const apicallStopBtn = document.getElementById('btn-apicall-stop');
 const apicallCaptureBtn = document.getElementById('btn-apicall-capture');
+const apicallScreenshotBtn = document.getElementById('btn-apicall-screenshot');
 const apicallRecOut = document.getElementById('apicallRecOut');
+const apicallScreenshot = document.getElementById('apicallScreenshot');
+
+apicallScreenshotBtn.addEventListener('click', function(ev) {
+  if (!g_canvas) return;
+
+  g_canvas.toBlob(function(blob) { 
+    img = document.createElement('img');
+    img.src = URL.createObjectURL(blob);
+
+    const box = apicallScreenshot;
+    removeChildren(box);
+
+    const screenshotW = Math.round(g_viewportSize.w / 4);
+    img.style = `width: ${screenshotW}px; height: auto; display: block;`;
+    box.appendChild(img);
+
+    const btn = document.createElement('button');
+    btn.innerText = "Copy image";
+    box.appendChild(btn);
+
+    const info = document.createElement('div');
+    box.appendChild(info);
+
+    btn.addEventListener('click', function(ev) {
+      try {
+        const item = new ClipboardItem({ "image/png": blob });
+        navigator.clipboard.write([item]).then(() => {
+          info.innerText = "Copied PNG to clipboard";
+        });
+      } catch (e) {
+        console.error("Exception copying PNG to clipboard: ", e);
+        alert("Copy failed:\n"+e);
+      }
+    });
+  });
+});
+
 
 apicallRecBtn.addEventListener('click', function(ev) {
   apicallRecBtn.className = 'disabled';
@@ -1026,18 +1063,13 @@ function captureCurrentValuesToApicallRec() {
 }
 
 function clearApicallRec() {
-  const box = apicallRecOut;
-  while ((child = box.firstChild)) {
-    box.removeChild(child);
-  }
+  removeChildren(apicallRecOut);
   g_apiRecObj = {};
 }
 
 function printApicallRec() {
   const box = apicallRecOut;
-  while ((child = box.firstChild)) {
-    box.removeChild(child);
-  }
+  removeChildren(box);
 
   let json = JSON.stringify(g_apiRecObj.params, null, 2);
 
@@ -1055,6 +1087,24 @@ function printApicallRec() {
   div.innerText = apicallStr;
 
   box.appendChild(div);
+
+  const btn = document.createElement('button');
+  btn.innerText = "Copy text";
+  box.appendChild(btn);
+
+  const info = document.createElement('div');
+  box.appendChild(info);
+
+  btn.addEventListener('click', function(ev) {
+    try {
+      navigator.clipboard.writeText(apicallStr).then(() => {
+        info.innerText = "Copied text to clipboard";
+      });
+    } catch (e) {
+      console.error("Exception copying text to clipboard: ", e);
+      alert("Copy failed:\n"+e);
+    }
+  });
 }
 
 document.getElementById('btn-apicall-clear').addEventListener('click', function(ev) {
