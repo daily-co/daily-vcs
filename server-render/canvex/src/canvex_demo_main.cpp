@@ -84,9 +84,9 @@ int main() {
 
     GraphicsExecutionStats execStats{};
 
-    auto resourceDir = std::filesystem::current_path() / "res";
+    auto resourceDir = std::filesystem::current_path() / "../../res";
 
-    RenderDisplayListToPNG(*displayList, "test-dl.png", resourceDir, &execStats);
+    RenderDisplayListToPNG(*displayList, "test-dl.png", resourceDir, nullptr, &execStats);
 
     if (i > 0) {
       // leave out the warming-up first frame

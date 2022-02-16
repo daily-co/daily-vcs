@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
   CanvexRenderResult renderRes = CanvexRenderJSON_RGBA(
     ctx,
     json,
-    buf, w, h, rowBytes, PREMULTIPLIED
+    buf, w, h, rowBytes, CANVEX_PREMULTIPLIED
   );
 
   CanvexResourceCtxDestroy(ctx); ctx = NULL;

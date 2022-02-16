@@ -18,12 +18,40 @@ import VideoPip from './components/VideoPip';
 import VideoSingle from './components/VideoSingle';
 import VideoSplit from './components/VideoSplit';
 
+// request all standard fonts
+const fontFamilies = [
+  'Roboto',
+  'RobotoCondensed',
+  'Anton',
+  'Bangers',
+  'Bitter',
+  'Exo',
+  'Magra',
+  'PermanentMarker',
+  'SuezOne',
+  'Teko',
+];
+// not all fonts have every weight,
+// but we can't currently filter the UI based on the font name
+const fontWeights = [
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+];
+
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
   displayMeta: {
     name: 'Daily Baseline',
     description: "Composition with Daily's baseline features",
   },
+  fontFamilies,
   params: [
     // -- composition's video layout mode --
     {
@@ -130,9 +158,22 @@ export const compositionInterface = {
       defaultValue: 0,
     },
     {
+      id: 'text.fontFamily',
+      type: 'enum',
+      defaultValue: fontFamilies[0],
+      values: fontFamilies,
+    },
+    {
       id: 'text.fontWeight',
-      type: 'text',
-      defaultValue: '500',
+      type: 'enum',
+      defaultValue: '400',
+      values: fontWeights,
+    },
+    {
+      id: 'text.fontStyle',
+      type: 'enum',
+      defaultValue: '',
+      values: ['normal', 'italic'],
     },
     {
       id: 'text.fontSize_percentageOfViewH',
@@ -196,13 +237,15 @@ export default function DailyBaselineVCS() {
       video = <VideoSplit {...videoProps} />;
       break;
     case 'pip':
-      video = <VideoPip
-        {...videoProps}
-        positionCorner={params['videoSettings.pip.position']}
-        aspectRatio={params['videoSettings.pip.aspectRatio']}
-        height_vh={params['videoSettings.pip.height_vh']}
-        margin_vh={params['videoSettings.pip.margin_vh']}
-      />;
+      video = (
+        <VideoPip
+          {...videoProps}
+          positionCorner={params['videoSettings.pip.position']}
+          aspectRatio={params['videoSettings.pip.aspectRatio']}
+          height_vh={params['videoSettings.pip.height_vh']}
+          margin_vh={params['videoSettings.pip.margin_vh']}
+        />
+      );
       break;
     case 'dominant':
       video = (

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <iostream>
 #include <unordered_map>
+#include "canvex_skia_resource_context.h"
 
 /*
  Implements a basic HTML-style canvas 2D context around Skia.
@@ -29,13 +30,16 @@ struct CanvexContextStateFrame {
 
   double fontSize = 12;
   int fontWeight = 400;
+  std::string fontName;
+  bool fontIsItalic;  // only supported value for fontStyle
 };
 
 class CanvexContext {
  public:
   CanvexContext(
     std::shared_ptr<SkCanvas> canvas,
-    const std::filesystem::path& resPath);
+    const std::filesystem::path& resPath,
+    CanvexSkiaResourceContext& skiaResCtx);
 
   void save();
   void restore();
@@ -52,7 +56,7 @@ class CanvexContext {
   void fillText(const std::string& text, double x, double y);
   void strokeText(const std::string& text, double x, double y);
 
-  void drawImage_fromAssets(const std::string& imageName, double x, double y, double w, double h);
+  void drawImage_fromDefaultAssets(const std::string& imageName, double x, double y, double w, double h);
 
   // commands that operate on current path
   void beginPath();
@@ -71,10 +75,8 @@ class CanvexContext {
   std::unique_ptr<SkPath> path_;
   std::vector<CanvexContextStateFrame> stateStack_;
 
-  // cached resources.
-  // TODO: move these to a higher-level object that can be shared between contexts
-  std::unordered_map<std::string, sk_sp<SkTypeface>> typefaceCache_Roboto_;
-  std::unordered_map<std::string, sk_sp<SkImage>> imageCache_assetNamespace_;
+  // cached resources
+  CanvexSkiaResourceContext& skiaResCtx_;
 
   // utils to access current state
   float getGlobalAlpha() {
