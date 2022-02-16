@@ -113,9 +113,16 @@ class VCSBrowserOutput {
   }
 
   async initTextSystem() {
-    // we don't know about any other fonts yet,
-    // so just specify the default.
-    const wantedFamilies = ['Roboto'];
+    // load fonts requested by composition.
+    // if empty, text system will just load default font.
+    let wantedFamilies;
+    if (
+      this.compositionInterface &&
+      Array.isArray(this.compositionInterface.fontFamilies)
+    ) {
+      wantedFamilies = this.compositionInterface.fontFamilies;
+      console.log('got font families from comp: ', wantedFamilies);
+    }
 
     await loadFontsAsync(
       this.getAssetUrlCb || this.getAssetUrl.bind(this),
@@ -148,15 +155,15 @@ class VCSBrowserOutput {
   }
 
   async initAsync(canvas, imageSources, updatedCb) {
+    // the interface definition object
+    this.compositionInterface = { ...VCSComp.compositionInterface };
+
     await this.initTextSystem();
 
     this.canvas = canvas;
     this.extUpdatedCb = updatedCb;
 
     this.updateImageSources(imageSources);
-
-    // the interface definition object
-    this.compositionInterface = { ...VCSComp.compositionInterface };
 
     // the backing model for our views.
     // the callback passed here will be called every time React has finished an update.
