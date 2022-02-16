@@ -239,6 +239,19 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case rect: {
+        PRINTCMD_ARGS("rect")
+        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number) {
+          std::cout << "Invalid args for rect: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.rect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case fillText: {
         PRINTCMD_ARGS("fillText")
         if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string

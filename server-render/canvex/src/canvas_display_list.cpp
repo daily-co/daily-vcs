@@ -279,6 +279,7 @@ class DisplayListJSONHandler {
     {"clip", OpType::clip},
     {"fillRect", OpType::fillRect},
     {"strokeRect", OpType::strokeRect},
+    {"rect", OpType::rect},
     {"fillText", OpType::fillText},
     {"strokeText", OpType::strokeText},
     {"drawImage", OpType::drawImage},

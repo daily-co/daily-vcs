@@ -28,6 +28,7 @@ enum OpType {
   clip,
   fillRect,
   strokeRect,
+  rect,
   fillText,
   strokeText,
   drawImage,

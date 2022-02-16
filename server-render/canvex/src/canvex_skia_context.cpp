@@ -84,6 +84,13 @@ void CanvexContext::fillRect(double x, double y, double w, double h) {
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
 }
 
+void CanvexContext::rect(double x, double y, double w, double h) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->addRect(SkRect::MakeXYWH(x, y, w, h));
+}
+
 void CanvexContext::strokeRect(double x, double y, double w, double h) {
   const auto& sf = stateStack_.back();
   SkPaint paint;
@@ -162,7 +169,7 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
       std::cerr << "Warning: fontResPath is empty, can't load fonts" << std::endl;
     } else {
       // FIXME: hardcoded subpath expects to find all fonts in one dir
-      auto fontPath = resPath_ / "fonts" / fontFileName;
+      auto fontPath = resPath_ / "../../res/fonts" / fontFileName;
       //std::cout << "Loading font at: " << fontPath << std::endl;
       typeface = SkTypeface::MakeFromFile(fontPath.c_str());
       if (!typeface) {
