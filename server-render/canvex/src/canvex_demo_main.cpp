@@ -86,7 +86,7 @@ int main() {
 
     GraphicsExecutionStats execStats{};
 
-    auto resourceDir = std::filesystem::current_path();
+    auto resourceDir = std::filesystem::current_path() / "../../res";
 
     RenderDisplayListToPNG(*displayList, "test-dl.png", resourceDir, &execStats);
 
