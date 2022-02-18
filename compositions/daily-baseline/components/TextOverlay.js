@@ -11,15 +11,18 @@ export default function TextOverlay({
   offset_y,
   rotationInDegrees,
   color,
+  fontFamily,
   fontSize_vh,
   fontWeight,
+  fontStyle,
   strokeColor,
   useStroke
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
-    fontFamily: DEFAULT_FONT,
+    fontFamily: fontFamily || DEFAULT_FONT,
     fontWeight: fontWeight || '500',
+    fontStyle: fontStyle || '',
     fontSize_vh: fontSize_vh || 0.07,
     strokeColor,
     strokeWidth_px: useStroke ? 12 : 0,

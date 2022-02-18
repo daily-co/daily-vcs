@@ -9,9 +9,9 @@ extern "C" {
 #endif
 
 typedef enum {
-  PREMULTIPLIED = 0,
-  NON_PREMULTIPLIED
-} Alpha;
+  CANVEX_PREMULTIPLIED = 0,
+  CANVEX_NON_PREMULTIPLIED
+} CanvexAlphaMode;
 
 typedef enum {
   CanvexRenderSuccess = 0,
@@ -60,7 +60,7 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  Alpha dstAlpha
+  CanvexAlphaMode dstAlpha
 );
 
 /*
@@ -82,7 +82,7 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  Alpha dstAlpha
+  CanvexAlphaMode dstAlpha
 );
 
 #ifdef __cplusplus
