@@ -124,12 +124,12 @@ table {
   margin-top: 1em;
 }
 
-#canvasContainer {
+#outputWrapper {
   flex: none;
   background-color: black;
   overflow: hidden;
   width: 640px;
-  height: auto;
+  height: 360px;
 }
 #deco {
   flex: none;
@@ -263,6 +263,9 @@ table {
   padding: 2px;
   outline: none;
 }
+#controls .compInterface .params select option {
+  background-color: var(--bg-color);
+}
 #controls .compInterface .params input[type=checkbox] {
   margin: 0;
   appearance: none;
@@ -363,8 +366,8 @@ table {
   <body>
     <div id="mainContainer">
       <div id="leftSplit">
-        <div id="canvasContainer">
-          <canvas id="renderCanvas" width="640" height="360" />
+        <div id="outputWrapper">
+          <div id="outputContainer"></div>
         </div>
         <div id="deco">
           <div id="compInfo">
@@ -444,12 +447,6 @@ table {
   </body>
 
 <script>
-
-const isChrome = /Chrome\//.test(navigator.userAgent);
-if ( !isChrome) {
-  document.getElementById('browserInfo').innerText =
-    "NOTE: This page is only tested on Chrome right now. Your browser may not render it correctly. Sorry...!";
-}
 
 // --- UI state ---
 
@@ -859,8 +856,8 @@ createVideoInputsUI();
 // --- setup rendering ---
 
 let g_viewportSize = { w: 1280, h: 720 };
-
-let g_canvas = document.getElementById("renderCanvas");
+let g_outputContainer = document.getElementById("outputContainer");
+let g_outputScale = 0.5;
 
 let g_vcsApi;
 
@@ -884,7 +881,7 @@ async function setupLiveVideo() {
 
     // place element in DOM so it gets updates
     liveVideoEl.setAttribute('style', "display: none;");
-    g_canvas.parentElement.appendChild(liveVideoEl);
+    g_outputContainer.parentElement.appendChild(liveVideoEl);
   } catch (e) {
     console.error("** getUserMedia failed: ", e);
     alert("Live video not available, getUserMedia failed:\n\n"+e);
@@ -987,9 +984,16 @@ const apicallRecOut = document.getElementById('apicallRecOut');
 const apicallScreenshot = document.getElementById('apicallScreenshot');
 
 apicallScreenshotBtn.addEventListener('click', function(ev) {
-  if (!g_canvas) return;
+  if (!g_vcsApi) return;
 
-  g_canvas.toBlob(function(blob) { 
+  // for the screenshot, render the current frame into a temp canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = g_viewportSize.w;
+  canvas.height = g_viewportSize.h;
+
+  g_vcsApi.captureFrameInCanvas(canvas);
+
+  canvas.toBlob(function(blob) { 
     img = document.createElement('img');
     img.src = URL.createObjectURL(blob);
 
@@ -1112,7 +1116,7 @@ document.getElementById('btn-apicall-clear').addEventListener('click', function(
 });
 
 for (const el of document.querySelectorAll("#compOutput button")) {
-  el.addEventListener('click', outputIdChanged);
+  el.addEventListener('click', outputModeChanged);
 }
 
 for (const el of document.querySelectorAll("#rightSplit .tabBar button")) {
@@ -1144,7 +1148,7 @@ function tabBarButtonClicked(ev) {
   tabs[id].className = 'tabContent visible';
 }
 
-function outputIdChanged(ev) {
+function outputModeChanged(ev) {
   const btn = ev.target;
   const outputId = btn.dataset.outputid;
 
@@ -1171,17 +1175,10 @@ function outputIdChanged(ev) {
   }
   g_viewportSize = newViewport;
 
-  let parent = g_canvas.parentElement;
-  let scale = 0.5;
-
-  parent.removeChild(g_canvas);
-
-  g_canvas = document.createElement('canvas');
-  g_canvas.width = g_viewportSize.w * scale;
-  g_canvas.height = g_viewportSize.h * scale;
-  parent.appendChild(g_canvas);
-
-  parent.style = `width: ${g_canvas.width}px;`;
+  // adjust size of the output container's parent which renders the background color.
+  const scale = g_outputScale;
+  const box = g_outputContainer.parentElement;
+  box.style = `width: ${newViewport.w * scale}px; height: ${newViewport.h * scale}px;`;
 
   recreateVCSCanvasOutput();
 }
@@ -1205,10 +1202,17 @@ async function recreateVCSCanvasOutput() {
 
   const fps = 5; // frame rate for React videoTime updates
 
-  g_vcsApi = await DailyVCS.startCanvasOutputAsync(
+  g_vcsApi = await DailyVCS.startDOMOutputAsync(
+    g_outputContainer,
     g_viewportSize.w, g_viewportSize.h,
-    g_canvas, g_defaultSources, compUpdated,
-    {enablePreload, errorCb: vcsErrorCb, fps});
+    g_defaultSources,
+    { updateCb: compUpdatedCb,
+      errorCb: vcsErrorCb,
+      fps,
+      scaleFactor: g_outputScale,
+      enablePreload,
+      enableSceneDescOutput: true, // for debug printout, request this encoding
+    });
 
   sendActiveVideoInputSlots();
 
@@ -1226,7 +1230,7 @@ function stopVCS() {
 
 // --- callback received from composition ---
 
-function compUpdated(sceneDesc) {
+function compUpdatedCb(sceneDesc) {
   if ( !sceneDesc) return;
 
   //console.log("scene desc JSON: ", JSON.stringify(sceneDesc));
