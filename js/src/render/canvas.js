@@ -9,7 +9,7 @@ const CanvasRenderMode = {
 
 const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
-export function renderCompInCanvas(comp, canvas, imageSources) {
+export function renderCompInCanvas(comp, canvas, imageSources, renderAll) {
   if (!comp.rootNode) return;
 
   const canvasW = canvas.width;
@@ -26,7 +26,9 @@ export function renderCompInCanvas(comp, canvas, imageSources) {
 
   ctx.clearRect(0, 0, viewportW, viewportH);
 
-  const mode = CanvasRenderMode.ALL;
+  const mode = renderAll
+    ? CanvasRenderMode.ALL
+    : CanvasRenderMode.GRAPHICS_SUBTREE_ONLY;
 
   recurseRenderNode(ctx, mode, comp.rootNode, comp, imageSources);
 
@@ -169,8 +171,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       if (contentW > 0 && contentH > 0) {
         if (scaleMode === 'fit') {
           frame = fitToFrame(frame, contentW, contentH);
-        }
-        else if (scaleMode === 'fill') {
+        } else if (scaleMode === 'fill') {
           srcDrawableRegion = cropToFill(frame, contentW, contentH);
         }
       }
@@ -218,7 +219,8 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       } else {
         if (srcDrawableRegion) {
           // we're cropping the input
-          ctx.drawImage(srcDrawable.domElement,
+          ctx.drawImage(
+            srcDrawable.domElement,
             srcDrawableRegion.x,
             srcDrawableRegion.y,
             srcDrawableRegion.w,
@@ -235,7 +237,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
             frame.y,
             frame.w,
             frame.h
-          );  
+          );
         }
       }
     }
@@ -330,7 +332,7 @@ function fitToFrame(frame, contentW, contentH) {
     y = frame.y + (frame.h - h) / 2;
   }
 
-  return {x, y, w, h};
+  return { x, y, w, h };
 }
 
 // returns the new content region
@@ -338,7 +340,10 @@ function cropToFill(frame, contentW, contentH) {
   let boxAsp = frame.w / frame.h;
   let contentAsp = contentW / contentH;
 
-  let x = 0, y = 0, w = contentW, h = contentH;
+  let x = 0,
+    y = 0,
+    w = contentW,
+    h = contentH;
 
   if (boxAsp === contentAsp) {
     // don't modify, content fits without cropping
@@ -352,5 +357,5 @@ function cropToFill(frame, contentW, contentH) {
     x += (contentW - w) / 2;
   }
 
-  return {x, y, w, h};
+  return { x, y, w, h };
 }

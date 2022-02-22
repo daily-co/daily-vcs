@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Composition, render } from '../src';
 import { renderCompInCanvas } from '../src/render/canvas';
+import { renderCompVideoLayersInDOM } from '../src/render/video-dom';
 import { makeVCSRootContainer } from '../src/loader-base';
 
 import { loadFontsAsync } from './font-loader';
@@ -10,43 +11,39 @@ import { v4 as uuidv4 } from 'uuid';
 // composition path is replaced by our webpack config
 import * as VCSComp from '__VCS_COMP_PATH__';
 
-export async function startCanvasOutputAsync(
-  w,
-  h,
-  canvas,
-  imageSources,
-  updatedCb,
-  opts
-) {
-  const { enablePreload, errorCb, fps } = opts || {};
+export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
+  const {
+    updateCb,
+    errorCb,
+    fps = 10,
+    scaleFactor = 1,
+    enablePreload,
+    enableSceneDescOutput,
+  } = opts || {};
 
   console.assert(
     w > 0 && h > 0,
-    `startCanvasOutputAsync: Invalid viewport size specified: ${w}, ${h}`
+    `startDOMOutputAsync: Invalid viewport size specified: ${w}, ${h}`
   );
 
-  const vcs = new VCSBrowserOutput(w, h, fps, errorCb);
+  const vcs = new VCSBrowserOutput(w, h, fps, scaleFactor, updateCb, errorCb);
 
-  console.log(
-    'created renderer %s: viewport size %d * %d, canvas %d * %d',
-    vcs.uuid,
-    w,
-    h,
-    canvas.width,
-    canvas.height
-  );
+  console.log('created renderer %s: viewport size %d * %d', vcs.uuid, w, h);
 
-  if (enablePreload !== undefined) {
+  if (typeof enablePreload === 'boolean') {
     vcs.enableAssetPreload = enablePreload;
   }
+  if (typeof enableSceneDescOutput === 'boolean') {
+    vcs.enableSceneDescOutput = enableSceneDescOutput;
+  }
 
-  await vcs.initAsync(canvas, imageSources, updatedCb);
+  await vcs.initRenderingAsync(rootEl, imageSources);
 
   return vcs;
 }
 
 class VCSBrowserOutput {
-  constructor(w, h, fps, errorCb) {
+  constructor(w, h, fps, scaleFactor, updateCb, errorCb) {
     this.viewportSize = { w, h };
 
     this.uuid = uuidv4();
@@ -56,9 +53,12 @@ class VCSBrowserOutput {
 
     this.comp = null;
     this.compositionInterface = null;
-    this.canvas = null;
     this.imageSources = {};
-    this.extUpdatedCb = null;
+
+    // DOM state
+    this.videoBox = null;
+    this.fgCanvas = null;
+    this.scaleFactor = scaleFactor || 1;
 
     // playback state
     this.startT = 0;
@@ -70,9 +70,10 @@ class VCSBrowserOutput {
     this.enableAssetPreload = true;
     this.preloadContainerEl = null;
 
-    this.getAssetUrlCb = null;
-
+    // external callbacks
+    this.updateCb = updateCb;
     this.errorCb = errorCb;
+    this.getAssetUrlCb = null;
   }
 
   // --- asset loading utilities ---
@@ -154,20 +155,42 @@ class VCSBrowserOutput {
     }
   }
 
-  async initAsync(canvas, imageSources, updatedCb) {
-    // the interface definition object
+  async initRenderingAsync(rootEl, imageSources) {
+    // the interface definition object.
+    // initializing fonts and other preloads needs this.
     this.compositionInterface = { ...VCSComp.compositionInterface };
 
-    await this.initTextSystem();
+    // load fonts. this call will make network loads and can take a while,
+    // so do anything else we can before awaiting this.
+    const textPromise = this.initTextSystem();
 
-    this.canvas = canvas;
-    this.extUpdatedCb = updatedCb;
+    // clear out the root DOM element
+    let child;
+    while ((child = rootEl.firstChild)) {
+      rootEl.removeChild(child);
+    }
+
+    rootEl.style = `position: relative;`;
+
+    // create elements to contain rendering
+    this.videoBox = document.createElement('div');
+    this.fgCanvas = document.createElement('canvas');
+    rootEl.appendChild(this.videoBox);
+    rootEl.appendChild(this.fgCanvas);
+
+    this.videoBox.style = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
+
+    this.fgCanvas.width = this.viewportSize.w;
+    this.fgCanvas.height = this.viewportSize.h;
+    this.fgCanvas.style = 'position: absolute; width: 100%; height: auto;';
 
     this.updateImageSources(imageSources);
 
     // the backing model for our views.
     // the callback passed here will be called every time React has finished an update.
     this.comp = new Composition(this.viewportSize, this.compUpdated.bind(this));
+
+    await textPromise;
 
     // bind our React reconciler with the container component and the composition model.
     // when the root container receives a state update, React will reconcile it into composition.
@@ -205,16 +228,20 @@ class VCSBrowserOutput {
   }
 
   compUpdated(comp) {
-    if (!this.extUpdatedCb || this.stopped) return;
+    if (!this.updateCb || this.stopped) return;
 
     let sceneDesc;
-    try {
-      sceneDesc = comp.writeSceneDescription(this.imageSources);
-    } catch (e) {
-      console.error('unable to write scenedesc: ', e);
-      return;
+    if (this.enableSceneDescOutput) {
+      // the caller may not need the scene description if they just render
+      // directly from the model, so only write if requested.
+      try {
+        sceneDesc = comp.writeSceneDescription(this.imageSources);
+      } catch (e) {
+        console.error('unable to write scenedesc: ', e);
+        return;
+      }
     }
-    if (sceneDesc) this.extUpdatedCb(sceneDesc);
+    if (sceneDesc) this.updateCb(sceneDesc);
   }
 
   renderFrame() {
@@ -237,10 +264,16 @@ class VCSBrowserOutput {
     }
 
     if (renderNow) {
-      renderCompInCanvas(this.comp, this.canvas, this.imageSources);
+      renderCompVideoLayersInDOM(this.comp, this.videoBox, this.imageSources);
+
+      renderCompInCanvas(this.comp, this.fgCanvas, this.imageSources, false);
     }
 
     requestAnimationFrame(this.renderFrame.bind(this));
+  }
+
+  captureFrameInCanvas(canvas) {
+    renderCompInCanvas(this.comp, canvas, this.imageSources, true);
   }
 
   // --- command API ---
