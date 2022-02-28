@@ -5,6 +5,7 @@ export function makeVCSRootContainer(
   ContentRoot,
   rootContainerRef,
   viewportSize,
+  paramValues,
   errorCb
 ) {
   // a root component that wraps the view we loaded from the external JSX source,
@@ -16,8 +17,7 @@ export function makeVCSRootContainer(
       this.state = {
         hasError: false,
         compositionData: {
-          mode: '',
-          params: {},
+          params: paramValues || {},
         },
         time: {
           currentTime: 0,
