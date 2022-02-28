@@ -192,6 +192,18 @@ class VCSBrowserOutput {
 
     await textPromise;
 
+    // set default values for params
+    let paramValues = {};
+    for (const paramDesc of this.compositionInterface.params) {
+      const { id, type, defaultValue } = paramDesc;
+      if (!id || id.length < 1) continue;
+      if (!defaultValue) continue;
+
+      let value = type === 'boolean' ? !!defaultValue : defaultValue;
+
+      paramValues[id] = value;
+    }
+
     // bind our React reconciler with the container component and the composition model.
     // when the root container receives a state update, React will reconcile it into composition.
     render(
@@ -199,6 +211,7 @@ class VCSBrowserOutput {
         VCSComp.default,
         this.rootContainerRef,
         this.viewportSize,
+        paramValues,
         this.errorCb
       ),
       this.comp
@@ -208,23 +221,6 @@ class VCSBrowserOutput {
     this.lastT = this.startT;
 
     requestAnimationFrame(this.renderFrame.bind(this));
-
-    this.setDefaultParamsInComp();
-  }
-
-  setDefaultParamsInComp() {
-    // set default values for params now
-    for (const paramDesc of this.compositionInterface.params) {
-      const { id, type, defaultValue } = paramDesc;
-      if (!id || id.length < 1) continue;
-      if (!defaultValue) continue;
-
-      if (type === 'boolean') {
-        this.setParamValue(id, !!defaultValue);
-      } else {
-        this.setParamValue(id, defaultValue);
-      }
-    }
   }
 
   compUpdated(comp) {
