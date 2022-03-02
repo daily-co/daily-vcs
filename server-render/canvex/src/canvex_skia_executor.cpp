@@ -217,6 +217,16 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case fill: {
+        PRINTCMD_ARGS("fill")
+        ctx.fill();
+        break;
+      }
+      case stroke: {
+        PRINTCMD_ARGS("stroke")
+        ctx.stroke();
+        break;
+      }
       case clip: {
         PRINTCMD_ARGS("clip")
         ctx.clip();

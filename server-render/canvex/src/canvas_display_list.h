@@ -25,6 +25,8 @@ enum OpType {
   lineWidth,
   lineJoin,
   font,
+  fill,
+  stroke,
   clip,
   fillRect,
   strokeRect,

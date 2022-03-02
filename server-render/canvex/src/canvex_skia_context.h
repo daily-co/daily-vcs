@@ -66,6 +66,8 @@ class CanvexContext {
   void lineTo(double x, double y);
   void quadraticCurveTo(double cp_x, double cp_y, double x, double y);
   void clip();
+  void fill();
+  void stroke();
 
  private:
   // external rendering target and configuration
@@ -101,6 +103,25 @@ class CanvexContext {
         sf.strokeColor[0] * 255.0f,
         sf.strokeColor[1] * 255.0f,
         sf.strokeColor[2] * 255.0f);
+  }
+
+  SkPaint getFillPaint() {
+    SkPaint paint;
+    paint.setStyle(SkPaint::kFill_Style);
+    paint.setColor(getSkFillColor());
+    paint.setAntiAlias(true);
+    return paint;
+  }
+
+  SkPaint getStrokePaint() {
+    const auto& sf = stateStack_.back();
+    SkPaint paint;
+    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setColor(getSkStrokeColor());
+    paint.setAntiAlias(true);
+    paint.setStrokeWidth(sf.strokeWidth_px);
+    paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
+    return paint;
   }
 
   // drawing utils

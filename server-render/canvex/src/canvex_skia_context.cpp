@@ -80,12 +80,7 @@ void CanvexContext::setFont(const std::string& weight, const std::string& style,
 }
 
 void CanvexContext::fillRect(double x, double y, double w, double h) {
-  SkPaint paint;
-  paint.setStyle(SkPaint::kFill_Style);
-  paint.setColor(getSkFillColor());
-  paint.setAntiAlias(true);
-
-  canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
+  canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), getFillPaint());
 }
 
 void CanvexContext::rect(double x, double y, double w, double h) {
@@ -96,36 +91,15 @@ void CanvexContext::rect(double x, double y, double w, double h) {
 }
 
 void CanvexContext::strokeRect(double x, double y, double w, double h) {
-  const auto& sf = stateStack_.back();
-  SkPaint paint;
-  paint.setStyle(SkPaint::kStroke_Style);
-  paint.setColor(getSkStrokeColor());
-  paint.setAntiAlias(true);
-  paint.setStrokeWidth(sf.strokeWidth_px);
-  paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
-
-  canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
+  canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), getStrokePaint());
 }
 
 void CanvexContext::fillText(const std::string& text, double x, double y) {
-  SkPaint paint;
-  paint.setStyle(SkPaint::kFill_Style);
-  paint.setColor(getSkFillColor());
-  paint.setAntiAlias(true);
-
-  drawTextWithPaint_(text, x, y, paint);
+  drawTextWithPaint_(text, x, y, getFillPaint());
 }
 
 void CanvexContext::strokeText(const std::string& text, double x, double y) {
-  const auto& sf = stateStack_.back();
-  SkPaint paint;
-  paint.setStyle(SkPaint::kStroke_Style);
-  paint.setColor(getSkStrokeColor());
-  paint.setAntiAlias(true);
-  paint.setStrokeWidth(sf.strokeWidth_px);
-  paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
-
-  drawTextWithPaint_(text, x, y, paint);
+  drawTextWithPaint_(text, x, y, getStrokePaint());
 }
 
 void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint) {
@@ -239,4 +213,15 @@ void CanvexContext::clip() {
   }
 }
 
+void CanvexContext::fill() {
+  if (path_) {
+    canvas_->drawPath(*path_, getFillPaint());
+  }
+}
+
+void CanvexContext::stroke() {
+  if (path_) {
+    canvas_->drawPath(*path_, getStrokePaint());
+  }
+}
 } // namespace canvex
