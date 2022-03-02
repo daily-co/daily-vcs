@@ -178,12 +178,13 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     // if rounded corners requested, use a clip path while rendering this node's content
-    let inShapeClip = false;
-    if (
+    const hasCornerRadius =
       node.style &&
       Number.isFinite(node.style.cornerRadius_px) &&
-      node.style.cornerRadius_px > 0
-    ) {
+      node.style.cornerRadius_px > 0;
+
+    let inShapeClip = false;
+    if (hasCornerRadius && (fillColor || srcDrawable || textContent)) {
       inShapeClip = true;
       ctx.save();
       roundRect(
@@ -200,11 +201,6 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     if (fillColor) {
       ctx.fillStyle = fillColor;
       ctx.fillRect(frame.x, frame.y, frame.w, frame.h);
-    }
-    if (strokeColor && Number.isFinite(strokeW_px) && strokeW_px > 0) {
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = strokeW_px;
-      ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
     }
 
     if (srcDrawable) {
@@ -247,6 +243,28 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     if (inShapeClip) ctx.restore();
+
+    // stroke needs to be rendered after clip
+    if (strokeColor && Number.isFinite(strokeW_px) && strokeW_px > 0) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeW_px;
+
+      if (hasCornerRadius) {
+        ctx.save();
+        roundRect(
+          ctx,
+          frame.x,
+          frame.y,
+          frame.w,
+          frame.h,
+          node.style.cornerRadius_px
+        );
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
+      }
+    }
   } // end if (writeContent)
 
   if (recurseChildren) {
