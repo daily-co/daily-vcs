@@ -40,7 +40,10 @@ if (outputFrames.length > 0 && !outputPathPrefix?.length) {
   process.exit(1);
 }
 
-const ContentRoot = require(Path.resolve('.', srcCompPath)).default;
+const {
+  compositionInterface: compInterface,
+  default: ContentRoot,
+} = require(Path.resolve('.', srcCompPath));
 
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
@@ -75,7 +78,7 @@ function getVideoTime() {
 main();
 
 async function main() {
-  await loadFontsAsync();
+  await loadFontsAsync(compInterface ? compInterface.fontFamilies : null);
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.

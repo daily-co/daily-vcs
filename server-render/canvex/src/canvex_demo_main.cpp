@@ -59,8 +59,10 @@ int main() {
   // -- json test --
   auto jsonPath = 
         //"example-data/basic-lowerthird.json";
-        "example-data/rounded-sidebar.json";
-        //"example-data/graphics-test-random-50.json";
+        // "example-data/rounded-sidebar.json";
+        // "example-data/graphics-test-random-50.json";
+        "example-data/basic-labels.json";
+        
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;
 
@@ -84,9 +86,9 @@ int main() {
 
     GraphicsExecutionStats execStats{};
 
-    auto resourceDir = std::filesystem::current_path() / "res";
+    auto resourceDir = std::filesystem::current_path() / "../../res";
 
-    RenderDisplayListToPNG(*displayList, "test-dl.png", resourceDir, &execStats);
+    RenderDisplayListToPNG(*displayList, "test-dl.png", resourceDir, nullptr, &execStats);
 
     if (i > 0) {
       // leave out the warming-up first frame

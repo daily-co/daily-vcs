@@ -3,6 +3,7 @@
 // internal C++ API
 #include "canvas_display_list.h"
 #include "canvex_skia_executor.h"
+#include "canvex_skia_resource_context.h"
 #include "file_util.h"
 #include "time_util.h"
 
@@ -26,6 +27,7 @@ struct ResourceCtx {
   }
 
   std::filesystem::path resourceDir;
+  CanvexSkiaResourceContext skiaResourceCtx;
 };
 
 } // namespace canvex::c_api_internal
@@ -51,7 +53,8 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  CanvexAlphaMode dstAlpha
 ) {
   if (!json) {
     return CanvexRenderError_InvalidArgument_JSONInput;
@@ -82,8 +85,9 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   // currently no provision in C API for this
 
   if (!RenderDisplayListToRawBuffer(*displayList, format,
-    dstImageData, dstImageW, dstImageH, dstImageRowBytes,
+    dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha,
     ctx->resourceDir,
+    &ctx->skiaResourceCtx,
     nullptr)) {
     return CanvexRenderError_GraphicsUnspecifiedError;
   }
@@ -97,10 +101,11 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  CanvexAlphaMode dstAlpha
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
   );
 }
 
@@ -110,9 +115,10 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   uint8_t *dstImageData,
   uint32_t dstImageW,
   uint32_t dstImageH,
-  uint32_t dstImageRowBytes
+  uint32_t dstImageRowBytes,
+  CanvexAlphaMode dstAlpha
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes
+      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
   );
 }

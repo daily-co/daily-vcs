@@ -6,8 +6,11 @@ namespace canvex {
 
 CanvexContext::CanvexContext(
     std::shared_ptr<SkCanvas> canvas,
-    const std::filesystem::path& resPath
-  ) : canvas_(canvas), resPath_(resPath) {
+    const std::filesystem::path& resPath,
+    CanvexSkiaResourceContext& skiaResCtx
+  ) : canvas_(canvas),
+      resPath_(resPath),
+      skiaResCtx_(skiaResCtx) {
   // init stack with state defaults
   stateStack_.push_back({});
 }
@@ -60,12 +63,13 @@ void CanvexContext::setLineJoin(JoinType t) {
   sf.strokeJoin = t;
 }
 
-void CanvexContext::setFont(const std::string& weight, const std::string& /*style*/, double pxSize, const std::string& /*name*/) {
+void CanvexContext::setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name) {
   auto& sf = stateStack_.back();
 
-  // TODO: handle remaining font props style + name
-
+  sf.fontName = name;
   sf.fontSize = pxSize;
+  
+  sf.fontIsItalic = style == "italic";
   
   if (!weight.empty()) {
     auto w = strtol(weight.c_str(), nullptr, 10);
@@ -84,6 +88,13 @@ void CanvexContext::fillRect(double x, double y, double w, double h) {
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
 }
 
+void CanvexContext::rect(double x, double y, double w, double h) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->addRect(SkRect::MakeXYWH(x, y, w, h));
+}
+
 void CanvexContext::strokeRect(double x, double y, double w, double h) {
   const auto& sf = stateStack_.back();
   SkPaint paint;
@@ -94,34 +105,6 @@ void CanvexContext::strokeRect(double x, double y, double w, double h) {
   paint.setStrokeJoin((SkPaint::Join)sf.strokeJoin);
 
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), paint);
-}
-
-// translate CSS-style font weight to known Roboto font names
-static std::string getRobotoFontNameSuffix(int fontWeight, bool italic) {
-  std::string s;
-
-  switch (fontWeight) {
-    default: case 400:
-      if (!italic)
-        return "Regular";
-      else
-        return "Italic";
-    case 500: case 600:
-      s = "Medium"; break;
-    case 700:
-      s = "Bold"; break;
-    case 800:
-    case 900:
-      s = "Black"; break;
-    case 300: case 200:
-      s = "Light"; break;
-    case 100:
-      s = "Thin"; break;
-  }
-  if (italic) {
-    s = s += "Italic";
-  }
-  return s;
 }
 
 void CanvexContext::fillText(const std::string& text, double x, double y) {
@@ -150,12 +133,15 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
 
   double t0 = getMonotonicTime();
 
-  // currently locally loaded Roboto supported for rendering text
-  std::string fontFileName = "Roboto-";
-  fontFileName += getRobotoFontNameSuffix(sf.fontWeight, false);  // FIXME: support italic
-  fontFileName += ".ttf";
+  std::string fontFamily = (sf.fontName.empty()) ? "Roboto" : sf.fontName;
+  auto fontFileNameOpt = skiaResCtx_.getFontFileName(fontFamily, sf.fontWeight, sf.fontIsItalic);
+  if (!fontFileNameOpt.has_value()) {
+    std::cerr << "** Unable to match font name: " << fontFamily << std::endl;
+    return; // --
+  }
+  std::string fontFileName = fontFileNameOpt.value();
 
-  sk_sp<SkTypeface> typeface = typefaceCache_Roboto_[fontFileName];
+  sk_sp<SkTypeface> typeface = skiaResCtx_.typefaceCache[fontFileName];
   if (!typeface) {
     // the font look-up call is somewhat expensive, so we cache the typeface objects
     if (resPath_.empty()) {
@@ -168,7 +154,7 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
       if (!typeface) {
         std::cerr << "** Unable to load font at: " << fontPath << std::endl;
       } else {
-        typefaceCache_Roboto_[fontFileName] = typeface;
+        skiaResCtx_.typefaceCache[fontFileName] = typeface;
       }
     }
     /*
@@ -190,10 +176,10 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
-void CanvexContext::drawImage_fromAssets(const std::string& imageName, double x, double y, double w, double h) {
+void CanvexContext::drawImage_fromDefaultAssets(const std::string& imageName, double x, double y, double w, double h) {
   if (imageName.empty()) return; // --
 
-  sk_sp<SkImage> image = imageCache_assetNamespace_[imageName];
+  sk_sp<SkImage> image = skiaResCtx_.imageCache_defaultNamespace[imageName];
   if (!image) {
     // FIXME: hardcoded subpath to known test images
     auto assetsPath = resPath_ / "test-assets" / imageName;
@@ -208,7 +194,7 @@ void CanvexContext::drawImage_fromAssets(const std::string& imageName, double x,
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
       return;
     }
-    imageCache_assetNamespace_[imageName] = image;
+    skiaResCtx_.imageCache_defaultNamespace[imageName] = image;
   }
 
   SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};

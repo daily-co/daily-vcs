@@ -50,7 +50,7 @@ export default function VideoSplit({
       <Box
         key={key}
         id={key}
-        layout={[layoutFuncs.splitVertical, { index: itemIdx }]}
+        layout={[layoutFuncs.splitAcrossLongerDimension, { index: itemIdx }]}
       >
         {content}
       </Box>

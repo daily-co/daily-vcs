@@ -3,6 +3,7 @@ canvex_lib_sources = files(
   'canvex_c_api.cpp',
   'canvex_skia_context.cpp',
   'canvex_skia_executor.cpp',
+  'canvex_skia_resource_context.cpp',
   'file_util.cpp',
   'style_util.cpp',
 )

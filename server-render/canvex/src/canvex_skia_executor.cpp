@@ -1,3 +1,4 @@
+#include "../include/canvex_c_api.h"
 #include "canvex_skia_executor.h"
 #include "canvex_skia_context.h"
 #include "skia_includes.h"
@@ -38,7 +39,8 @@ static void debugPrintArgs(const Command& cmd, std::ostream& os) {
 static void renderDisplayListInSkCanvas(
     const VCSCanvasDisplayList& dl,
     std::shared_ptr<SkCanvas> canvas,
-    const std::filesystem::path& resourceDir
+    const std::filesystem::path& resourceDir,
+    CanvexSkiaResourceContext* skiaResCtxPtr
   ) {
   canvas->clear(SK_ColorTRANSPARENT);
 
@@ -53,7 +55,15 @@ static void renderDisplayListInSkCanvas(
     canvas->scale(scaleX, scaleY);
   }
 
-  CanvexContext ctx(canvas, resourceDir);
+  std::unique_ptr<CanvexSkiaResourceContext> tempResCtxPtr;
+  if (!skiaResCtxPtr) {
+    // if a cached resource context wasn't passed in, create one now for this call
+    tempResCtxPtr = std::make_unique<CanvexSkiaResourceContext>();
+    std::cout << __func__
+        << ": No Skia resource context from caller (this prevents resource reuse between calls)" << std::endl;
+  }
+
+  CanvexContext ctx(canvas, resourceDir, (skiaResCtxPtr) ? *skiaResCtxPtr : *tempResCtxPtr);
 
   // basic status tracking
   int numInvalidArgErrors = 0;
@@ -238,6 +248,19 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case rect: {
+        PRINTCMD_ARGS("rect")
+        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number) {
+          std::cout << "Invalid args for rect: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.rect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case fillText: {
         PRINTCMD_ARGS("fillText")
         if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string
@@ -279,7 +302,7 @@ static void renderDisplayListInSkCanvas(
           // eventually we'll support other types of images,
           // e.g. compositions can have their own namespace for user-provided assets.
           if (imgType == "defaultAsset") {
-            ctx.drawImage_fromAssets(imgName,
+            ctx.drawImage_fromDefaultAssets(imgName,
               cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
           } else {
             std::cout << "Unsupported type for drawImage: " << imgType << std::endl;
@@ -320,7 +343,8 @@ bool RenderDisplayListToPNG(
   const VCSCanvasDisplayList& dl,
   const std::filesystem::path& dstFile,
   const std::filesystem::path& resourceDir,
-  GraphicsExecutionStats* stats
+  CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
+  GraphicsExecutionStats* stats // optional stats
 ) {
   const auto w = dl.width;
   const auto h = dl.height;
@@ -340,7 +364,7 @@ bool RenderDisplayListToPNG(
 
   double t1 = getMonotonicTime();
 
-  renderDisplayListInSkCanvas(dl, canvas, resourceDir);
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx);
 
   double t2 = getMonotonicTime();
 
@@ -364,10 +388,13 @@ bool RenderDisplayListToRawBuffer(
   uint32_t w,
   uint32_t h,
   uint32_t rowBytes,
+  CanvexAlphaMode alphaMode,
   const std::filesystem::path& resourceDir,
-  GraphicsExecutionStats* stats  // optional stats
+  CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
+  GraphicsExecutionStats* stats // optional stats
 ) {
   SkColorType skFormat;
+  SkImageInfo imageInfo;
 
   switch (format) {
     case Rgba:
@@ -379,10 +406,19 @@ bool RenderDisplayListToRawBuffer(
       break;
   }
 
-  auto imageInfo = SkImageInfo::Make(w, h, skFormat, kPremul_SkAlphaType);
+  switch (alphaMode) {
+    case CanvexAlphaMode::CANVEX_PREMULTIPLIED:
+      imageInfo = SkImageInfo::Make(w, h, skFormat, kPremul_SkAlphaType);
+      break;
+
+    case CanvexAlphaMode::CANVEX_NON_PREMULTIPLIED:
+      imageInfo = SkImageInfo::Make(w, h, skFormat, kUnpremul_SkAlphaType);
+      break;
+  }
+
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 
-  renderDisplayListInSkCanvas(dl, canvas, resourceDir);
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx);
 
   // TODO: collect stats in this call too (refactor from above)
 
