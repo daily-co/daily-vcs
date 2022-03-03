@@ -105,6 +105,14 @@ class CanvasEncodingContext {
     this.encodeCmd('clip');
   }
 
+  fill() {
+    this.encodeCmd('fill');
+  }
+
+  stroke() {
+    this.encodeCmd('stroke');
+  }
+
   fillRect(...args) {
     this.encodeCmd('fillRect', args);
   }
