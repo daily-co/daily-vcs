@@ -5,6 +5,7 @@ export function makeVCSRootContainer(
   ContentRoot,
   rootContainerRef,
   viewportSize,
+  paramValues,
   errorCb
 ) {
   // a root component that wraps the view we loaded from the external JSX source,
@@ -16,8 +17,7 @@ export function makeVCSRootContainer(
       this.state = {
         hasError: false,
         compositionData: {
-          mode: '',
-          params: {},
+          params: paramValues || {},
         },
         time: {
           currentTime: 0,
@@ -65,6 +65,17 @@ export function makeVCSRootContainer(
       compositionData.params = { ...compositionData.params };
 
       compositionData.params[id] = value;
+
+      // if the param is of format "group.subid", make a convenience object for the group
+      const idx = id.indexOf('.');
+      if (idx > 0 && idx < id.length - 1) {
+        const group = id.substr(0, idx);
+        const subid = id.substr(idx + 1);
+        if (typeof compositionData.params[group] !== 'object') {
+          compositionData.params[group] = {};
+        }
+        compositionData.params[group][subid] = value;
+      }
 
       this.setState({ compositionData });
     }

@@ -1,4 +1,5 @@
 import fontSetup from '../src/text/font-setup';
+import { standardFontFamilies } from '../src/text/standard-fonts';
 
 // callback for font loading
 fontSetup.platformConfig.loadFontSourceAsync = async function (
@@ -18,57 +19,12 @@ export async function loadFontsAsync(
   appendPreloadToDOMFunc,
   wantedFamilies
 ) {
-  const robotoVariants = [
-    { fileName: 'Roboto-Regular.ttf' },
-    { fileName: 'Roboto-Bold.ttf', fontWeight: 700 },
-    { fileName: 'Roboto-Italic.ttf', fontStyle: 'italic' },
-    { fileName: 'Roboto-BoldItalic.ttf', fontWeight: 700, fontStyle: 'italic' },
-    { fileName: 'Roboto-Thin.ttf', fontWeight: 100 },
-    { fileName: 'Roboto-ThinItalic.ttf', fontWeight: 100, fontStyle: 'italic' },
-    { fileName: 'Roboto-Light.ttf', fontWeight: 300 },
-    {
-      fileName: 'Roboto-LightItalic.ttf',
-      fontWeight: 300,
-      fontStyle: 'italic',
-    },
-    { fileName: 'Roboto-Medium.ttf', fontWeight: 500 },
-    {
-      fileName: 'Roboto-MediumItalic.ttf',
-      fontWeight: 500,
-      fontStyle: 'italic',
-    },
-    { fileName: 'Roboto-Black.ttf', fontWeight: 900 },
-    {
-      fileName: 'Roboto-BlackItalic.ttf',
-      fontWeight: 900,
-      fontStyle: 'italic',
-    },
-  ];
-
-  const knownFamilies = [
-    // -- BASE FONT: Roboto.
-    // this is supported as a family.
-    {
-      family: 'Roboto',
-      variants: robotoVariants,
-    }, // end of Roboto family
-  ];
-
-  let fontDescs = [];
-  for (const fontDesc of fontDescs) {
-    const { postscriptName, fileName } = fontDesc;
-    knownFamilies.push({
-      family: postscriptName,
-      variants: [{ fileName }],
-    });
-  }
+  const knownFamilies = standardFontFamilies;
 
   if (!Array.isArray(wantedFamilies)) {
     // add default font if nothing else was specified
     wantedFamilies = ['Roboto'];
   }
-
-  //console.log('known font families: ', knownFamilies);
 
   for (const { family, variants } of knownFamilies) {
     if (!wantedFamilies.includes(family)) continue;

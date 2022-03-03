@@ -5,34 +5,42 @@ import { DEFAULT_FONT } from '../constants';
 
 export default function TextOverlay({
   content,
-  vAlign,
-  hAlign,
-  xOffset,
-  yOffset,
-  rotation,
+  align_vertical,
+  align_horizontal,
+  offset_x,
+  offset_y,
+  rotationInDegrees,
   color,
+  fontFamily,
   fontSize_vh,
   fontWeight,
+  fontStyle,
   strokeColor,
   useStroke
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
-    fontFamily: DEFAULT_FONT,
+    fontFamily: fontFamily || DEFAULT_FONT,
     fontWeight: fontWeight || '500',
+    fontStyle: fontStyle || '',
     fontSize_vh: fontSize_vh || 0.07,
     strokeColor,
     strokeWidth_px: useStroke ? 12 : 0,
   };
   let textTrs;
-  if (rotation) {
+  if (Number.isFinite(rotationInDegrees)) {
     textTrs = {
-      rotate_deg: rotation,
+      rotate_deg: rotationInDegrees,
     };
   }
 
   const layoutFn = layoutFuncs.placeText;
-  const layoutParams = { vAlign, hAlign, xOffset, yOffset };
+  const layoutParams = {
+    vAlign: align_vertical,
+    hAlign: align_horizontal,
+    xOffset: offset_x,
+    yOffset: offset_y
+  };
 
   return (
     <Label

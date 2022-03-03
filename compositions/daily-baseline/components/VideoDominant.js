@@ -2,8 +2,11 @@ import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
+import { PositionEdge } from '../constants';
+import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle';
 
-const DOMINANT_SPLIT_PROP = 0.8;
+const DOMINANT_SPLIT_DEFAULT = 0.8;
+const DOMINANT_MAXITEMS_DEFAULT = 5;
 
 export default function VideoDominant({
   showLabels,
@@ -11,13 +14,29 @@ export default function VideoDominant({
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
-  dominantOnLeft,
+  positionEdge = PositionEdge.LEFT,
+  splitPos = DOMINANT_SPLIT_DEFAULT,
+  maxItems = DOMINANT_MAXITEMS_DEFAULT,
 }) {
-  const { activeIds, activeScreenshareIds, dominantId, displayNamesById } = useActiveVideo();
+  const { activeIds, dominantId, displayNamesById } = useActiveVideo();
 
-  const splitPos = dominantOnLeft
-    ? DOMINANT_SPLIT_PROP
-    : 1 - DOMINANT_SPLIT_PROP;
+  const dominantFirst =
+    positionEdge === PositionEdge.LEFT || positionEdge === PositionEdge.TOP;
+  const isVerticalSplit =
+    positionEdge === PositionEdge.LEFT || positionEdge === PositionEdge.RIGHT;
+
+  if (!dominantFirst) {
+    splitPos = 1 - splitPos;
+  }
+
+  let mainLayoutFn, chicletsIsRow;
+  if (isVerticalSplit) {
+    mainLayoutFn = layoutFuncs.splitVertical;
+    chicletsIsRow = false;
+  } else {
+    mainLayoutFn = layoutFuncs.splitHorizontal;
+    chicletsIsRow = true;
+  }
 
   function makeDominantItem(itemIdx) {
     const key = 'videodominant_' + itemIdx;
@@ -29,50 +48,40 @@ export default function VideoDominant({
       content = <Box style={placeholderStyle} />;
     } else {
       // render video with optional label
-      let participantLabel;
-      if (showLabels) {
-        participantLabel = (
-          <Label
-            key={key + '_label'}
-            style={videoLabelStyle}
-            layout={[layoutFuncs.offset, { x: 10, y: 10 }]}
-          >
-            {displayNamesById[videoId] || ''}
-          </Label>
-        );
-      }
-
-      // TODO: get the real video aspect ratio
-      const contentAspectRatio = 16 / 9;
-
       content = [
         <Video
           key={key + '_video'}
           src={videoId}
           style={videoStyle}
-          layout={[layoutFuncs.fit, { contentAspectRatio }]}
           scaleMode={scaleMode}
-        />,
-        participantLabel,
+        />
       ];
+      if (showLabels) {
+        content.push(
+          <ParticipantLabelPipStyle
+            key={key + '_label'}
+            label={displayNamesById[videoId]}
+            labelStyle={videoLabelStyle}
+          />
+        );
+      }
     }
 
     return (
       <Box
         key={key}
         id={key}
-        layout={[layoutFuncs.splitVertical, { index: itemIdx, pos: splitPos }]}
+        layout={[mainLayoutFn, { index: itemIdx, pos: splitPos }]}
       >
         {content}
       </Box>
     );
   }
 
-  function makeTileColumn(itemIdx) {
+  function makeChiclets(itemIdx) {
     const key = 'videodominant_tiles_' + itemIdx;
 
     let videoIds = activeIds.filter((id) => id !== dominantId);
-    const maxItems = 5;
     if (videoIds.length > maxItems) {
       videoIds = videoIds.slice(0, maxItems);
     }
@@ -80,30 +89,41 @@ export default function VideoDominant({
     const items = [];
     for (let i = 0; i < videoIds.length; i++) {
       const videoId = videoIds[i];
+      const layout = [layoutFuncs.column, { index: i, total: maxItems, makeRow: chicletsIsRow }];
       items.push(
         <Video
           key={videoId}
           src={videoId}
           style={videoStyle}
-          layout={[layoutFuncs.column, { index: i, total: maxItems }]}
+          layout={layout}
         />
       );
+      if (showLabels) {
+        items.push(
+          <ParticipantLabelPipStyle
+            key={videoId + '_label'}
+            label={displayNamesById[videoId]}
+            labelStyle={videoLabelStyle}
+            layout={layout}
+          />
+        );
+      }
     }
 
     return (
       <Box
         key={key}
         id={key}
-        layout={[layoutFuncs.splitVertical, { index: itemIdx, pos: splitPos }]}
+        layout={[mainLayoutFn, { index: itemIdx, pos: splitPos }]}
       >
         {items}
       </Box>
     );
   }
 
-  const topItems = dominantOnLeft
-    ? [makeDominantItem(0), makeTileColumn(1)]
-    : [makeTileColumn(0), makeDominantItem(1)];
+  const topItems = dominantFirst
+    ? [makeDominantItem(0), makeChiclets(1)]
+    : [makeChiclets(0), makeDominantItem(1)];
 
   return <Box id="videodominant">{topItems}</Box>;
 }
