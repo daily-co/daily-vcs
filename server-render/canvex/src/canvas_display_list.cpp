@@ -276,6 +276,8 @@ class DisplayListJSONHandler {
     {"lineWidth", OpType::lineWidth},
     {"lineJoin", OpType::lineJoin},
     {"font", OpType::font},
+    {"fill", OpType::fill},
+    {"stroke", OpType::stroke},
     {"clip", OpType::clip},
     {"fillRect", OpType::fillRect},
     {"strokeRect", OpType::strokeRect},
