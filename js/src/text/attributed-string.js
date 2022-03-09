@@ -1,4 +1,4 @@
-import {getNumericFontWeightFromCSSValue} from './font';
+import { getNumericFontWeightFromCSSValue } from './font';
 import fontSetup from './font-setup';
 
 const kFallbackFont = fontSetup.fallbackFontFamily;
@@ -8,7 +8,8 @@ function computeStyleAttributes(styledObj, viewport) {
     ? styledObj.fontSize_px
     : 12.0;
 
-  if (styledObj.fontSize_vh > 0) { // relative to viewport height
+  if (styledObj.fontSize_vh > 0) {
+    // relative to viewport height
     size_px = styledObj.fontSize_vh * viewport.h;
   }
 
@@ -41,8 +42,8 @@ function computeStyleAttributes(styledObj, viewport) {
     fontWeight = parseFloat(styledObj.fontWeight);
     if (!isFinite(fontWeight)) {
       fontWeight = styledObj.fontWeight
-      ? getNumericFontWeightFromCSSValue(styledObj.fontWeight)
-      : 400;
+        ? getNumericFontWeightFromCSSValue(styledObj.fontWeight)
+        : 400;
     }
   }
 
@@ -69,11 +70,7 @@ function computeStyleAttributes(styledObj, viewport) {
 // returned 'fragments' array is the pieces needed to construct a Fontkit AttributedString object.
 // we're returning also the font object, since our attributed strings are currently single-style
 // (no inline fonts in fragments, yet).
-export function makeAttributedStringDesc(
-  string,
-  styledObj,
-  viewport
-) {
+export function makeAttributedStringDesc(string, styledObj, viewport) {
   let fragments = [];
 
   const {
@@ -87,17 +84,19 @@ export function makeAttributedStringDesc(
 
   let font;
   try {
-    font = fontSetup.getFont({fontFamily, fontWeight, fontStyle});
+    font = fontSetup.getFont({ fontFamily, fontWeight, fontStyle });
   } catch (e) {
     console.error(
       "** couldn't get font '%s' / %s / %s, will default",
       fontFamily,
       fontWeight,
-      fontStyle,
+      fontStyle
     );
-    font = fontSetup.getFont({fontFamily: kFallbackFont, fontWeight: 400});
+    font = fontSetup.getFont({ fontFamily: kFallbackFont, fontWeight: 400 });
     if (!font) {
-      console.assert(`Fallback font ${kFallbackFont} is not available, engine is misconfigured`);
+      console.assert(
+        `Fallback font ${kFallbackFont} is not available, engine is misconfigured`
+      );
     }
   }
   const attributes = {

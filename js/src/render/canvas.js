@@ -254,7 +254,17 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     if (textContent && textContent.length > 0) {
-      drawStyledText(ctx, textContent, textStyle, frame, comp);
+      if (node.textLayoutBlocks) {
+        drawStyledTextLayoutBlocks(
+          ctx,
+          node.textLayoutBlocks,
+          textStyle,
+          frame,
+          comp
+        );
+      } else {
+        drawStyledText(ctx, textContent, textStyle, frame, comp);
+      }
     }
 
     if (inShapeClip) ctx.restore();
@@ -304,6 +314,27 @@ function ensureCssColor(color) {
     })`;
   }
   return color;
+}
+
+function drawStyledTextLayoutBlocks(ctx, blocks, style, frame, comp) {
+  let { x, y } = frame;
+
+  for (const paragraphLinesArr of blocks) {
+    for (const lineDesc of paragraphLinesArr) {
+      const { box, string } = lineDesc;
+      // the lineDesc has a 'runs' property which contains exact glyph positions.
+      // for now, we just draw the string in one shot since we don't offer fancy
+      // letter spacing, inline emojis, or other features that would need per-glyph rendering.
+
+      const textFrame = {
+        x: Number.isFinite(box.x) ? x + box.x : x,
+        y: Number.isFinite(box.y) ? y + box.y : y,
+        w: box.width,
+        h: box.height,
+      };
+      drawStyledText(ctx, string, style, textFrame, comp);
+    }
+  }
 }
 
 function drawStyledText(ctx, text, style, frame, comp) {
