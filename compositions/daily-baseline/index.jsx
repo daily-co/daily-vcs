@@ -129,6 +129,7 @@ export const compositionInterface = {
       id: 'text.content',
       type: 'text',
       defaultValue: 'An example text overlay',
+      //'An example text overlay\nwith line breaks\nThis third line is very long dolor sit amet lorem ipsum, and the line ends here.',
     },
     {
       id: 'text.align_horizontal',

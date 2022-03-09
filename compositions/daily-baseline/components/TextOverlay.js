@@ -26,6 +26,7 @@ export default function TextOverlay({
     fontSize_vh: fontSize_vh || 0.07,
     strokeColor,
     strokeWidth_px: useStroke ? 12 : 0,
+    textAlign: align_horizontal,
   };
   let textTrs;
   if (Number.isFinite(rotationInDegrees)) {

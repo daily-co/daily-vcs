@@ -58,21 +58,6 @@ export function placeText(parentFrame, params, layoutCtx) {
   let xOff = params.xOffset || 0;
   let yOff = params.yOffset || 0;
 
-  switch (params.hAlign) {
-    default:
-    case 'left':
-      break;
-
-    case 'right':
-      x += parentFrame.w - w;
-      xOff = -xOff; // flip offset direction
-      break;
-
-    case 'center':
-      x += (parentFrame.w - w) / 2;
-      break;
-  }
-
   switch (params.vAlign) {
     default:
     case 'top':
@@ -149,8 +134,8 @@ export function column(parentFrame, params, layoutCtx) {
     outerMargins.x = outerMargins.y = marginRel * 0.75;
   }
 
-  const numCols = (makeRow) ? total : 1;
-  const numRows = (makeRow) ? 1 : total;
+  const numCols = makeRow ? total : 1;
+  const numRows = makeRow ? 1 : total;
 
   // assume video item aspect ratio is same as output
   const videoAsp = outputAsp;
@@ -249,13 +234,19 @@ export function pip(parentFrame, params, layoutCtx) {
   h = Math.round(height_vh * viewport.h);
   w = Math.round(aspectRatio * h);
 
-  if (positionCorner === PositionCorner.TOP_LEFT || positionCorner === PositionCorner.TOP_RIGHT) {
+  if (
+    positionCorner === PositionCorner.TOP_LEFT ||
+    positionCorner === PositionCorner.TOP_RIGHT
+  ) {
     y += margin;
   } else {
     y += parentFrame.h - h - margin;
   }
 
-  if (positionCorner === PositionCorner.TOP_LEFT || positionCorner === PositionCorner.BOTTOM_LEFT) {
+  if (
+    positionCorner === PositionCorner.TOP_LEFT ||
+    positionCorner === PositionCorner.BOTTOM_LEFT
+  ) {
     x += margin;
   } else {
     x += parentFrame.w - w - margin;

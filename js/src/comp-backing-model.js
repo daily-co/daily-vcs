@@ -22,9 +22,15 @@ export const IntrinsicNodeType = {
 
 export class Composition {
   constructor(viewportSize, cb) {
-    console.assert(viewportSize.w > 0 && viewportSize.h > 0, `** invalid Composition viewportSize arg: ${viewportSize}`);
+    console.assert(
+      viewportSize.w > 0 && viewportSize.h > 0,
+      `** invalid Composition viewportSize arg: ${viewportSize}`
+    );
     if (cb) {
-      console.assert(typeof cb === 'function', `** invalid Composition cb arg: ${cb}`);
+      console.assert(
+        typeof cb === 'function',
+        `** invalid Composition cb arg: ${cb}`
+      );
     }
 
     this.viewportSize = viewportSize;
@@ -109,7 +115,7 @@ export class Composition {
         addDep('intrinsicSize');
         return node.intrinsicSize ? node.intrinsicSize : { w: -1, h: -1 };
       },
-    }
+    };
   }
 
   _performLayout() {
@@ -130,7 +136,7 @@ export class Composition {
         frame = node.layoutFunc(frame, node.layoutParams, {
           ...layoutCtxBase,
           ...makeLayoutCtxHooks(node),
-          node
+          node,
         });
       }
       node.layoutFrame = frame;
@@ -406,7 +412,9 @@ class LabelNode extends StyledNodeBase {
       );
       return;
     }
-    const frame = null; // could set w/h to constrain the text layout
+    // constrain layout within viewport for now
+    let frame = this.container.viewportSize;
+
     const textContainerFrame = {
       x: 0,
       y: 0,
@@ -417,6 +425,8 @@ class LabelNode extends StyledNodeBase {
     const blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
 
     const { totalBox, numLines } = measureTextLayoutBlocks(blocks);
+
+    // console.log('measure text: numLines %d, totalBox: ', numLines, totalBox);
 
     if (numLines > 1 && frame && frame.w) {
       // for multiple lines, the width is the given max

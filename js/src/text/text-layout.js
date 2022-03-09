@@ -8,11 +8,10 @@ import AttributedString from '@react-pdf/textkit/lib/attributedString';
 
 import fontSetup from './font-setup';
 
-
-const fontSubstitution = () => ({string, runs}) => {
+const fontSubstitution = () => ({ string, runs }) => {
   // no font substitution performed.
   // we assume all fonts are known and available.
-  return {string, runs};
+  return { string, runs };
 };
 
 const kEngines = {
@@ -26,9 +25,7 @@ const kEngines = {
 const kEngineFn = layoutEngine(kEngines);
 
 export function performTextLayout(attrStringDesc, containerDesc) {
-  const attrStr = AttributedString.fromFragments(
-    attrStringDesc.fragments
-  );
+  const attrStr = AttributedString.fromFragments(attrStringDesc.fragments);
 
   const options = {
     hyphenationCallback: fontSetup.getHyphenationCallback(),
@@ -37,7 +34,7 @@ export function performTextLayout(attrStringDesc, containerDesc) {
 }
 
 export function measureTextLayoutBlocks(blocks) {
-  let totalBox = {x: null, y: null, w: 0, h: 0};
+  let totalBox = { x: null, y: null, w: 0, h: 0 };
   let numLines = 0;
 
   let lastParagraphSpacing = 0;
@@ -46,7 +43,7 @@ export function measureTextLayoutBlocks(blocks) {
     totalBox.h += lastParagraphSpacing;
 
     for (const lineDesc of paragraphLinesArr) {
-      const {box, runs} = lineDesc;
+      const { box, runs } = lineDesc;
 
       let w = box.width;
       if (runs.length > 0) {
@@ -62,10 +59,11 @@ export function measureTextLayoutBlocks(blocks) {
       if (totalBox.x === null) totalBox.x = box.x;
       if (totalBox.y === null) totalBox.y = box.y;
 
-      lastParagraphSpacing = runs.length > 0 ? runs[0].attributes.paragraphSpacing : 0;
+      lastParagraphSpacing =
+        runs.length > 0 ? runs[0].attributes.paragraphSpacing : 0;
       numLines++;
     }
   }
 
-  return {totalBox, numLines};
-};
+  return { totalBox, numLines };
+}
