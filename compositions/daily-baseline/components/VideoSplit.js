@@ -9,8 +9,20 @@ export default function VideoSplit({
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
+  labelsOffset_px,
 }) {
   const { activeIds, displayNamesById } = useActiveVideo();
+
+  if (
+    !labelsOffset_px ||
+    !Number.isFinite(labelsOffset_px.x) ||
+    !Number.isFinite(labelsOffset_px.y)
+  ) {
+    labelsOffset_px = { x: 0, y: 0 };
+  }
+  // this is the default offset for split mode
+  labelsOffset_px.x += 10;
+  labelsOffset_px.y += 10;
 
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
@@ -28,7 +40,7 @@ export default function VideoSplit({
           <Label
             key={key + '_label'}
             style={videoLabelStyle}
-            layout={[layoutFuncs.offset, { x: 10, y: 10 }]}
+            layout={[layoutFuncs.offset, labelsOffset_px]}
           >
             {displayNamesById[videoId] || ''}
           </Label>

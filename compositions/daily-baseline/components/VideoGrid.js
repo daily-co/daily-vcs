@@ -8,6 +8,7 @@ export default function VideoGrid({
   scaleMode,
   videoStyle,
   videoLabelStyle,
+  labelsOffset_px,
 }) {
   const { activeIds, dominantId, displayNamesById } = useActiveVideo();
 
@@ -26,7 +27,7 @@ export default function VideoGrid({
           style={videoLabelStyle}
           layout={[
             layoutFuncs.gridLabel,
-            { textH: videoLabelStyle.fontSize_px },
+            { textH: videoLabelStyle.fontSize_px, offsets: labelsOffset_px },
           ]}
           clip
         >

@@ -14,6 +14,7 @@ export default function VideoPip({
   aspectRatio,
   height_vh,
   margin_vh,
+  labelsOffset_px,
 }) {
   const { activeIds, dominantId, displayNamesById } = useActiveVideo();
 
@@ -29,7 +30,7 @@ export default function VideoPip({
     // render video with optional label
     const videoId = firstVideoId;
     const key = 0;
-    
+
     items.push(
       <Video key={key + '_video'} src={videoId} scaleMode={scaleMode} />
     );
@@ -40,6 +41,7 @@ export default function VideoPip({
           key={key + '_label'}
           label={displayNamesById[videoId]}
           labelStyle={videoLabelStyle}
+          labelsOffset_px={labelsOffset_px}
         />
       );
     }
@@ -74,6 +76,7 @@ export default function VideoPip({
           key={key + '_label'}
           label={displayNamesById[videoId]}
           labelStyle={videoLabelStyle}
+          labelsOffset_px={labelsOffset_px}
           layout={layout}
         />
       );
