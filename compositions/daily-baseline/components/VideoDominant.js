@@ -18,7 +18,11 @@ export default function VideoDominant({
   splitPos = DOMINANT_SPLIT_DEFAULT,
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
 }) {
-  const { activeIds, dominantId, displayNamesById } = useActiveVideo();
+  let { activeIds, dominantId, displayNamesById } = useActiveVideo();
+
+  if (!dominantId) {
+    dominantId = activeIds[0];
+  }
 
   const dominantFirst =
     positionEdge === PositionEdge.LEFT || positionEdge === PositionEdge.TOP;
@@ -54,7 +58,7 @@ export default function VideoDominant({
           src={videoId}
           style={videoStyle}
           scaleMode={scaleMode}
-        />
+        />,
       ];
       if (showLabels) {
         content.push(
@@ -89,14 +93,12 @@ export default function VideoDominant({
     const items = [];
     for (let i = 0; i < videoIds.length; i++) {
       const videoId = videoIds[i];
-      const layout = [layoutFuncs.column, { index: i, total: maxItems, makeRow: chicletsIsRow }];
+      const layout = [
+        layoutFuncs.column,
+        { index: i, total: maxItems, makeRow: chicletsIsRow },
+      ];
       items.push(
-        <Video
-          key={videoId}
-          src={videoId}
-          style={videoStyle}
-          layout={layout}
-        />
+        <Video key={videoId} src={videoId} style={videoStyle} layout={layout} />
       );
       if (showLabels) {
         items.push(
