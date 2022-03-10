@@ -17,6 +17,7 @@ export default function VideoDominant({
   positionEdge = PositionEdge.LEFT,
   splitPos = DOMINANT_SPLIT_DEFAULT,
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
+  labelsOffset_px,
 }) {
   const { activeIds, dominantId, displayNamesById } = useActiveVideo();
 
@@ -54,7 +55,7 @@ export default function VideoDominant({
           src={videoId}
           style={videoStyle}
           scaleMode={scaleMode}
-        />
+        />,
       ];
       if (showLabels) {
         content.push(
@@ -62,6 +63,7 @@ export default function VideoDominant({
             key={key + '_label'}
             label={displayNamesById[videoId]}
             labelStyle={videoLabelStyle}
+            labelsOffset_px={labelsOffset_px}
           />
         );
       }
@@ -89,14 +91,12 @@ export default function VideoDominant({
     const items = [];
     for (let i = 0; i < videoIds.length; i++) {
       const videoId = videoIds[i];
-      const layout = [layoutFuncs.column, { index: i, total: maxItems, makeRow: chicletsIsRow }];
+      const layout = [
+        layoutFuncs.column,
+        { index: i, total: maxItems, makeRow: chicletsIsRow },
+      ];
       items.push(
-        <Video
-          key={videoId}
-          src={videoId}
-          style={videoStyle}
-          layout={layout}
-        />
+        <Video key={videoId} src={videoId} style={videoStyle} layout={layout} />
       );
       if (showLabels) {
         items.push(
@@ -104,6 +104,7 @@ export default function VideoDominant({
             key={videoId + '_label'}
             label={displayNamesById[videoId]}
             labelStyle={videoLabelStyle}
+            labelsOffset_px={labelsOffset_px}
             layout={layout}
           />
         );
