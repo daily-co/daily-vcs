@@ -31,6 +31,16 @@ const fontFamilies = [
   'SuezOne',
   'Teko',
 ];
+// fonts that are legible at a small size (for participant labels)
+const fontFamilies_smallSizeFriendly = [
+  'Roboto',
+  'RobotoCondensed',
+  'Bitter',
+  'Exo',
+  'Magra',
+  'SuezOne',
+  'Teko',
+];
 // not all fonts have every weight,
 // but we can't currently filter the UI based on the font name
 const fontWeights = [
@@ -123,6 +133,43 @@ export const compositionInterface = {
       defaultValue: 0.04,
       step: 0.01,
     },
+    {
+      id: 'videoSettings.labels.fontFamily',
+      type: 'enum',
+      defaultValue: fontFamilies_smallSizeFriendly[0],
+      values: fontFamilies_smallSizeFriendly,
+    },
+    {
+      id: 'videoSettings.labels.fontWeight',
+      type: 'enum',
+      defaultValue: '600',
+      values: fontWeights,
+    },
+    {
+      id: 'videoSettings.labels.fontSize_pct',
+      type: 'number',
+      defaultValue: 100,
+    },
+    {
+      id: 'videoSettings.labels.offset_x',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'videoSettings.labels.offset_y',
+      type: 'number',
+      defaultValue: 0,
+    },
+    {
+      id: 'videoSettings.labels.color',
+      type: 'text',
+      defaultValue: 'white',
+    },
+    {
+      id: 'videoSettings.labels.strokeColor',
+      type: 'text',
+      defaultValue: 'rgba(0, 0, 0, 0.9)',
+    },
 
     // -- text overlay params --
     {
@@ -209,11 +256,15 @@ export default function DailyBaselineVCS() {
     fillColor: '#008',
   };
   const videoLabelStyle = {
-    textColor: 'white',
-    fontFamily: DEFAULT_FONT,
-    fontWeight: '600',
-    fontSize_px: DEFAULT_LABEL_FONT_SIZE_PX,
-    strokeColor: 'rgba(0, 0, 0, 0.9)',
+    textColor: params['videoSettings.labels.color'] || 'white',
+    fontFamily: params['videoSettings.labels.fontFamily'] || DEFAULT_FONT,
+    fontWeight: params['videoSettings.labels.fontWeight'] || '600',
+    fontSize_px: params['videoSettings.labels.fontSize_pct']
+      ? (params['videoSettings.labels.fontSize_pct'] / 100) *
+        DEFAULT_LABEL_FONT_SIZE_PX
+      : DEFAULT_LABEL_FONT_SIZE_PX,
+    strokeColor:
+      params['videoSettings.labels.strokeColor'] || 'rgba(0, 0, 0, 0.9)',
     strokeWidth_px: 4,
   };
 
@@ -224,6 +275,14 @@ export default function DailyBaselineVCS() {
     videoLabelStyle,
     showLabels: params['videoSettings.showParticipantLabels'],
     scaleMode: params['videoSettings.scaleMode'],
+    labelsOffset_px: {
+      x: params['videoSettings.labels.offset_x']
+        ? parseInt(params['videoSettings.labels.offset_x'], 10)
+        : 0,
+      y: params['videoSettings.labels.offset_y']
+        ? parseInt(params['videoSettings.labels.offset_y'], 10)
+        : 0,
+    },
   };
   let video;
   switch (params.mode) {
