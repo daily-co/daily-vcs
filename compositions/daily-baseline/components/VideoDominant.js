@@ -17,6 +17,7 @@ export default function VideoDominant({
   positionEdge = PositionEdge.LEFT,
   splitPos = DOMINANT_SPLIT_DEFAULT,
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
+  labelsOffset_px,
 }) {
   let { activeIds, dominantId, displayNamesById } = useActiveVideo();
 
@@ -66,6 +67,7 @@ export default function VideoDominant({
             key={key + '_label'}
             label={displayNamesById[videoId]}
             labelStyle={videoLabelStyle}
+            labelsOffset_px={labelsOffset_px}
           />
         );
       }
@@ -106,6 +108,7 @@ export default function VideoDominant({
             key={videoId + '_label'}
             label={displayNamesById[videoId]}
             labelStyle={videoLabelStyle}
+            labelsOffset_px={labelsOffset_px}
             layout={layout}
           />
         );

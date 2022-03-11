@@ -212,10 +212,13 @@ export function grid(parentFrame, params, layoutCtx) {
 }
 
 export function gridLabel(parentFrame, params) {
-  const { textH = 0 } = params;
+  const { textH = 0, offsets = {} } = params;
   let { x, y, w, h } = parentFrame;
 
   y += h + Math.round(textH * 0.1);
+
+  if (Number.isFinite(offsets.x)) x += offsets.x;
+  if (Number.isFinite(offsets.y)) y += offsets.y;
 
   return { x, y, w, h };
 }
