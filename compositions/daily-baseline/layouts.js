@@ -1,4 +1,4 @@
-import { PositionEdge, PositionCorner } from './constants';
+import { PositionEdge, PositionCorner } from './constants.js';
 
 // --- layout functions and utils ---
 

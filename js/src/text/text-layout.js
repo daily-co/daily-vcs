@@ -1,12 +1,22 @@
-import layoutEngine from '@react-pdf/textkit/lib/layout';
-import linebreaker from '@react-pdf/textkit/lib/engines/linebreaker';
-import justification from '@react-pdf/textkit/lib/engines/justification';
-import textDecoration from '@react-pdf/textkit/lib/engines/textDecoration';
-import scriptItemizer from '@react-pdf/textkit/lib/engines/scriptItemizer';
-import wordHyphenation from '@react-pdf/textkit/lib/engines/wordHyphenation';
-import AttributedString from '@react-pdf/textkit/lib/attributedString';
+import module_layoutEngine from '@react-pdf/textkit/lib/layout/index.js';
+import module_linebreaker from '@react-pdf/textkit/lib/engines/linebreaker/index.js';
+import module_justification from '@react-pdf/textkit/lib/engines/justification/index.js';
+import module_textDecoration from '@react-pdf/textkit/lib/engines/textDecoration/index.js';
+import module_scriptItemizer from '@react-pdf/textkit/lib/engines/scriptItemizer/index.js';
+import module_wordHyphenation from '@react-pdf/textkit/lib/engines/wordHyphenation/index.js';
+import module_AttributedString from '@react-pdf/textkit/lib/attributedString/index.js';
 
-import fontSetup from './font-setup';
+const layoutEngineFactory = module_layoutEngine.default || module_layoutEngine;
+const linebreaker = module_linebreaker.default || module_linebreaker;
+const justification = module_justification.default || module_justification;
+const textDecoration = module_textDecoration.default || module_textDecoration;
+const scriptItemizer = module_scriptItemizer.default || module_scriptItemizer;
+const wordHyphenation =
+  module_wordHyphenation.default || module_wordHyphenation;
+const AttributedString =
+  module_AttributedString.default || module_AttributedString;
+
+import fontSetup from './font-setup.js';
 
 const fontSubstitution = () => ({ string, runs }) => {
   // no font substitution performed.
@@ -22,7 +32,7 @@ const kEngines = {
   wordHyphenation,
   fontSubstitution,
 };
-const kEngineFn = layoutEngine(kEngines);
+const kEngineFn = layoutEngineFactory(kEngines);
 
 export function performTextLayout(attrStringDesc, containerDesc) {
   const attrStr = AttributedString.fromFragments(attrStringDesc.fragments);

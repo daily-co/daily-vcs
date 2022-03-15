@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Box, Label, Video } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
-import * as Rand from 'random-seed';
+import Rand from 'random-seed';
 
 export const compositionInterface = {
   displayMeta: {
@@ -22,9 +22,7 @@ export default function GraphicsTestComposition() {
 
   return (
     <Box id="main">
-      <Box>
-        {video}
-      </Box>
+      <Box>{video}</Box>
       <RandomGraphics />
     </Box>
   );

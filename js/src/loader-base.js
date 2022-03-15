@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as ViewContexts from '../src/react/contexts';
+import * as ViewContexts from '../src/react/contexts/index.js';
 
 export function makeVCSRootContainer(
   ContentRoot,
@@ -94,23 +94,36 @@ export function makeVCSRootContainer(
       if (this.state.hasError) {
         return null;
       }
-      return (
-        <ViewContexts.CompositionDataContext.Provider
-          value={this.state.compositionData}
-        >
-          <ViewContexts.TimeContext.Provider value={this.state.time}>
-            <ViewContexts.MediaInputContext.Provider
-              value={this.state.mediaInput}
-            >
-              <root>
-                <ContentRoot />
-              </root>
-            </ViewContexts.MediaInputContext.Provider>
-          </ViewContexts.TimeContext.Provider>
-        </ViewContexts.CompositionDataContext.Provider>
+
+      // can't use JSX in VCS core because it needs to run on Node without transpiling
+
+      return React.createElement(
+        ViewContexts.CompositionDataContext.Provider,
+        {
+          value: this.state.compositionData,
+        },
+        React.createElement(
+          ViewContexts.TimeContext.Provider,
+          {
+            value: this.state.time,
+          },
+          React.createElement(
+            ViewContexts.MediaInputContext.Provider,
+            {
+              value: this.state.mediaInput,
+            },
+            React.createElement(
+              'root',
+              null,
+              React.createElement(ContentRoot, null)
+            )
+          )
+        )
       );
     }
   }
 
-  return <RootContainer ref={rootContainerRef} />;
+  return React.createElement(RootContainer, {
+    ref: rootContainerRef,
+  });
 }

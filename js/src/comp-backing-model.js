@@ -1,15 +1,20 @@
 import { v4 as uuidv4 } from 'uuid';
-import * as deepEqual from 'deep-equal';
+import deepEqual from 'deep-equal';
 
-import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
+import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list.js';
+
 import {
   encodeCanvasDisplayList_fg,
   encodeCanvasDisplayList_videoLayersPreview,
-} from '../src/render/canvas';
-import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc';
+} from '../src/render/canvas.js';
 
-import { makeAttributedStringDesc } from './text/attributed-string';
-import { performTextLayout, measureTextLayoutBlocks } from './text/text-layout';
+import { encodeCompVideoSceneDesc } from '../src/render/video-scenedesc.js';
+
+import { makeAttributedStringDesc } from './text/attributed-string.js';
+import {
+  performTextLayout,
+  measureTextLayoutBlocks,
+} from './text/text-layout.js';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)

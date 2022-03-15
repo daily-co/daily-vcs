@@ -8,15 +8,15 @@ import {
   DEFAULT_CORNER_RADIUS_PX,
   PositionEdge,
   PositionCorner,
-} from './constants';
+} from './constants.js';
 
-import CustomOverlay from './components/CustomOverlay';
-import TextOverlay from './components/TextOverlay';
-import VideoDominant from './components/VideoDominant';
-import VideoGrid from './components/VideoGrid';
-import VideoPip from './components/VideoPip';
-import VideoSingle from './components/VideoSingle';
-import VideoSplit from './components/VideoSplit';
+import CustomOverlay from './components/CustomOverlay.js';
+import TextOverlay from './components/TextOverlay.js';
+import VideoDominant from './components/VideoDominant.js';
+import VideoGrid from './components/VideoGrid.js';
+import VideoPip from './components/VideoPip.js';
+import VideoSingle from './components/VideoSingle.js';
+import VideoSplit from './components/VideoSplit.js';
 
 // request all standard fonts
 const fontFamilies = [

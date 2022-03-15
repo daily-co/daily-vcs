@@ -1,5 +1,5 @@
-import fontSetup from '../src/text/font-setup';
-import { standardFontFamilies } from '../src/text/standard-fonts';
+import fontSetup from '../src/text/font-setup.js';
+import { standardFontFamilies } from '../src/text/standard-fonts.js';
 
 // callback for font loading
 fontSetup.platformConfig.loadFontSourceAsync = async function (

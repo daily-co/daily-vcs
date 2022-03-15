@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
-import * as layoutFuncs from '../layouts';
-import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle';
-import { PausedPlaceholder } from './PausedPlaceholder';
+import * as layoutFuncs from '../layouts.js';
+import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
+import { PausedPlaceholder } from './PausedPlaceholder.js';
 
 export default function VideoPip({
   scaleMode,
@@ -17,12 +17,8 @@ export default function VideoPip({
   margin_vh,
   labelsOffset_px,
 }) {
-  const {
-    activeIds,
-    dominantId,
-    displayNamesById,
-    pausedById,
-  } = useActiveVideo();
+  const { activeIds, dominantId, displayNamesById, pausedById } =
+    useActiveVideo();
 
   let firstVideoId = dominantId || activeIds[0];
   let otherVideoIds = activeIds.filter((id) => id !== firstVideoId);

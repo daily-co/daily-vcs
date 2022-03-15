@@ -5,14 +5,13 @@ export function Label(props) {
     ? props.children.join(' ')
     : props.children || '';
 
-  return (
-    <label
-      id={props.id}
-      layout={props.layout}
-      style={props.style || {}}
-      transform={props.transform || {}}
-      clip={props.clip || false}
-      text={text}
-    />
-  );
+  // can't use JSX in VCS core because it needs to run on Node without transpiling
+  return React.createElement('label', {
+    id: props.id,
+    layout: props.layout,
+    style: props.style || {},
+    transform: props.transform || {},
+    clip: props.clip || false,
+    text: text,
+  });
 }

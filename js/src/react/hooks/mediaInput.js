@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { MediaInputContext } from '../contexts';
+import { MediaInputContext } from '../contexts/index.js';
 
 export function useMediaInput() {
   return React.useContext(MediaInputContext);

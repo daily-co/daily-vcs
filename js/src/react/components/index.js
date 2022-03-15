@@ -1,4 +1,4 @@
-export { Box } from './Box';
-export { Image } from './Image';
-export { Label } from './Label';
-export { Video } from './Video';
+export { Box } from './Box.js';
+export { Image } from './Image.js';
+export { Label } from './Label.js';
+export { Video } from './Video.js';

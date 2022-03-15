@@ -1,5 +1,5 @@
-import { IntrinsicNodeType } from '../comp-backing-model';
-import { roundRect } from './canvas-utils';
+import { IntrinsicNodeType } from '../comp-backing-model.js';
+import { roundRect } from './canvas-utils.js';
 
 const CanvasRenderMode = {
   ALL: 'all',

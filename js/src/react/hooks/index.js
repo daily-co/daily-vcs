@@ -1,3 +1,7 @@
-export { useParams } from './compositionData';
-export { useVideoTime } from './time';
-export { useMediaInput, useViewportSize, useActiveVideo } from './mediaInput';
+export { useParams } from './compositionData.js';
+export { useVideoTime } from './time.js';
+export {
+  useMediaInput,
+  useViewportSize,
+  useActiveVideo,
+} from './mediaInput.js';

@@ -1,7 +1,10 @@
-import fontSetup from '../src/text/font-setup';
-import { standardFontFamilies } from '../src/text/standard-fonts';
+import fontSetup from '../src/text/font-setup.js';
+import { standardFontFamilies } from '../src/text/standard-fonts.js';
 import * as Path from 'path';
-import { logToHostInfo } from './log';
+import { fileURLToPath } from 'url';
+import { logToHostInfo } from './log.js';
+
+const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
 // FIXME: figure out better way to get resource path?
 const kResDir = Path.resolve(__dirname, '../../res/fonts');
