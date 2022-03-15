@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as deepEqual from 'deep-equal';
 
 import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list';
 import {
@@ -207,12 +208,7 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
     if (newParams && !oldParams) return false;
     if (oldParams && !newParams) return false;
 
-    for (const k in oldParams) {
-      if (oldParams[k] !== newParams[k]) return false;
-    }
-    for (const k in newParams) {
-      if (oldParams[k] !== newParams[k]) return false;
-    }
+    if (!deepEqual(newParams, oldParams)) return false;
   }
   return true;
 }
@@ -222,12 +218,8 @@ function isEqualStyleOrTransform(oldStyle, newStyle) {
   if (newStyle && !oldStyle) return false;
   if (oldStyle && !newStyle) return false;
 
-  for (const k in oldStyle) {
-    if (oldStyle[k] !== newStyle[k]) return false;
-  }
-  for (const k in newStyle) {
-    if (oldStyle[k] !== newStyle[k]) return false;
-  }
+  if (!deepEqual(newStyle, oldStyle)) return false;
+
   return true;
 }
 
@@ -270,7 +262,7 @@ class NodeBase {
         newLayout[1] ? cleanLayoutParams(newLayout[1]) : {}
       )
     ) {
-      //console.log("layout props will be updated for '%s'", newProps.id || '');
+      //console.log("layout props will be updated for %s '%s'", this.uuid, newProps.id || '');
       return true;
     }
 
@@ -287,7 +279,7 @@ class NodeBase {
     // (e.g. viewport size) as part of their commit cycle
     this.container = container;
 
-    //console.log("commit %s: ", this.uuid, newProps)
+    //console.log('commit %s, %s: ', this.uuid, this.constructor.nodeType, newProps);
 
     if (newProps.id) this.userGivenId = newProps.id;
 
