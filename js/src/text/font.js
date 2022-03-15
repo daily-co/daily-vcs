@@ -3,8 +3,10 @@
  MIT license.
 */
 
-import fontkit from '@react-pdf/fontkit';
+import Fontkit from '@react-pdf/fontkit';
 import fetch from 'cross-fetch';
+
+const fontkit = Fontkit.default || Fontkit;
 
 // https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight#Common_weight_name_mapping
 const kFontWeights = {

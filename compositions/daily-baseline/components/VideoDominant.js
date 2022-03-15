@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
-import * as layoutFuncs from '../layouts';
-import { PositionEdge } from '../constants';
-import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle';
-import { PausedPlaceholder } from './PausedPlaceholder';
+import * as layoutFuncs from '../layouts.js';
+import { PositionEdge } from '../constants.js';
+import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
+import { PausedPlaceholder } from './PausedPlaceholder.js';
 
 const DOMINANT_SPLIT_DEFAULT = 0.8;
 const DOMINANT_MAXITEMS_DEFAULT = 5;
@@ -20,12 +20,8 @@ export default function VideoDominant({
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
   labelsOffset_px,
 }) {
-  let {
-    activeIds,
-    dominantId,
-    displayNamesById,
-    pausedById,
-  } = useActiveVideo();
+  let { activeIds, dominantId, displayNamesById, pausedById } =
+    useActiveVideo();
 
   if (!dominantId) {
     dominantId = activeIds[0];

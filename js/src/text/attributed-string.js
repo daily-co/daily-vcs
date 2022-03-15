@@ -1,5 +1,5 @@
-import { getNumericFontWeightFromCSSValue } from './font';
-import fontSetup from './font-setup';
+import { getNumericFontWeightFromCSSValue } from './font.js';
+import fontSetup from './font-setup.js';
 
 const kFallbackFont = fontSetup.fallbackFontFamily;
 

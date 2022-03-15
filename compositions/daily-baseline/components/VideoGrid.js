@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
-import * as layoutFuncs from '../layouts';
-import { PausedPlaceholder } from './PausedPlaceholder';
+import * as layoutFuncs from '../layouts.js';
+import { PausedPlaceholder } from './PausedPlaceholder.js';
 
 export default function VideoGrid({
   showLabels,
@@ -12,12 +12,8 @@ export default function VideoGrid({
   placeholderStyle,
   labelsOffset_px,
 }) {
-  const {
-    activeIds,
-    dominantId,
-    displayNamesById,
-    pausedById,
-  } = useActiveVideo();
+  const { activeIds, dominantId, displayNamesById, pausedById } =
+    useActiveVideo();
 
   const items = activeIds.map((videoId, i) => {
     const key = 'videogrid_item' + i;

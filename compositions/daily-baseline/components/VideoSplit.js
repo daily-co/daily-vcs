@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
-import * as layoutFuncs from '../layouts';
-import { PausedPlaceholder } from './PausedPlaceholder';
+import * as layoutFuncs from '../layouts.js';
+import { PausedPlaceholder } from './PausedPlaceholder.js';
 
 export default function VideoSplit({
   showLabels,

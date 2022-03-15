@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Label } from '#vcs-react/components';
-import * as layoutFuncs from '../layouts';
+import * as layoutFuncs from '../layouts.js';
 
 export function ParticipantLabelPipStyle({
   label: labelStr,
@@ -15,12 +15,15 @@ export function ParticipantLabelPipStyle({
   ) {
     labelsOffset_px = { x: 0, y: 0 };
   }
-  // this is the default offset for PiP mode
-  labelsOffset_px.x += 10;
-  labelsOffset_px.y += 10;
+  // apply a default offset for PiP mode so the offset comp param
+  // behaves more predictably when the mode param is switched
+  const offsets = {
+    x: 10 + labelsOffset_px.x,
+    y: 10 + labelsOffset_px.y,
+  };
 
   const label = (
-    <Label style={labelStyle} layout={[layoutFuncs.offset, labelsOffset_px]}>
+    <Label style={labelStyle} layout={[layoutFuncs.offset, offsets]}>
       {labelStr || ''}
     </Label>
   );

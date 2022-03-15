@@ -1,10 +1,15 @@
-const fs = require('fs');
-const path = require('path');
-const webpack = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+import * as fs from 'fs';
+import * as path from 'path';
 
-const { getCompPathFromId } = require('./comp-namespace-util.js');
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+
+import { getCompPathFromId } from './comp-namespace-util.js';
+
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 const breakOnWarningPlugin = function () {
   this.hooks.done.tap('BreakOnWarning', (stats) => {
@@ -40,7 +45,7 @@ const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
   }
 );
 
-const wwwClientConfig = function (env) {
+export default function wwwClientConfig(env) {
   const compId = env.compid;
   if (!compId || compId.length < 1) {
     console.error(
@@ -58,14 +63,14 @@ const wwwClientConfig = function (env) {
 
   const useCompFilename = env.use_comp_filename;
   if (useCompFilename) {
-    console.log("Exporting with comp filename, will use production mode");
+    console.log('Exporting with comp filename, will use production mode');
     isDev = false;
   }
 
   return {
     mode: isDev ? 'development' : 'production',
     entry: {
-      devrig: './lib-browser/vcs-browser.js' //path.resolve(__dirname, '', 'vcs-browser.js'),
+      devrig: './lib-browser/vcs-browser.js', //path.resolve(__dirname, '', 'vcs-browser.js'),
     },
     target: 'web',
     output: {
@@ -73,15 +78,17 @@ const wwwClientConfig = function (env) {
         name: 'DailyVCS',
         type: 'window',
       },
-      filename: useCompFilename ? `${compFilenameBase}.bundle.js` : '[name].bundle.js', 
+      filename: useCompFilename
+        ? `${compFilenameBase}.bundle.js`
+        : '[name].bundle.js',
       path: path.resolve('build'),
       clean: true,
     },
     devServer: {
       port: 8083,
       static: {
-        directory: './build'
-      }
+        directory: './build',
+      },
     },
     devtool: isDev ? 'cheap-source-map' : false,
     module: {
@@ -104,7 +111,7 @@ const wwwClientConfig = function (env) {
                 ],
                 plugins: [
                   '@babel/plugin-proposal-class-properties',
-                  "@babel/plugin-transform-runtime",
+                  '@babel/plugin-transform-runtime',
                 ],
               },
             },
@@ -118,8 +125,8 @@ const wwwClientConfig = function (env) {
 
       // following buffer plugin is needed by textkit (from react-pdf)
       new webpack.ProvidePlugin({
-        Buffer: ["buffer", "Buffer"],
-        process: "process/browser",
+        Buffer: ['buffer', 'Buffer'],
+        process: 'process/browser',
       }),
 
       // dev server
@@ -130,11 +137,11 @@ const wwwClientConfig = function (env) {
       }),
       new CopyWebpackPlugin({
         patterns: [
-          { from: "./devrig/example-assets", to: "example-assets" },
-          { from: "./devrig/ui-assets", to: "ui-assets" },
-          { from: "../res", to: "res" },
+          { from: './devrig/example-assets', to: 'example-assets' },
+          { from: './devrig/ui-assets', to: 'ui-assets' },
+          { from: '../res', to: 'res' },
         ],
-      }),  
+      }),
     ],
     externals: [],
     optimization: {
@@ -148,15 +155,13 @@ const wwwClientConfig = function (env) {
       },
       fallback: {
         // following fallbacks are needed by textkit (from react-pdf)
-        process: require.resolve("process/browser"),
-        zlib: require.resolve("browserify-zlib"),
-        stream: require.resolve("stream-browserify"),
-        util: require.resolve("util"),
-        buffer: require.resolve("buffer"),
-        asset: require.resolve("assert"),
-      },  
+        process: require.resolve('process/browser'),
+        zlib: require.resolve('browserify-zlib'),
+        stream: require.resolve('stream-browserify'),
+        util: require.resolve('util'),
+        buffer: require.resolve('buffer'),
+        asset: require.resolve('assert'),
+      },
     },
   };
-};
-
-module.exports = [wwwClientConfig];
+}

@@ -1,11 +1,12 @@
-const Path = require('path');
+import * as Path from 'path';
+import { fileURLToPath } from 'url';
 
 /*
   Translates a composition id to a path to its root component.
   
   The id format is {namespace}:{name}, e.g. "example:hello".
 */
-function getCompPathFromId(compId, targetId) {
+export function getCompPathFromId(compId, targetId) {
   if (!compId) {
     console.error('** VCS composition id must be a string, got: ' + compId);
     return null;
@@ -24,9 +25,11 @@ function getCompPathFromId(compId, targetId) {
       vcsBaseDir = '..';
       break;
 
-    case 'node':
+    case 'node': {
+      const __dirname = Path.dirname(fileURLToPath(import.meta.url));
       vcsBaseDir = Path.resolve(__dirname, '..');
       break;
+    }
 
     default:
       console.error(
@@ -46,13 +49,18 @@ function getCompPathFromId(compId, targetId) {
       compDir = Path.resolve(vcsBaseDir, 'js/example');
       jsxPath = `${compDir}/${compFilename}.jsx`;
       break;
-    
+
     // recognized namespaces in our 'compositions' directory
     case 'dev':
     case 'experiment':
     case 'daily': {
-      compDir = Path.resolve(vcsBaseDir, `compositions/${compNamespace}-${compFilename}`);
+      compDir = Path.resolve(
+        vcsBaseDir,
+        `compositions/${compNamespace}-${compFilename}`
+      );
 
+      /*
+      // moved this into jsx-builder.js
       if (targetId === 'node') {
         // we want to load code from outside the current package root,
         // but that's not possible in Node with dynamic require while using
@@ -64,7 +72,7 @@ function getCompPathFromId(compId, targetId) {
         fs.ensureDirSync(tmpDir);
         fs.copySync(compDir, tmpDir);
         compDir = tmpDir;
-      }
+      }*/
 
       jsxPath = `${compDir}/index.jsx`;
       break;
@@ -76,7 +84,3 @@ function getCompPathFromId(compId, targetId) {
   }
   return jsxPath;
 }
-
-module.exports = {
-  getCompPathFromId,
-};

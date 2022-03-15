@@ -1,4 +1,4 @@
-import * as Reconciler from 'react-reconciler';
+import Reconciler from 'react-reconciler';
 import {
   unstable_now as now,
   unstable_scheduleCallback as scheduleDeferredCallback,

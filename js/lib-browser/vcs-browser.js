@@ -1,12 +1,12 @@
 import * as React from 'react';
-import { Composition, render } from '../src';
-import { renderCompInCanvas } from '../src/render/canvas';
-import { renderCompVideoLayersInDOM } from '../src/render/video-dom';
-import { makeVCSRootContainer } from '../src/loader-base';
-
-import { loadFontsAsync } from './font-loader';
-
 import { v4 as uuidv4 } from 'uuid';
+
+import { Composition, render } from '../src/index.js';
+import { renderCompInCanvas } from '../src/render/canvas.js';
+import { renderCompVideoLayersInDOM } from '../src/render/video-dom.js';
+import { makeVCSRootContainer } from '../src/loader-base.js';
+
+import { loadFontsAsync } from './font-loader.js';
 
 // composition path is replaced by our webpack config
 import * as VCSComp from '__VCS_COMP_PATH__';

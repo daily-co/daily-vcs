@@ -1,4 +1,4 @@
-import { IntrinsicNodeType } from '../comp-backing-model';
+import { IntrinsicNodeType } from '../comp-backing-model.js';
 
 export function encodeCompVideoSceneDesc(comp, imageSources) {
   const sceneDesc = [];
