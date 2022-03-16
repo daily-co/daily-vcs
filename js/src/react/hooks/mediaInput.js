@@ -18,6 +18,7 @@ export function useActiveVideo() {
     let activeScreenshareIds = [];
     let dominantId = null;
     let displayNamesById = {};
+    let pausedById = {};
     let maxSimultaneousVideoInputs = activeVideoInputSlots.length;
 
     for (let i = 0; i < maxSimultaneousVideoInputs; i++) {
@@ -35,6 +36,7 @@ export function useActiveVideo() {
         dominantId = videoId;
       }
       displayNamesById[videoId] = slot.displayName;
+      pausedById[videoId] = !!slot.paused;
     }
 
     return {
@@ -42,9 +44,10 @@ export function useActiveVideo() {
       activeScreenshareIds,
       dominantId,
       displayNamesById,
+      pausedById,
       maxSimultaneousVideoInputs,
     };
-   }, [activeVideoInputSlots]);
-   
-   return memo;
+  }, [activeVideoInputSlots]);
+
+  return memo;
 }
