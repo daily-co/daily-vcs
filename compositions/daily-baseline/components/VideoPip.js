@@ -3,6 +3,7 @@ import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle';
+import { PausedPlaceholder } from './PausedPlaceholder';
 
 export default function VideoPip({
   scaleMode,
@@ -16,7 +17,12 @@ export default function VideoPip({
   margin_vh,
   labelsOffset_px,
 }) {
-  const { activeIds, dominantId, displayNamesById } = useActiveVideo();
+  const {
+    activeIds,
+    dominantId,
+    displayNamesById,
+    pausedById,
+  } = useActiveVideo();
 
   let firstVideoId = dominantId || activeIds[0];
   let otherVideoIds = activeIds.filter((id) => id !== firstVideoId);
@@ -32,7 +38,14 @@ export default function VideoPip({
     const key = 0;
 
     items.push(
-      <Video key={key + '_video'} src={videoId} scaleMode={scaleMode} />
+      pausedById[videoId] ? (
+        <PausedPlaceholder
+          key={key + '_video_paused'}
+          {...{ placeholderStyle }}
+        />
+      ) : (
+        <Video key={key + '_video'} src={videoId} scaleMode={scaleMode} />
+      )
     );
 
     if (showLabels) {
@@ -61,13 +74,20 @@ export default function VideoPip({
     const layout = [layoutFuncs.pip, layoutProps];
 
     items.push(
-      <Video
-        key={key + '_video'}
-        src={videoId}
-        style={videoStyle}
-        scaleMode="fill"
-        layout={layout}
-      />
+      pausedById[videoId] ? (
+        <PausedPlaceholder
+          key={key + '_video_paused'}
+          {...{ layout, placeholderStyle }}
+        />
+      ) : (
+        <Video
+          key={key + '_video'}
+          src={videoId}
+          style={videoStyle}
+          scaleMode="fill"
+          layout={layout}
+        />
+      )
     );
 
     if (showLabels) {

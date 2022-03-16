@@ -93,6 +93,11 @@ export const compositionInterface = {
       values: ['fill', 'fit'],
     },
     {
+      id: 'videoSettings.placeholder.bgColor',
+      type: 'text',
+      defaultValue: 'rgb(0, 50, 80)',
+    },
+    {
       id: 'videoSettings.dominant.position',
       type: 'enum',
       defaultValue: PositionEdge.LEFT,
@@ -253,7 +258,8 @@ export default function DailyBaselineVCS() {
       : 0,
   };
   const placeholderStyle = {
-    fillColor: '#008',
+    fillColor: params['videoSettings.placeholder.bgColor'] || '#008',
+    cornerRadius_px: videoStyle.cornerRadius_px,
   };
   const videoLabelStyle = {
     textColor: params['videoSettings.labels.color'] || 'white',
