@@ -143,7 +143,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         if (node.src && node.src.length > 0) {
           srcDrawable = images ? images[node.src] : null;
           if (!srcDrawable) {
-            console.warn(
+            console.error(
               'Unable to find specified source image: ',
               node.src,
               images

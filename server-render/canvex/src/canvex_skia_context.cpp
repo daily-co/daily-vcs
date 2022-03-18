@@ -150,13 +150,16 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
-void CanvexContext::drawImage_fromDefaultAssets(const std::string& imageName, double x, double y, double w, double h) {
+void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h) {
   if (imageName.empty()) return; // --
 
-  sk_sp<SkImage> image = skiaResCtx_.imageCache_defaultNamespace[imageName];
+  auto& cache = (type == CompositionAsset) ? skiaResCtx_.imageCache_compositionNamespace : skiaResCtx_.imageCache_defaultNamespace;
+
+  sk_sp<SkImage> image = cache[imageName];
   if (!image) {
-    // FIXME: hardcoded subpath to known test images
-    auto assetsPath = resPath_ / "test-assets" / imageName;
+    auto assetsPath = (type == CompositionAsset)
+                      ? resPath_ / imageName
+                      : resPath_ / "test-assets" / imageName;
 
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
@@ -168,7 +171,7 @@ void CanvexContext::drawImage_fromDefaultAssets(const std::string& imageName, do
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
       return;
     }
-    skiaResCtx_.imageCache_defaultNamespace[imageName] = image;
+    cache[imageName] = image;
   }
 
   SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};

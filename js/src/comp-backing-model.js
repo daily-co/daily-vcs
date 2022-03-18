@@ -156,7 +156,9 @@ export class Composition {
     recurseLayout(this.rootNode, layoutCtxBase.viewport);
   }
 
-  writeSceneDescription(imageSources) {
+  // if optional 'prev' is provided, this call returns
+  // only those top-level keys that have changed from 'prev'
+  writeSceneDescription(imageSources, prev) {
     if (!this.rootNode) return null;
 
     // get foreground graphics as a display list
@@ -171,6 +173,19 @@ export class Composition {
 
     // get video elements
     const videoLayers = encodeCompVideoSceneDesc(this, imageSources);
+
+    if (prev) {
+      // if the caller provides their previous cached sceneDesc,
+      // only return those keys that have changed.
+      // deep compare here should be fast enough because videoLayers is
+      // a fairly small object, and fgDisplayList is a flat array.
+      let obj = {};
+      if (!deepEqual(prev.videoLayers, videoLayers))
+        obj.videoLayers = videoLayers;
+      if (!deepEqual(prev.fgDisplayList, fgDisplayList))
+        obj.fgDisplayList = fgDisplayList;
+      return obj;
+    }
 
     return {
       videoLayers,
@@ -251,7 +266,7 @@ class NodeBase {
     let newLayout = [];
     if (newProps.layout) {
       if (!Array.isArray(newProps.layout)) {
-        console.warn(
+        console.error(
           'invalid layout prop passed to node, must be an array (got %s)',
           typeof newProps.layout
         );
