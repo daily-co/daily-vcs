@@ -5,7 +5,10 @@ import * as layoutFuncs from '../layouts.js';
 export function PausedPlaceholder({ placeholderStyle = {}, layout }) {
   return (
     <Box style={placeholderStyle} layout={layout}>
-      <Image src="user_white_64" layout={[layoutFuncs.pausedPlaceholderIcon]} />
+      <Image
+        src="user_white_64.png"
+        layout={[layoutFuncs.pausedPlaceholderIcon]}
+      />
     </Box>
   );
 }

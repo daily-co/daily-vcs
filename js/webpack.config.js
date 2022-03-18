@@ -57,6 +57,26 @@ export default function wwwClientConfig(env) {
     process.exit(3);
   }
 
+  const isCompBundleDir =
+    path.basename(compositionImportPath).toLowerCase().indexOf('index.js') ===
+    0;
+
+  const dirsToCopy = [
+    { from: './devrig/example-assets', to: 'example-assets' },
+    { from: './devrig/ui-assets', to: 'ui-assets' },
+    { from: '../res', to: 'res' },
+  ];
+  if (isCompBundleDir) {
+    // if this is a directory, copy its assets to devrig too.
+    // currently 'images' is the only subpath supported for composition assets.
+    const baseDir = path.dirname(compositionImportPath);
+    const imagesDir = path.resolve(baseDir, 'images');
+    if (fs.existsSync(imagesDir)) {
+      console.log('will copy composition asset images: ', imagesDir);
+      dirsToCopy.push({ from: imagesDir, to: 'composition-assets/images' });
+    }
+  }
+
   let isDev = true;
 
   const compFilenameBase = compId.replace(/:/g, '_');
@@ -136,11 +156,7 @@ export default function wwwClientConfig(env) {
         filename: useCompFilename ? `${compFilenameBase}.html` : 'index.html',
       }),
       new CopyWebpackPlugin({
-        patterns: [
-          { from: './devrig/example-assets', to: 'example-assets' },
-          { from: './devrig/ui-assets', to: 'ui-assets' },
-          { from: '../res', to: 'res' },
-        ],
+        patterns: dirsToCopy,
       }),
     ],
     externals: [],

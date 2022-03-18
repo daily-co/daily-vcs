@@ -444,6 +444,7 @@ table {
       <img id="demoperson_moongirl" src="example-assets/demoperson_moongirl.png" />
       <img id="demoperson_yellowkid" src="example-assets/demoperson_yellowkid.png" />
       <img id="screenshare_standin" src="example-assets/screenshare_standin_1600x900.png" />
+      <img id="image_test_square" src="example-assets/test_square_320px.png" />
     </div>
   </body>
 
@@ -920,36 +921,9 @@ async function setupLiveVideo() {
 }
 
 async function loadTestImages() {
-  const exampleAssets = [
-    { name: 'test_square', file: 'test_square_320px.png' },
-    { name: 'user_white_64', file: 'user_white_64.png' },
-    { name: 'emoji_raised_hand', file: 'raised-hand_270b.png' },
-    { name: 'daily-logo-primary-darkground', file: 'daily-logo-primary-darkground.png' },
-  ];
-
-  const promises = [];
-  for (const ea of exampleAssets) {
-    promises.push(new Promise((resolve, reject) => {
-      const img = new Image();
-      
-      img.onload = () => {
-        resolve({name: ea.name, image: img});
-      };
-      img.onerror = () => {
-        const msg = `Image load failed, asset ${ea.file}`;
-        console.error(msg);
-        reject(new Error(msg));
-      };
-      img.src = `example-assets/${ea.file}`;
-    }));
-  }
-
-  const results = await Promise.all(promises);
-  const imagesByName = {};
-  for (const item of results) {
-    imagesByName[item.name] = item.image;
-  }
-  return imagesByName;
+  return {
+    'test_square': document.getElementById('image_test_square')
+  };
 }
 
 const demoPeople = [
@@ -1225,6 +1199,21 @@ function vcsErrorCb(error, info) {
         +info.componentStack);
 }
 
+function getAssetUrlCb(name, namespace, type) {
+  // these paths are defined in webpack config for CopyWebpackPlugin
+  if (type === 'font') {
+    return `res/fonts/${name}`;
+  }
+  else if (type === 'image') {
+    if (namespace === 'composition') {
+      return `composition-assets/images/${name}`;
+    } else {
+      return `res/test-assets/${name}`;
+    }
+  }
+  return name;
+}
+
 async function recreateVCSCanvasOutput() {
   let enablePreload = true;
 
@@ -1234,7 +1223,7 @@ async function recreateVCSCanvasOutput() {
     enablePreload = false; // don't preload again
   }
 
-  const fps = 15; // frame rate for React videoTime updates
+  const fps = 20; // frame rate for React videoTime updates
 
   g_vcsApi = await DailyVCS.startDOMOutputAsync(
     g_outputContainer,
@@ -1242,6 +1231,7 @@ async function recreateVCSCanvasOutput() {
     g_defaultSources,
     { updateCb: compUpdatedCb,
       errorCb: vcsErrorCb,
+      getAssetUrlCb,
       fps,
       scaleFactor: g_outputScale,
       enablePreload,

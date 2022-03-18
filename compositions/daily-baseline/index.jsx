@@ -62,6 +62,7 @@ export const compositionInterface = {
     description: "Composition with Daily's baseline features",
   },
   fontFamilies,
+  imagePreloads: ['user_white_64.png'],
   params: [
     // -- composition's video layout mode --
     {
