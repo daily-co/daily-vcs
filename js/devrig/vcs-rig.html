@@ -388,6 +388,7 @@ table {
               <div class="labels">
                 <div>Active video inputs</div>
                 <div>Make dominant</div>
+                <div>Paused</div>
                 <div>Toggle screenshare</div>
                 <div>Randomize name</div>
               </div>
@@ -465,10 +466,11 @@ function getVideoInputIdForSlotIndex(idx) {
   return 'devinput'+idx;
 }
 
-function setActiveVideoInput(idx, active, isScreenshare) {
+function setActiveVideoInput(idx, active, paused, isScreenshare) {
   g_activeVideoInputSlots[idx] = {
     id: getVideoInputIdForSlotIndex(idx),
     active: !!active,
+    paused: !!paused,
     type: isScreenshare ? 'screenshare' : 'camera',
     displayName: 'Participant ' + (idx+1)
   };
@@ -556,10 +558,19 @@ function dominantToggled(ev) {
 
   g_dominantIdx = (idx === g_dominantIdx) ? -1 : idx;
 
-  console.log("dominant now ", g_dominantIdx)
-
   sendActiveVideoInputSlots();
   
+  createVideoInputsUI();
+}
+
+function pauseToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  g_activeVideoInputSlots[idx].paused = !g_activeVideoInputSlots[idx].paused;
+
+  sendActiveVideoInputSlots();
+
   createVideoInputsUI();
 }
 
@@ -569,7 +580,7 @@ function screenshareToggled(ev) {
 
   const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
 
-  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, s);
+  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
 
   sendActiveVideoInputSlots();
 
@@ -794,12 +805,14 @@ function createVideoInputsUI() {
   const n = MAX_VIDEO_INPUTS;
   for (i = 0; i < n; i++) {
     const active = g_activeVideoInputSlots[i].active;
+    const paused = g_activeVideoInputSlots[i].paused;
     const screenshare = g_activeVideoInputSlots[i].type === 'screenshare';
     const dominant = g_dominantIdx === i;
 
     const box = document.createElement('div');
     box.className = 'buttonColumn';
 
+    // --
     const btn = document.createElement('button');
     btn.setAttribute('data-index', i);
     btn.innerText = ""+(i + 1);
@@ -811,6 +824,7 @@ function createVideoInputsUI() {
     
     btn.addEventListener('click', participantToggled);
 
+    // --
     const domBtn = document.createElement('button');
     domBtn.setAttribute('data-index', i);
     domBtn.setAttribute('data-video-dominant', true);
@@ -824,6 +838,21 @@ function createVideoInputsUI() {
 
     domBtn.addEventListener('click', dominantToggled);
 
+    // --
+    const pauseBtn = document.createElement('button');
+    pauseBtn.setAttribute('data-index', i);
+    pauseBtn.setAttribute('data-video-screenshare', true);
+    pauseBtn.innerText = "";
+    box.appendChild(pauseBtn);
+
+    cls = 'pause';
+    if (paused) cls += ' selected checkboxOn';
+    else cls += ' checkboxOff';
+    pauseBtn.className = cls;
+
+    pauseBtn.addEventListener('click', pauseToggled);
+
+    // --
     const sBtn = document.createElement('button');
     sBtn.setAttribute('data-index', i);
     sBtn.setAttribute('data-video-screenshare', true);
@@ -837,6 +866,7 @@ function createVideoInputsUI() {
 
     sBtn.addEventListener('click', screenshareToggled);
 
+    // --
     const nameBtn = document.createElement('button');
     nameBtn.setAttribute('data-index', i);
     nameBtn.setAttribute('data-video-randomname', true);
@@ -892,6 +922,7 @@ async function setupLiveVideo() {
 async function loadTestImages() {
   const exampleAssets = [
     { name: 'test_square', file: 'test_square_320px.png' },
+    { name: 'user_white_64', file: 'user_white_64.png' },
     { name: 'emoji_raised_hand', file: 'raised-hand_270b.png' },
     { name: 'daily-logo-primary-darkground', file: 'daily-logo-primary-darkground.png' },
   ];

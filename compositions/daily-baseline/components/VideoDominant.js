@@ -4,6 +4,7 @@ import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
 import { PositionEdge } from '../constants';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle';
+import { PausedPlaceholder } from './PausedPlaceholder';
 
 const DOMINANT_SPLIT_DEFAULT = 0.8;
 const DOMINANT_MAXITEMS_DEFAULT = 5;
@@ -19,7 +20,12 @@ export default function VideoDominant({
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
   labelsOffset_px,
 }) {
-  let { activeIds, dominantId, displayNamesById } = useActiveVideo();
+  let {
+    activeIds,
+    dominantId,
+    displayNamesById,
+    pausedById,
+  } = useActiveVideo();
 
   if (!dominantId) {
     dominantId = activeIds[0];
@@ -48,9 +54,9 @@ export default function VideoDominant({
     const videoId = dominantId;
 
     let content;
-    if (videoId === null) {
+    if (videoId === null || pausedById[videoId]) {
       // show a placeholder
-      content = <Box style={placeholderStyle} />;
+      content = <PausedPlaceholder {...{ placeholderStyle }} />;
     } else {
       // render video with optional label
       content = [
@@ -100,7 +106,20 @@ export default function VideoDominant({
         { index: i, total: maxItems, makeRow: chicletsIsRow },
       ];
       items.push(
-        <Video key={videoId} src={videoId} style={videoStyle} layout={layout} />
+        pausedById[videoId] ? (
+          <PausedPlaceholder
+            key={videoId}
+            layout={layout}
+            {...{ placeholderStyle }}
+          />
+        ) : (
+          <Video
+            key={videoId}
+            src={videoId}
+            style={videoStyle}
+            layout={layout}
+          />
+        )
       );
       if (showLabels) {
         items.push(

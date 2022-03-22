@@ -258,6 +258,14 @@ export function pip(parentFrame, params, layoutCtx) {
   return { x, y, w, h };
 }
 
+export function pausedPlaceholderIcon(parentFrame) {
+  let { x, y, w, h } = parentFrame;
+  w = h = 32;
+  x += (parentFrame.w - w) / 2;
+  y += (parentFrame.h - h) / 2;
+  return { x, y, w, h };
+}
+
 // -- utils --
 
 function computeGridItem({
