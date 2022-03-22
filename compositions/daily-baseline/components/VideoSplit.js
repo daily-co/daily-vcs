@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
+import { PausedPlaceholder } from './PausedPlaceholder';
 
 export default function VideoSplit({
   showLabels,
@@ -11,7 +12,7 @@ export default function VideoSplit({
   placeholderStyle,
   labelsOffset_px,
 }) {
-  const { activeIds, displayNamesById } = useActiveVideo();
+  const { activeIds, displayNamesById, pausedById } = useActiveVideo();
 
   if (
     !labelsOffset_px ||
@@ -29,9 +30,9 @@ export default function VideoSplit({
     const videoId = activeIds.length > itemIdx ? activeIds[itemIdx] : null;
 
     let content;
-    if (videoId === null) {
+    if (videoId === null || pausedById[videoId]) {
       // show a placeholder
-      content = <Box style={placeholderStyle} />;
+      content = <PausedPlaceholder {...{ placeholderStyle }} />;
     } else {
       // render video with optional label
       let participantLabel;

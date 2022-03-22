@@ -2,15 +2,22 @@ import * as React from 'react';
 import { Box, Video, Label } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts';
+import { PausedPlaceholder } from './PausedPlaceholder';
 
 export default function VideoGrid({
   showLabels,
   scaleMode,
   videoStyle,
   videoLabelStyle,
+  placeholderStyle,
   labelsOffset_px,
 }) {
-  const { activeIds, dominantId, displayNamesById } = useActiveVideo();
+  const {
+    activeIds,
+    dominantId,
+    displayNamesById,
+    pausedById,
+  } = useActiveVideo();
 
   const items = activeIds.map((videoId, i) => {
     const key = 'videogrid_item' + i;
@@ -53,9 +60,16 @@ export default function VideoGrid({
       );
     }
 
+    let video;
+    if (pausedById[videoId]) {
+      video = <PausedPlaceholder {...{ placeholderStyle }} />;
+    } else {
+      video = <Video src={videoId} style={videoStyle} scaleMode={scaleMode} />;
+    }
+
     const item = (
       <Box key={key} id={key} layout={itemLayout}>
-        <Video src={videoId} style={videoStyle} scaleMode={scaleMode} />
+        {video}
         {participantLabel}
       </Box>
     );
