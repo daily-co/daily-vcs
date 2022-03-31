@@ -19,11 +19,12 @@ export default function VideoDominant({
   splitPos = DOMINANT_SPLIT_DEFAULT,
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
   labelsOffset_px,
+  followDominantFlag,
 }) {
   let { activeIds, dominantId, displayNamesById, pausedById } =
     useActiveVideo();
 
-  if (!dominantId) {
+  if (!followDominantFlag || !dominantId) {
     dominantId = activeIds[0];
   }
 

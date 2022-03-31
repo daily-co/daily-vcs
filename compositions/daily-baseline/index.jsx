@@ -116,6 +116,11 @@ export const compositionInterface = {
       defaultValue: 5,
     },
     {
+      id: 'videoSettings.dominant.followDomFlag',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
       id: 'videoSettings.pip.position',
       type: 'enum',
       defaultValue: PositionCorner.TOP_RIGHT,
@@ -138,6 +143,11 @@ export const compositionInterface = {
       type: 'number',
       defaultValue: 0.04,
       step: 0.01,
+    },
+    {
+      id: 'videoSettings.pip.followDomFlag',
+      type: 'boolean',
+      defaultValue: false,
     },
     {
       id: 'videoSettings.labels.fontFamily',
@@ -311,6 +321,7 @@ export default function DailyBaselineVCS() {
           aspectRatio={params['videoSettings.pip.aspectRatio']}
           height_vh={params['videoSettings.pip.height_vh']}
           margin_vh={params['videoSettings.pip.margin_vh']}
+          followDominantFlag={params['videoSettings.pip.followDomFlag']}
         />
       );
       break;
@@ -321,6 +332,7 @@ export default function DailyBaselineVCS() {
           positionEdge={params['videoSettings.dominant.position']}
           splitPos={params['videoSettings.dominant.splitPos']}
           maxItems={params['videoSettings.dominant.numChiclets']}
+          followDominantFlag={params['videoSettings.dominant.followDomFlag']}
         />
       );
       break;
