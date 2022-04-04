@@ -16,11 +16,16 @@ export default function VideoPip({
   height_vh,
   margin_vh,
   labelsOffset_px,
+  followDominantFlag,
 }) {
   const { activeIds, dominantId, displayNamesById, pausedById } =
     useActiveVideo();
 
-  let firstVideoId = dominantId || activeIds[0];
+  let firstVideoId = activeIds[0];
+  if (followDominantFlag && dominantId) {
+    firstVideoId = dominantId;
+  }
+
   let otherVideoIds = activeIds.filter((id) => id !== firstVideoId);
 
   const items = [];
