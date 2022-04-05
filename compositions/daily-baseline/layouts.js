@@ -2,14 +2,31 @@ import { PositionEdge, PositionCorner } from './constants.js';
 
 // --- layout functions and utils ---
 
-export function pad(parentFrame, params) {
+export function pad(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
-  const pad = params.pad || 0;
 
-  x += pad;
-  y += pad;
-  w -= 2 * pad;
-  h -= 2 * pad;
+  let padL = 0,
+    padR = 0,
+    padT = 0,
+    padB = 0;
+
+  // padding can be specified as either a value or an object with l/r/t/b
+  if (Number.isFinite(params.pad)) {
+    padL = padR = padT = padB = params.pad;
+  } else if (typeof params.pad_viewportRelative === 'object') {
+    const { viewport } = layoutCtx;
+    let { l, r, t, b } = params.pad_viewportRelative;
+
+    if (Number.isFinite(l)) padL = l * viewport.w;
+    if (Number.isFinite(r)) padR = r * viewport.w;
+    if (Number.isFinite(t)) padT = t * viewport.h;
+    if (Number.isFinite(b)) padB = b * viewport.h;
+  }
+
+  x += padL;
+  y += padT;
+  w -= padL + padR;
+  h -= padT + padB;
 
   return { x, y, w, h };
 }

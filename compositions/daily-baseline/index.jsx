@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Box } from '#vcs-react/components';
 import { useParams } from '#vcs-react/hooks';
+import * as layoutFuncs from './layouts.js';
 
 import {
   DEFAULT_FONT,
@@ -11,6 +12,7 @@ import {
 } from './constants.js';
 
 import CustomOverlay from './components/CustomOverlay.js';
+import ImageOverlay from './components/ImageOverlay.js';
 import TextOverlay from './components/TextOverlay.js';
 import VideoDominant from './components/VideoDominant.js';
 import VideoGrid from './components/VideoGrid.js';
@@ -62,7 +64,7 @@ export const compositionInterface = {
     description: "Composition with Daily's baseline features",
   },
   fontFamilies,
-  imagePreloads: ['user_white_64.png'],
+  imagePreloads: ['user_white_64.png', 'overlay.png'],
   params: [
     // -- composition's video layout mode --
     {
@@ -73,6 +75,11 @@ export const compositionInterface = {
     },
     {
       id: 'showTextOverlay',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
+      id: 'showImageOverlay',
       type: 'boolean',
       defaultValue: false,
     },
@@ -186,6 +193,30 @@ export const compositionInterface = {
       type: 'text',
       defaultValue: 'rgba(0, 0, 0, 0.9)',
     },
+    {
+      id: 'videoSettings.margin.left_vw',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.right_vw',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.top_vh',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.bottom_vh',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
 
     // -- text overlay params --
     {
@@ -253,6 +284,42 @@ export const compositionInterface = {
       id: 'text.strokeColor',
       type: 'text',
       defaultValue: 'rgba(0, 0, 0, 0.8)',
+    },
+
+    // -- image overlay params --
+    {
+      id: 'image.assetName',
+      type: 'text',
+      defaultValue: 'overlay.png',
+    },
+    {
+      id: 'image.position',
+      type: 'enum',
+      defaultValue: PositionCorner.TOP_RIGHT,
+      values: Object.values(PositionCorner),
+    },
+    {
+      id: 'image.fullScreen',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
+      id: 'image.aspectRatio',
+      type: 'number',
+      defaultValue: 1.778,
+      step: 0.1,
+    },
+    {
+      id: 'image.height_vh',
+      type: 'number',
+      defaultValue: 0.3,
+      step: 0.1,
+    },
+    {
+      id: 'image.margin_vh',
+      type: 'number',
+      defaultValue: 0.04,
+      step: 0.01,
     },
   ],
 };
@@ -339,6 +406,7 @@ export default function DailyBaselineVCS() {
   }
 
   let graphics = [];
+  let gi = 0;
   if (params.showTextOverlay) {
     // copy params to props and ensure types are what the component expects
     let overlayProps = params.text ? { ...params.text } : {};
@@ -358,13 +426,48 @@ export default function DailyBaselineVCS() {
     overlayProps.useStroke =
       overlayProps.strokeColor && overlayProps.strokeColor.length > 0;
 
-    graphics.push(<TextOverlay key={0} {...overlayProps} />);
+    graphics.push(<TextOverlay key={gi++} {...overlayProps} />);
   }
-  graphics.push(<CustomOverlay key={1} />);
+  if (params.showImageOverlay) {
+    graphics.push(
+      <ImageOverlay
+        key={gi++}
+        src={params['image.assetName']}
+        positionCorner={params['image.position']}
+        fullScreen={params['image.fullScreen']}
+        aspectRatio={params['image.aspectRatio']}
+        height_vh={params['image.height_vh']}
+        margin_vh={params['image.margin_vh']}
+      />
+    );
+  }
+  graphics.push(<CustomOverlay key={gi++} />);
+
+  // apply a layout function to the video container if non-zero margins specified
+  let videoBoxLayout;
+  const videoMargins_rel = {
+    l: parseFloat(params['videoSettings.margin.left_vw']),
+    r: parseFloat(params['videoSettings.margin.right_vw']),
+    t: parseFloat(params['videoSettings.margin.top_vh']),
+    b: parseFloat(params['videoSettings.margin.bottom_vh']),
+  };
+  if (
+    videoMargins_rel.l !== 0 ||
+    videoMargins_rel.r !== 0 ||
+    videoMargins_rel.t !== 0 ||
+    videoMargins_rel.b !== 0
+  ) {
+    videoBoxLayout = [
+      layoutFuncs.pad,
+      { pad_viewportRelative: videoMargins_rel },
+    ];
+  }
 
   return (
     <Box id="main">
-      <Box id="videoBox">{video}</Box>
+      <Box id="videoBox" layout={videoBoxLayout}>
+        {video}
+      </Box>
       <Box id="graphicsBox">{graphics}</Box>
     </Box>
   );

@@ -217,6 +217,9 @@ table {
   color: var(--grey-text-color);
   font-weight: 600;
 }
+#controls .testImage {
+  margin-top: 1em;
+}
 #controls .compInterface {
   margin-top: 1.5em;
 }
@@ -241,7 +244,7 @@ table {
   position: relative;
   top: 4px;
 }
-#controls .compInterface .params input {
+#controls input {
   background-color: transparent;
   border: 1px solid var(--control-outline-color);
   border-radius: 5px;
@@ -360,6 +363,23 @@ table {
   opacity: 70%;
 }
 
+.testImageControls {
+  display: flex;
+  flex-direction: row;
+}
+#imageDropTarget {
+  flex: 1 0 auto;
+  margin-right: 2em;
+  height: 24px;
+  padding: 4px;
+  border: solid 1px var(--control-outline-color);
+  font-size: 0.9em;
+  color: var(--grey-text-color);
+}
+#imageDropAssetName {
+  flex: 0 0 auto;
+}
+
     </style>
   </head>
 
@@ -394,6 +414,16 @@ table {
               </div>
               <div class="buttonContainer"></div>
             </div>
+          </div>
+          <div class="testImage">
+            <h3>Asset images</h3>
+            <div class="testImageControls">
+              <div id="imageDropTarget">Drop an image file here</div>
+              <div id="imageDropAssetName">
+                <label>Asset name for drop:</label>
+                <input type="text" value="overlay.png" />
+              </div>
+            </div>  
           </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
@@ -979,6 +1009,41 @@ async function start() {
 window.addEventListener('load', function(ev) {
   start();
 });
+
+const imgDropEl = document.getElementById('imageDropTarget');
+imgDropEl.addEventListener('dragover', function(ev) {
+  ev.preventDefault();
+});
+imgDropEl.addEventListener('drop', function(ev) {
+  const assetName = document.querySelector('#imageDropAssetName input[type=text]').value;
+
+  ev.preventDefault();
+  const items = ev.dataTransfer.items;
+  if (items && items.length > 0 && items[0].kind === 'file') {
+    const file = items[0].getAsFile();
+    console.log("file drop received: ", file);
+    if (!file.type.match(/image.png/)) {
+      alert("The dropped image must be in PNG format.");
+    } else {
+      const img = document.createElement('img');
+      img.name = assetName;
+      const reader = new FileReader();
+      reader.onload = function(readEv) {
+        img.src = readEv.target.result;
+        updateTestImage(img, assetName);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+});
+
+function updateTestImage(img, assetName) {
+  const images = g_defaultSources.compositionAssetImages;
+  images[assetName] = img;
+  console.log("images updated: ", images);
+
+  recreateVCSCanvasOutput();
+}
 
 let g_recordingApiCalls = false;
 let g_apiRecObj = {};

@@ -161,7 +161,7 @@ export default function wwwClientConfig(env) {
     ],
     externals: [],
     optimization: {
-      minimize: false,
+      minimize: !isDev,
     },
     resolve: {
       alias: {
