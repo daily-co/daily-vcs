@@ -56,6 +56,8 @@ export function encodeCanvasDisplayList_videoLayersPreview(comp, canvasDL) {
   recurseRenderNode(ctx, mode, root, comp, null);
 }
 
+const s_missingAssetsNotified = new Set();
+
 function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   let writeContent = true;
   let recurseChildren = true;
@@ -125,9 +127,10 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     let strokeW_px;
     let srcDrawable;
     let scaleMode = node.scaleMode;
-    let contentAsp;
     let textContent = node.text;
     let textStyle = node.style;
+
+    let warningOutText;
 
     const videoSlots = imageSources ? imageSources.videoSlots : [];
     const images = imageSources ? imageSources.compositionAssetImages : {};
@@ -143,14 +146,19 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         if (node.src && node.src.length > 0) {
           srcDrawable = images ? images[node.src] : null;
           if (!srcDrawable) {
-            console.error(
-              'Unable to find specified source image: ',
-              node.src,
-              images
-            );
+            warningOutText = `Missing image:\n${node.src}`;
+            if (!s_missingAssetsNotified.has(node.src)) {
+              console.error(
+                'Unable to find specified source image: ',
+                node.src,
+                images
+              );
+              // to reduce log spam, only write this error once
+              s_missingAssetsNotified.add(node.src);
+            }
           }
         }
-        if (!srcDrawable) fillColor = 'red';
+        if (!srcDrawable) fillColor = 'rgba(0, 50, 200, 0.5)';
         break;
       }
       case IntrinsicNodeType.VIDEO: {
@@ -264,6 +272,19 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         );
       } else {
         drawStyledText(ctx, textContent, textStyle, frame, comp);
+      }
+    } else if (warningOutText && warningOutText.length > 0) {
+      // print out an informational label
+      const warningStyle = {
+        fontSize_px: 18,
+      };
+      const warningFrame = { ...frame };
+      warningFrame.x += 2;
+      warningFrame.y += 2;
+      const lines = warningOutText.split('\n');
+      for (const line of lines) {
+        drawStyledText(ctx, line, warningStyle, warningFrame, comp);
+        warningFrame.y += 20;
       }
     }
 
