@@ -237,6 +237,14 @@ table {
   height: 30px;
   position: relative;
 }
+#controls .compInterface .params > div.shortHelpText {
+  padding-left: 30px;
+  padding-right: 8px;
+  text-align: right;
+  font-size: 0.9em;
+  color: var(--grey-text-color);
+}
+
 #controls .compInterface .params label {
   width: var(--label-width);
   display: inline-block;
@@ -655,7 +663,9 @@ function paramTextEdited(ev) {
     alert("Missing paramId");
     return;
   }
-  const newValue = field.value || '';
+  let newValue = field.value || '';
+
+  newValue = newValue.replace(/\\n/g, '\n');
 
   sendParam(paramId, newValue);
 }
@@ -719,7 +729,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
     box.className = 'params';
 
     for (const paramDesc of group.items) {
-      const {id, type, defaultValue} = paramDesc;
+      const {id, type, defaultValue, shortHelpText} = paramDesc;
       let displayName = id;
       if (!group.isMain) {
         const idx = id.indexOf('.');
@@ -798,6 +808,13 @@ function createParamsUI(compInterface, groupsContainerEl) {
           div.appendChild(el);
         }
         box.appendChild(div);
+
+        if (shortHelpText && shortHelpText.length > 0) {
+          const helpDiv = document.createElement('div');
+          helpDiv.innerText = shortHelpText;
+          helpDiv.className = 'shortHelpText';
+          box.appendChild(helpDiv);
+        }
       }
     }
   }
