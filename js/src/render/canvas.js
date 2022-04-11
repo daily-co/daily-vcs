@@ -117,6 +117,16 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     inLayoutframeClip = true;
   }
 
+  let inAlpha = false;
+  if (node.blend && Number.isFinite(node.blend.opacity)) {
+    ctx.save();
+    ctx.globalAlpha = node.blend.opacity;
+    inAlpha = true;
+
+    // don't bother rendering content if alpha is zero
+    if (node.blend.opacity <= 0) writeContent = false;
+  }
+
   if (writeContent) {
     // encode asset references explicitly when writing a display list
     const isVCSDisplayListEncoder =
@@ -322,8 +332,10 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
   if (writeContent || recurseChildren) {
     ctx.restore();
   }
-
   if (inLayoutframeClip) {
+    ctx.restore();
+  }
+  if (inAlpha) {
     ctx.restore();
   }
 }
