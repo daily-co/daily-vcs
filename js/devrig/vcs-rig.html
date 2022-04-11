@@ -1011,29 +1011,34 @@ window.addEventListener('load', function(ev) {
 });
 
 const imgDropEl = document.getElementById('imageDropTarget');
+const imgDropAssetNameEl = document.querySelector('#imageDropAssetName input[type=text]');
 imgDropEl.addEventListener('dragover', function(ev) {
   ev.preventDefault();
 });
 imgDropEl.addEventListener('drop', function(ev) {
-  const assetName = document.querySelector('#imageDropAssetName input[type=text]').value;
-
   ev.preventDefault();
-  const items = ev.dataTransfer.items;
-  if (items && items.length > 0 && items[0].kind === 'file') {
-    const file = items[0].getAsFile();
-    console.log("file drop received: ", file);
-    if (!file.type.match(/image.png/)) {
-      alert("The dropped image must be in PNG format.");
-    } else {
-      const img = document.createElement('img');
-      img.name = assetName;
-      const reader = new FileReader();
-      reader.onload = function(readEv) {
-        img.src = readEv.target.result;
-        updateTestImage(img, assetName);
-      };
-      reader.readAsDataURL(file);
+  try {
+    const assetName = imgDropAssetNameEl ? imgDropAssetNameEl.value : 'overlay.png';
+
+    const items = ev.dataTransfer.items;
+    if (items && items.length > 0 && items[0].kind === 'file') {
+      const file = items[0].getAsFile();
+      console.log("file drop received: ", file);
+      if (!file.type.match(/image.png/)) {
+        alert("The dropped image must be in PNG format.");
+      } else {
+        const img = document.createElement('img');
+        img.name = assetName;
+        const reader = new FileReader();
+        reader.onload = function(readEv) {
+          img.src = readEv.target.result;
+          updateTestImage(img, assetName);
+        };
+        reader.readAsDataURL(file);
+      }
     }
+  } catch (e) {
+    console.error("** Exception handling image drop: ", e);
   }
 });
 
