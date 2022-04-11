@@ -10,6 +10,7 @@ export function Box(props) {
       style: props.style || {},
       transform: props.transform || {},
       clip: props.clip || false,
+      blend: props.blend || {},
     },
     props.children
   );

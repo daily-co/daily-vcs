@@ -291,6 +291,8 @@ class NodeBase {
     if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform))
       return true;
 
+    if (!isEqualStyleOrTransform(oldProps.blend, newProps.blend)) return true;
+
     return false;
   }
 
@@ -322,6 +324,8 @@ class NodeBase {
     // same stuff over again).
     // for now, just pass through the object received from the composition.
     this.transform = newProps.transform;
+
+    this.blend = newProps.blend;
   }
 
   delete() {
