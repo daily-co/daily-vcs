@@ -337,3 +337,78 @@ function computeGridItem({
 
   return { x, y, w, h };
 }
+
+function getLineH(params, layoutCtx) {
+  if (params.fontSize_px) {
+    return params.fontSize_px;
+  }
+  const { viewport } = layoutCtx;
+  const { fontSize_vh = 0.05 } = params;
+
+  return fontSize_vh * viewport.h;
+}
+
+export function toast(parentFrame, params, layoutCtx) {
+  const lineH = getLineH(params, layoutCtx);
+  let { x, y, w, h } = parentFrame;
+
+  const { textLength = 20, maxLinesOfText = 2 } = params;
+  const { viewport } = layoutCtx;
+  const asp = viewport.w / viewport.h;
+
+  let relW;
+  if (asp > 1) {
+    // very basic adaptation to text length.
+    // this will be replaced with real text measurement when two-pass layout is available.
+    relW = textLength > 32 ? 0.7 : textLength > 16 ? 0.45 : 0.33;
+  } else {
+    relW = asp < 0.8 ? 0.9 : 0.8;
+  }
+
+  w = Math.round(parentFrame.w * relW);
+  h = lineH * (2 + Math.max(maxLinesOfText, 1));
+
+  const margin = lineH * 1;
+
+  x += parentFrame.w - w - margin;
+  y += margin;
+
+  const pad = lineH * 0.5;
+
+  return { x, y, w, h, pad };
+}
+
+export function toastIcon(parentFrame, params) {
+  let { x, y, w, h } = parentFrame;
+
+  const iconSize = h;
+  w = iconSize;
+
+  const lMargin = 8;
+  x += lMargin;
+
+  return { x, y, w, h };
+}
+
+export function toastText(parentFrame, params, layoutCtx) {
+  const lineH = getLineH(params, layoutCtx);
+  const { actualLinesOfText = 1, showIcon = true } = params;
+  let { x, y, w, h } = parentFrame;
+
+  if (showIcon) {
+    const iconSize = h;
+    const iconMargin = 20;
+    x += iconSize + iconMargin;
+    w -= iconSize + iconMargin;
+  }
+
+  // add default margin
+  const lMargin = 8;
+  x += lMargin;
+  w -= lMargin;
+
+  const textH = Math.max(actualLinesOfText, 1) * lineH;
+  y += (parentFrame.h - textH) / 2;
+
+  return { x, y, w, h };
+}
