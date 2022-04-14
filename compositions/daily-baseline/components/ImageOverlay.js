@@ -9,6 +9,7 @@ export default function ImageOverlay({
   height_vh,
   margin_vh,
   fullScreen,
+  opacity = 1,
 }) {
   let layout;
   if (!fullScreen) {
@@ -21,5 +22,7 @@ export default function ImageOverlay({
     layout = [layoutFuncs.pip, layoutProps];
   }
 
-  return <Image src={src} layout={layout} />;
+  opacity = Math.max(0, Math.min(1, opacity));
+
+  return <Image src={src} layout={layout} blend={{ opacity }} />;
 }
