@@ -231,6 +231,10 @@ class CanvasEncodingContext {
     this.encodeCmd('font', v);
   }
 
+  set globalAlpha(v) {
+    this.encodeCmd('globalAlpha', v);
+  }
+
   save() {
     this.encodeCmd('save');
   }

@@ -25,6 +25,7 @@
     ["lineWidth", 4],
     ["strokeRect", [1012, 20, 248, 680]],
     ["restore"],
+    ["globalAlpha", 0.5],
     ["save"],
     ["fillStyle", "rgba(255, 250, 200, 0.95)"],
     ["font", ["300", "italic", 24, "Bitter"]],

@@ -157,6 +157,17 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case globalAlpha: {
+        PRINTCMD_ARGS("globalAlpha")
+        if (cmd.args.size() != 1 || cmd.args[0].type != ArgType::number) {
+          std::cout << "Invalid args for globalAlpha: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.setGlobalAlpha(cmd.args[0].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case font: {
         PRINTCMD_ARGS("font")
         if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::string

@@ -54,6 +54,7 @@ class CanvexContext {
   void setStrokeStyle(const std::string& s);
   void setLineWidth(double lineW);
   void setLineJoin(JoinType t);
+  void setGlobalAlpha(double a);
   void setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name);
 
   void fillRect(double x, double y, double w, double h);
