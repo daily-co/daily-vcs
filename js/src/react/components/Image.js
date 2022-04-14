@@ -9,5 +9,6 @@ export function Image(props) {
     transform: props.transform || {},
     src: props.src,
     scaleMode: props.scaleMode || 'fit',
+    blend: props.blend || {},
   });
 }

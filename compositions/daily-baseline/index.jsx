@@ -323,6 +323,12 @@ export const compositionInterface = {
       defaultValue: 0.04,
       step: 0.01,
     },
+    {
+      id: 'image.opacity',
+      type: 'number',
+      defaultValue: 1,
+      step: 0.1,
+    },
 
     // -- toast params --
     {
@@ -507,6 +513,7 @@ export default function DailyBaselineVCS() {
         aspectRatio={params['image.aspectRatio']}
         height_vh={params['image.height_vh']}
         margin_vh={params['image.margin_vh']}
+        opacity={params['image.opacity']}
       />
     );
   }
