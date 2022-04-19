@@ -217,6 +217,9 @@ table {
   color: var(--grey-text-color);
   font-weight: 600;
 }
+#controls .testImage {
+  margin-top: 1em;
+}
 #controls .compInterface {
   margin-top: 1.5em;
 }
@@ -234,6 +237,14 @@ table {
   height: 30px;
   position: relative;
 }
+#controls .compInterface .params > div.shortHelpText {
+  padding-left: 30px;
+  padding-right: 8px;
+  text-align: right;
+  font-size: 0.9em;
+  color: var(--grey-text-color);
+}
+
 #controls .compInterface .params label {
   width: var(--label-width);
   display: inline-block;
@@ -241,7 +252,7 @@ table {
   position: relative;
   top: 4px;
 }
-#controls .compInterface .params input {
+#controls input {
   background-color: transparent;
   border: 1px solid var(--control-outline-color);
   border-radius: 5px;
@@ -360,6 +371,23 @@ table {
   opacity: 70%;
 }
 
+.testImageControls {
+  display: flex;
+  flex-direction: row;
+}
+#imageDropTarget {
+  flex: 1 0 auto;
+  margin-right: 2em;
+  height: 24px;
+  padding: 4px;
+  border: solid 1px var(--control-outline-color);
+  font-size: 0.9em;
+  color: var(--grey-text-color);
+}
+#imageDropAssetName {
+  flex: 0 0 auto;
+}
+
     </style>
   </head>
 
@@ -394,6 +422,16 @@ table {
               </div>
               <div class="buttonContainer"></div>
             </div>
+          </div>
+          <div class="testImage">
+            <h3>Asset images</h3>
+            <div class="testImageControls">
+              <div id="imageDropTarget">Drop an image file here</div>
+              <div id="imageDropAssetName">
+                <label>Asset name for drop:</label>
+                <input type="text" value="overlay.png" />
+              </div>
+            </div>  
           </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
@@ -444,6 +482,7 @@ table {
       <img id="demoperson_moongirl" src="example-assets/demoperson_moongirl.png" />
       <img id="demoperson_yellowkid" src="example-assets/demoperson_yellowkid.png" />
       <img id="screenshare_standin" src="example-assets/screenshare_standin_1600x900.png" />
+      <img id="image_test_square" src="example-assets/test_square_320px.png" />
     </div>
   </body>
 
@@ -624,7 +663,9 @@ function paramTextEdited(ev) {
     alert("Missing paramId");
     return;
   }
-  const newValue = field.value || '';
+  let newValue = field.value || '';
+
+  newValue = newValue.replace(/\\n/g, '\n');
 
   sendParam(paramId, newValue);
 }
@@ -688,7 +729,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
     box.className = 'params';
 
     for (const paramDesc of group.items) {
-      const {id, type, defaultValue} = paramDesc;
+      const {id, type, defaultValue, shortHelpText} = paramDesc;
       let displayName = id;
       if (!group.isMain) {
         const idx = id.indexOf('.');
@@ -767,6 +808,13 @@ function createParamsUI(compInterface, groupsContainerEl) {
           div.appendChild(el);
         }
         box.appendChild(div);
+
+        if (shortHelpText && shortHelpText.length > 0) {
+          const helpDiv = document.createElement('div');
+          helpDiv.innerText = shortHelpText;
+          helpDiv.className = 'shortHelpText';
+          box.appendChild(helpDiv);
+        }
       }
     }
   }
@@ -920,36 +968,9 @@ async function setupLiveVideo() {
 }
 
 async function loadTestImages() {
-  const exampleAssets = [
-    { name: 'test_square', file: 'test_square_320px.png' },
-    { name: 'user_white_64', file: 'user_white_64.png' },
-    { name: 'emoji_raised_hand', file: 'raised-hand_270b.png' },
-    { name: 'daily-logo-primary-darkground', file: 'daily-logo-primary-darkground.png' },
-  ];
-
-  const promises = [];
-  for (const ea of exampleAssets) {
-    promises.push(new Promise((resolve, reject) => {
-      const img = new Image();
-      
-      img.onload = () => {
-        resolve({name: ea.name, image: img});
-      };
-      img.onerror = () => {
-        const msg = `Image load failed, asset ${ea.file}`;
-        console.error(msg);
-        reject(new Error(msg));
-      };
-      img.src = `example-assets/${ea.file}`;
-    }));
-  }
-
-  const results = await Promise.all(promises);
-  const imagesByName = {};
-  for (const item of results) {
-    imagesByName[item.name] = item.image;
-  }
-  return imagesByName;
+  return {
+    'test_square': document.getElementById('image_test_square')
+  };
 }
 
 const demoPeople = [
@@ -1005,6 +1026,46 @@ async function start() {
 window.addEventListener('load', function(ev) {
   start();
 });
+
+const imgDropEl = document.getElementById('imageDropTarget');
+const imgDropAssetNameEl = document.querySelector('#imageDropAssetName input[type=text]');
+imgDropEl.addEventListener('dragover', function(ev) {
+  ev.preventDefault();
+});
+imgDropEl.addEventListener('drop', function(ev) {
+  ev.preventDefault();
+  try {
+    const assetName = imgDropAssetNameEl ? imgDropAssetNameEl.value : 'overlay.png';
+
+    const items = ev.dataTransfer.items;
+    if (items && items.length > 0 && items[0].kind === 'file') {
+      const file = items[0].getAsFile();
+      console.log("file drop received: ", file);
+      if (!file.type.match(/image.png/)) {
+        alert("The dropped image must be in PNG format.");
+      } else {
+        const img = document.createElement('img');
+        img.name = assetName;
+        const reader = new FileReader();
+        reader.onload = function(readEv) {
+          img.src = readEv.target.result;
+          updateTestImage(img, assetName);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  } catch (e) {
+    console.error("** Exception handling image drop: ", e);
+  }
+});
+
+function updateTestImage(img, assetName) {
+  const images = g_defaultSources.compositionAssetImages;
+  images[assetName] = img;
+  console.log("images updated: ", images);
+
+  recreateVCSCanvasOutput();
+}
 
 let g_recordingApiCalls = false;
 let g_apiRecObj = {};
@@ -1225,6 +1286,21 @@ function vcsErrorCb(error, info) {
         +info.componentStack);
 }
 
+function getAssetUrlCb(name, namespace, type) {
+  // these paths are defined in webpack config for CopyWebpackPlugin
+  if (type === 'font') {
+    return `res/fonts/${name}`;
+  }
+  else if (type === 'image') {
+    if (namespace === 'composition') {
+      return `composition-assets/images/${name}`;
+    } else {
+      return `res/test-assets/${name}`;
+    }
+  }
+  return name;
+}
+
 async function recreateVCSCanvasOutput() {
   let enablePreload = true;
 
@@ -1234,7 +1310,7 @@ async function recreateVCSCanvasOutput() {
     enablePreload = false; // don't preload again
   }
 
-  const fps = 15; // frame rate for React videoTime updates
+  const fps = 20; // frame rate for React videoTime updates
 
   g_vcsApi = await DailyVCS.startDOMOutputAsync(
     g_outputContainer,
@@ -1242,6 +1318,7 @@ async function recreateVCSCanvasOutput() {
     g_defaultSources,
     { updateCb: compUpdatedCb,
       errorCb: vcsErrorCb,
+      getAssetUrlCb,
       fps,
       scaleFactor: g_outputScale,
       enablePreload,

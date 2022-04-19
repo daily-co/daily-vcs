@@ -157,6 +157,17 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case globalAlpha: {
+        PRINTCMD_ARGS("globalAlpha")
+        if (cmd.args.size() != 1 || cmd.args[0].type != ArgType::number) {
+          std::cout << "Invalid args for globalAlpha: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.setGlobalAlpha(cmd.args[0].numberValue);
+          numCmds++;
+        }
+        break;
+      }
       case font: {
         PRINTCMD_ARGS("font")
         if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::string
@@ -306,17 +317,19 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid assetRef for drawImage, has_value=" << cmd.args[0].assetRefValue.has_value() << std::endl;
           numInvalidArgErrors++;
         } else {
-          auto& imgType = cmd.args[0].assetRefValue->first;
+          auto& imgTypeStr = cmd.args[0].assetRefValue->first;
           auto& imgName = cmd.args[0].assetRefValue->second;
 
-          // eventually we'll support other types of images,
-          // e.g. compositions can have their own namespace for user-provided assets.
-          if (imgType == "defaultAsset") {
-            ctx.drawImage_fromDefaultAssets(imgName,
+          if (imgTypeStr == "defaultAsset") {
+            ctx.drawImage(ImageSourceType::DefaultAsset, imgName,
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+          } else if (imgTypeStr == "compositionAsset") {
+            ctx.drawImage(ImageSourceType::CompositionAsset, imgName,
               cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
           } else {
-            std::cout << "Unsupported type for drawImage: " << imgType << std::endl;
-          }
+            std::cout << "Unsupported type for drawImage: " << imgTypeStr << std::endl;
+           }
+
           numCmds++;
         }
 

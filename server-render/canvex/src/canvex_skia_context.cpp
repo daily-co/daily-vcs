@@ -63,6 +63,11 @@ void CanvexContext::setLineJoin(JoinType t) {
   sf.strokeJoin = t;
 }
 
+void CanvexContext::setGlobalAlpha(double a) {
+  auto& sf = stateStack_.back();
+  sf.globalAlpha = isfinite(a) ? a : 0.0;
+}
+
 void CanvexContext::setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name) {
   auto& sf = stateStack_.back();
 
@@ -150,13 +155,20 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
-void CanvexContext::drawImage_fromDefaultAssets(const std::string& imageName, double x, double y, double w, double h) {
+void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h) {
+  const auto& sf = stateStack_.back();
+
+  if (sf.globalAlpha <= 0.0) return; // --
+
   if (imageName.empty()) return; // --
 
-  sk_sp<SkImage> image = skiaResCtx_.imageCache_defaultNamespace[imageName];
+  auto& cache = (type == CompositionAsset) ? skiaResCtx_.imageCache_compositionNamespace : skiaResCtx_.imageCache_defaultNamespace;
+
+  sk_sp<SkImage> image = cache[imageName];
   if (!image) {
-    // FIXME: hardcoded subpath to known test images
-    auto assetsPath = resPath_ / "test-assets" / imageName;
+    auto assetsPath = (type == CompositionAsset)
+                      ? resPath_ / imageName
+                      : resPath_ / "test-assets" / imageName;
 
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
@@ -168,13 +180,16 @@ void CanvexContext::drawImage_fromDefaultAssets(const std::string& imageName, do
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
       return;
     }
-    skiaResCtx_.imageCache_defaultNamespace[imageName] = image;
+    cache[imageName] = image;
   }
 
   SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};
   SkSamplingOptions sampleOptions(SkFilterMode::kLinear);
 
-  canvas_->drawImageRect(image, rect, sampleOptions);
+  SkPaint paint;
+  paint.setAlpha(sf.globalAlpha * 255);
+
+  canvas_->drawImageRect(image, rect, sampleOptions, &paint);
 }
 
 void CanvexContext::beginPath() {

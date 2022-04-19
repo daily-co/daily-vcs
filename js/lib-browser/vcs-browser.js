@@ -15,7 +15,8 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
   const {
     updateCb,
     errorCb,
-    fps = 15,
+    getAssetUrlCb,
+    fps = 20,
     scaleFactor = 1,
     enablePreload,
     enableSceneDescOutput,
@@ -26,7 +27,15 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
     `startDOMOutputAsync: Invalid viewport size specified: ${w}, ${h}`
   );
 
-  const vcs = new VCSBrowserOutput(w, h, fps, scaleFactor, updateCb, errorCb);
+  const vcs = new VCSBrowserOutput(
+    w,
+    h,
+    fps,
+    scaleFactor,
+    updateCb,
+    errorCb,
+    getAssetUrlCb
+  );
 
   console.log('created renderer %s: viewport size %d * %d', vcs.uuid, w, h);
 
@@ -43,7 +52,7 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
 }
 
 class VCSBrowserOutput {
-  constructor(w, h, fps, scaleFactor, updateCb, errorCb) {
+  constructor(w, h, fps, scaleFactor, updateCb, errorCb, getAssetUrlCb) {
     this.viewportSize = { w, h };
 
     this.uuid = uuidv4();
@@ -64,7 +73,7 @@ class VCSBrowserOutput {
     this.startT = 0;
     this.lastT = 0;
     this.stopped = false;
-    this.fps = fps || 15;
+    this.fps = fps || 20;
 
     // asset preloading
     this.enableAssetPreload = true;
@@ -73,7 +82,7 @@ class VCSBrowserOutput {
     // external callbacks
     this.updateCb = updateCb;
     this.errorCb = errorCb;
-    this.getAssetUrlCb = null;
+    this.getAssetUrlCb = getAssetUrlCb || this.getAssetUrl.bind(this);
   }
 
   // --- asset loading utilities ---
@@ -106,6 +115,7 @@ class VCSBrowserOutput {
   }
 
   getAssetUrl(name, namespace, type) {
+    // default implementation.
     // owner of the output can replace this behavior by setting getAssetUrlCb
     if (type === 'font') {
       return `res/fonts/${name}`;
@@ -126,10 +136,43 @@ class VCSBrowserOutput {
     }
 
     await loadFontsAsync(
-      this.getAssetUrlCb || this.getAssetUrl.bind(this),
+      this.getAssetUrlCb,
       this.appendPreloadedAssetToDOM.bind(this),
       wantedFamilies
     );
+  }
+
+  async initImagePreloads() {
+    // load images requested by composition
+    const promises = [];
+    if (
+      this.compositionInterface &&
+      Array.isArray(this.compositionInterface.imagePreloads)
+    ) {
+      for (const imgName of this.compositionInterface.imagePreloads) {
+        const url = this.getAssetUrlCb(imgName, 'composition', 'image');
+        if (!url) {
+          console.warn('** Unable to get URL for image preload: ', imgName);
+        } else {
+          promises.push(
+            new Promise((resolve, reject) => {
+              const img = new Image();
+
+              img.onload = () => {
+                resolve({ name: imgName, image: img });
+              };
+              img.onerror = () => {
+                const msg = `Image preload failed, composition asset '${imgName}'`;
+                console.error(msg);
+                reject(new Error(msg));
+              };
+              img.src = url;
+            })
+          );
+        }
+      }
+    }
+    this.preloadedImages = await Promise.all(promises);
   }
 
   updateImageSources(imageSources) {
@@ -145,6 +188,18 @@ class VCSBrowserOutput {
         vcsSourceId: id !== undefined ? id : i,
         domElement: element,
       });
+    }
+
+    // add preload images first, then caller-provided images
+    if (this.preloadedImages) {
+      for (const obj of this.preloadedImages) {
+        const { name, image } = obj;
+        this.imageSources.compositionAssetImages[name] = {
+          vcsSourceType: 'compositionAsset',
+          vcsSourceId: name,
+          domElement: image,
+        };
+      }
     }
     for (const key in imageSources.compositionAssetImages) {
       this.imageSources.compositionAssetImages[key] = {
@@ -171,9 +226,11 @@ class VCSBrowserOutput {
     // initializing fonts and other preloads needs this.
     this.compositionInterface = { ...VCSComp.compositionInterface };
 
-    // load fonts. this call will make network loads and can take a while,
+    // load fonts and images.
+    // these calls will make network loads and can take a while,
     // so do anything else we can before awaiting this.
     const textPromise = this.initTextSystem();
+    const imagesPromise = this.initImagePreloads();
 
     // clear out the root DOM element
     let child;
@@ -192,6 +249,8 @@ class VCSBrowserOutput {
     rootEl.appendChild(this.fgCanvas);
 
     this.resetOutputScalingCSS();
+
+    await imagesPromise;
 
     this.updateImageSources(imageSources);
 

@@ -24,6 +24,7 @@ enum OpType {
   strokeStyle,
   lineWidth,
   lineJoin,
+  globalAlpha,
   font,
   fill,
   stroke,

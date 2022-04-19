@@ -50,6 +50,7 @@ struct CanvexSkiaResourceContext {
    std::vector<FontVariantMatcher> fontVariantMatchers;
    TypefaceCache typefaceCache;
    ImageCache imageCache_defaultNamespace;
+   ImageCache imageCache_compositionNamespace;
 };
 
 } // namespace canvex

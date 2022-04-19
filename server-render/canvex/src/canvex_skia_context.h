@@ -17,6 +17,11 @@ enum JoinType {
   ROUND = SkPaint::kRound_Join,
 };
 
+enum ImageSourceType {
+  DefaultAsset,
+  CompositionAsset,
+};
+
 // The canvas API has state that can be saved but is not part of Skia's save/restore.
 // This frame object tracks that extra state.
 struct CanvexContextStateFrame {
@@ -49,6 +54,7 @@ class CanvexContext {
   void setStrokeStyle(const std::string& s);
   void setLineWidth(double lineW);
   void setLineJoin(JoinType t);
+  void setGlobalAlpha(double a);
   void setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name);
 
   void fillRect(double x, double y, double w, double h);
@@ -57,7 +63,7 @@ class CanvexContext {
   void fillText(const std::string& text, double x, double y);
   void strokeText(const std::string& text, double x, double y);
 
-  void drawImage_fromDefaultAssets(const std::string& imageName, double x, double y, double w, double h);
+  void drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h);
 
   // commands that operate on current path
   void beginPath();

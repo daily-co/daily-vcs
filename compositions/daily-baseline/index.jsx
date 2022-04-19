@@ -1,16 +1,20 @@
 import * as React from 'react';
 import { Box } from '#vcs-react/components';
 import { useParams } from '#vcs-react/hooks';
+import * as layoutFuncs from './layouts.js';
 
 import {
   DEFAULT_FONT,
   DEFAULT_LABEL_FONT_SIZE_PX,
+  DEFAULT_TOAST_FONT_SIZE_PX,
   DEFAULT_CORNER_RADIUS_PX,
   PositionEdge,
   PositionCorner,
 } from './constants.js';
 
 import CustomOverlay from './components/CustomOverlay.js';
+import ImageOverlay from './components/ImageOverlay.js';
+import Toast from './components/Toast.js';
 import TextOverlay from './components/TextOverlay.js';
 import VideoDominant from './components/VideoDominant.js';
 import VideoGrid from './components/VideoGrid.js';
@@ -62,6 +66,7 @@ export const compositionInterface = {
     description: "Composition with Daily's baseline features",
   },
   fontFamilies,
+  imagePreloads: ['user_white_64.png', 'overlay.png', 'party-popper_1f389.png'],
   params: [
     // -- composition's video layout mode --
     {
@@ -72,6 +77,11 @@ export const compositionInterface = {
     },
     {
       id: 'showTextOverlay',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
+      id: 'showImageOverlay',
       type: 'boolean',
       defaultValue: false,
     },
@@ -115,6 +125,11 @@ export const compositionInterface = {
       defaultValue: 5,
     },
     {
+      id: 'videoSettings.dominant.followDomFlag',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
       id: 'videoSettings.pip.position',
       type: 'enum',
       defaultValue: PositionCorner.TOP_RIGHT,
@@ -137,6 +152,11 @@ export const compositionInterface = {
       type: 'number',
       defaultValue: 0.04,
       step: 0.01,
+    },
+    {
+      id: 'videoSettings.pip.followDomFlag',
+      type: 'boolean',
+      defaultValue: false,
     },
     {
       id: 'videoSettings.labels.fontFamily',
@@ -174,6 +194,30 @@ export const compositionInterface = {
       id: 'videoSettings.labels.strokeColor',
       type: 'text',
       defaultValue: 'rgba(0, 0, 0, 0.9)',
+    },
+    {
+      id: 'videoSettings.margin.left_vw',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.right_vw',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.top_vh',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
+    },
+    {
+      id: 'videoSettings.margin.bottom_vh',
+      type: 'number',
+      defaultValue: 0,
+      step: 0.01,
     },
 
     // -- text overlay params --
@@ -243,6 +287,113 @@ export const compositionInterface = {
       type: 'text',
       defaultValue: 'rgba(0, 0, 0, 0.8)',
     },
+
+    // -- image overlay params --
+    {
+      id: 'image.assetName',
+      type: 'text',
+      defaultValue: 'overlay.png',
+    },
+    {
+      id: 'image.position',
+      type: 'enum',
+      defaultValue: PositionCorner.TOP_RIGHT,
+      values: Object.values(PositionCorner),
+    },
+    {
+      id: 'image.fullScreen',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
+      id: 'image.aspectRatio',
+      type: 'number',
+      defaultValue: 1.778,
+      step: 0.1,
+    },
+    {
+      id: 'image.height_vh',
+      type: 'number',
+      defaultValue: 0.3,
+      step: 0.1,
+    },
+    {
+      id: 'image.margin_vh',
+      type: 'number',
+      defaultValue: 0.04,
+      step: 0.01,
+    },
+    {
+      id: 'image.opacity',
+      type: 'number',
+      defaultValue: 1,
+      step: 0.1,
+    },
+
+    // -- toast params --
+    {
+      id: 'toast.key',
+      type: 'number',
+      defaultValue: 0,
+      shortHelpText: "To send a toast, increment the value of 'key'",
+    },
+    {
+      id: 'toast.text',
+      type: 'text',
+      defaultValue: 'Hello world',
+    },
+    {
+      id: 'toast.duration_secs',
+      type: 'number',
+      defaultValue: 4,
+    },
+    {
+      id: 'toast.numTextLines',
+      type: 'number',
+      defaultValue: 2,
+    },
+    {
+      id: 'toast.showIcon',
+      type: 'boolean',
+      defaultValue: true,
+    },
+    {
+      id: 'toast.icon.assetName',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'toast.color',
+      type: 'text',
+      defaultValue: 'rgba(15, 50, 110, 0.6)',
+    },
+    {
+      id: 'toast.strokeColor',
+      type: 'text',
+      defaultValue: 'rgba(0, 0, 30, 0.44)',
+    },
+    {
+      id: 'toast.text.color',
+      type: 'text',
+      defaultValue: 'white',
+    },
+    {
+      id: 'toast.text.fontFamily',
+      type: 'enum',
+      defaultValue: fontFamilies_smallSizeFriendly[0],
+      values: fontFamilies_smallSizeFriendly,
+    },
+    {
+      id: 'toast.text.fontWeight',
+      type: 'enum',
+      defaultValue: '500',
+      values: fontWeights,
+    },
+    {
+      id: 'toast.text.fontSize_pct',
+      type: 'number',
+      defaultValue: 100,
+    },
   ],
 };
 
@@ -310,6 +461,7 @@ export default function DailyBaselineVCS() {
           aspectRatio={params['videoSettings.pip.aspectRatio']}
           height_vh={params['videoSettings.pip.height_vh']}
           margin_vh={params['videoSettings.pip.margin_vh']}
+          followDominantFlag={params['videoSettings.pip.followDomFlag']}
         />
       );
       break;
@@ -320,12 +472,14 @@ export default function DailyBaselineVCS() {
           positionEdge={params['videoSettings.dominant.position']}
           splitPos={params['videoSettings.dominant.splitPos']}
           maxItems={params['videoSettings.dominant.numChiclets']}
+          followDominantFlag={params['videoSettings.dominant.followDomFlag']}
         />
       );
       break;
   }
 
   let graphics = [];
+  let gi = 0;
   if (params.showTextOverlay) {
     // copy params to props and ensure types are what the component expects
     let overlayProps = params.text ? { ...params.text } : {};
@@ -345,13 +499,84 @@ export default function DailyBaselineVCS() {
     overlayProps.useStroke =
       overlayProps.strokeColor && overlayProps.strokeColor.length > 0;
 
-    graphics.push(<TextOverlay key={0} {...overlayProps} />);
+    graphics.push(<TextOverlay key={gi} {...overlayProps} />);
   }
-  graphics.push(<CustomOverlay key={1} />);
+  gi++;
+
+  if (params.showImageOverlay) {
+    graphics.push(
+      <ImageOverlay
+        key={gi}
+        src={params['image.assetName']}
+        positionCorner={params['image.position']}
+        fullScreen={params['image.fullScreen']}
+        aspectRatio={params['image.aspectRatio']}
+        height_vh={params['image.height_vh']}
+        margin_vh={params['image.margin_vh']}
+        opacity={params['image.opacity']}
+      />
+    );
+  }
+  gi++;
+
+  graphics.push(
+    <Toast
+      key={gi++}
+      numberOfLines={
+        params['toast.numTextLines']
+          ? parseInt(params['toast.numTextLines'], 10)
+          : 2
+      }
+      currentItem={{
+        key: params['toast.key'] ? parseInt(params['toast.key'], 10) : 0,
+        text: params['toast.text'],
+        showIcon: !!params['toast.showIcon'],
+        iconOverrideAssetName: params['toast.icon.assetName'],
+        durationInSeconds: params['toast.duration_secs']
+          ? parseFloat(params['toast.duration_secs'])
+          : 4,
+      }}
+      style={{
+        fillColor: params['toast.color'],
+        textColor: params['toast.text.color'] || 'white',
+        fontFamily: params['toast.text.fontFamily'] || DEFAULT_FONT,
+        fontWeight: params['toast.text.fontWeight'] || '500',
+        fontSize_px: params['toast.text.fontSize_pct']
+          ? (params['toast.text.fontSize_pct'] / 100) *
+            DEFAULT_TOAST_FONT_SIZE_PX
+          : DEFAULT_TOAST_FONT_SIZE_PX,
+        strokeColor: params['toast.strokeColor'],
+      }}
+    />
+  );
+
+  graphics.push(<CustomOverlay key={gi++} />);
+
+  // apply a layout function to the video container if non-zero margins specified
+  let videoBoxLayout;
+  const videoMargins_rel = {
+    l: parseFloat(params['videoSettings.margin.left_vw']),
+    r: parseFloat(params['videoSettings.margin.right_vw']),
+    t: parseFloat(params['videoSettings.margin.top_vh']),
+    b: parseFloat(params['videoSettings.margin.bottom_vh']),
+  };
+  if (
+    videoMargins_rel.l !== 0 ||
+    videoMargins_rel.r !== 0 ||
+    videoMargins_rel.t !== 0 ||
+    videoMargins_rel.b !== 0
+  ) {
+    videoBoxLayout = [
+      layoutFuncs.pad,
+      { pad_viewportRelative: videoMargins_rel },
+    ];
+  }
 
   return (
     <Box id="main">
-      <Box id="videoBox">{video}</Box>
+      <Box id="videoBox" layout={videoBoxLayout}>
+        {video}
+      </Box>
       <Box id="graphicsBox">{graphics}</Box>
     </Box>
   );
