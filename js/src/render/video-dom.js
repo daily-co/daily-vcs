@@ -65,7 +65,7 @@ function collectVideoLayerChildren(containerEl) {
   for (let child of containerEl.childNodes) {
     let layerId = child.dataset.vcsVideoLayerId;
     if (!layerId) {
-      console.warn(
+      console.error(
         "Child in video container not tagged with layerId, this shouldn't happen: ",
         child
       );
@@ -103,7 +103,7 @@ function recurseRenderNode(
         } else if (src.domElement.nodeName === 'VIDEO') {
           srcDOM = src.domElement;
         } else {
-          console.warn(
+          console.error(
             'Unknown DOM element present in imageSources.videoSlots, not image or video: ',
             src.domElement
           );
