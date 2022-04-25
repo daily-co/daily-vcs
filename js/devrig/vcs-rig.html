@@ -656,6 +656,21 @@ function paramCheckboxToggled(ev) {
   sendParam(paramId, newValue);
 }
 
+function paramNumberEdited(ev) {
+  const field = ev.target;
+  const paramId = field.dataset.paramId;
+  if (!paramId || paramId.length < 1) {
+    alert("Missing paramId");
+    return;
+  }
+  let newValue = field.value;
+  if (typeof newValue !== 'number') {
+    newValue = parseFloat(newValue);
+  }
+
+  if (Number.isFinite(newValue)) sendParam(paramId, newValue);
+}
+
 function paramTextEdited(ev) {
   const field = ev.target;
   const paramId = field.dataset.paramId;
@@ -767,7 +782,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
           if (Number.isFinite(paramDesc.step) && paramDesc.step > 0) {
             el.setAttribute('step', paramDesc.step);
           }
-          el.addEventListener('change', paramTextEdited);
+          el.addEventListener('change', paramNumberEdited);
           break;
 
         case 'text':
