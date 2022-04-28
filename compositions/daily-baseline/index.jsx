@@ -329,6 +329,11 @@ export const compositionInterface = {
       defaultValue: 1,
       step: 0.1,
     },
+    {
+      id: 'image.enableFade',
+      type: 'boolean',
+      defaultValue: true,
+    },
 
     // -- toast params --
     {
@@ -503,20 +508,20 @@ export default function DailyBaselineVCS() {
   }
   gi++;
 
-  if (params.showImageOverlay) {
-    graphics.push(
-      <ImageOverlay
-        key={gi}
-        src={params['image.assetName']}
-        positionCorner={params['image.position']}
-        fullScreen={params['image.fullScreen']}
-        aspectRatio={params['image.aspectRatio']}
-        height_vh={params['image.height_vh']}
-        margin_vh={params['image.margin_vh']}
-        opacity={params['image.opacity']}
-      />
-    );
-  }
+  graphics.push(
+    <ImageOverlay
+      key={gi}
+      src={params['image.assetName']}
+      positionCorner={params['image.position']}
+      fullScreen={params['image.fullScreen']}
+      aspectRatio={params['image.aspectRatio']}
+      height_vh={params['image.height_vh']}
+      margin_vh={params['image.margin_vh']}
+      opacity={params['image.opacity']}
+      enableFade={params['image.enableFade']}
+      show={params.showImageOverlay}
+    />
+  );
   gi++;
 
   graphics.push(
