@@ -17,10 +17,12 @@ export default function ImageOverlay({
   const t = useVideoTime();
 
   // this component needs to keep track of when it was toggled on/off
-  // so we can render the fade in/out operation for this graphic
+  // so we can render the fade in/out operation for this graphic.
+  // default value for "time last toggled" is negative infinity
+  // so the fade transition logic works right.
   const lastToggledRef = React.useRef({
     show,
-    t,
+    t: -Infinity,
   });
 
   if (lastToggledRef.current.show !== show) {
