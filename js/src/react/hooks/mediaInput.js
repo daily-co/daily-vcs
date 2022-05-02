@@ -10,8 +10,13 @@ export function useViewportSize() {
   return viewportSize;
 }
 
-export function useActiveVideo() {
+export function useActiveVideo(opts) {
   const { activeVideoInputSlots } = React.useContext(MediaInputContext);
+
+  let preferScreenshare = false;
+  if (opts) {
+    preferScreenshare = !!opts.preferScreenshare;
+  }
 
   const memo = React.useMemo(() => {
     let activeIds = [];
@@ -39,6 +44,12 @@ export function useActiveVideo() {
       pausedById[videoId] = !!slot.paused;
     }
 
+    if (preferScreenshare && activeScreenshareIds.length > 0) {
+      // if requested, move screenshare ids to first in array
+      activeIds = activeIds.filter((id) => !activeScreenshareIds.includes(id));
+      activeIds = activeScreenshareIds.concat(activeIds);
+    }
+
     return {
       activeIds,
       activeScreenshareIds,
@@ -47,7 +58,7 @@ export function useActiveVideo() {
       pausedById,
       maxSimultaneousVideoInputs,
     };
-  }, [activeVideoInputSlots]);
+  }, [activeVideoInputSlots, preferScreenshare]);
 
   return memo;
 }

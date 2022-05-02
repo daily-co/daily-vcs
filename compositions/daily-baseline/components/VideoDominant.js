@@ -20,9 +20,11 @@ export default function VideoDominant({
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
   labelsOffset_px,
   followDominantFlag,
+  preferScreenshare,
 }) {
-  let { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo();
+  let { activeIds, dominantId, displayNamesById, pausedById } = useActiveVideo({
+    preferScreenshare,
+  });
 
   if (!followDominantFlag || !dominantId) {
     dominantId = activeIds[0];

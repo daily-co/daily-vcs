@@ -87,6 +87,11 @@ export const compositionInterface = {
     },
     // -- video layout params --
     {
+      id: 'videoSettings.preferScreenshare',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
       id: 'videoSettings.showParticipantLabels',
       type: 'boolean',
       defaultValue: false,
@@ -435,6 +440,7 @@ export default function DailyBaselineVCS() {
     videoStyle,
     placeholderStyle,
     videoLabelStyle,
+    preferScreenshare: params['videoSettings.preferScreenshare'],
     showLabels: params['videoSettings.showParticipantLabels'],
     scaleMode: params['videoSettings.scaleMode'],
     labelsOffset_px: {
