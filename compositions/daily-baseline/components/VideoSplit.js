@@ -11,8 +11,11 @@ export default function VideoSplit({
   videoLabelStyle,
   placeholderStyle,
   labelsOffset_px,
+  preferScreenshare,
 }) {
-  const { activeIds, displayNamesById, pausedById } = useActiveVideo();
+  const { activeIds, displayNamesById, pausedById } = useActiveVideo({
+    preferScreenshare,
+  });
 
   if (
     !labelsOffset_px ||

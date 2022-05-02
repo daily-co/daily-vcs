@@ -17,9 +17,10 @@ export default function VideoPip({
   margin_vh,
   labelsOffset_px,
   followDominantFlag,
+  preferScreenshare,
 }) {
   const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo();
+    useActiveVideo({ preferScreenshare });
 
   let firstVideoId = activeIds[0];
   if (followDominantFlag && dominantId) {

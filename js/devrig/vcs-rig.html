@@ -500,14 +500,15 @@ for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
 }
 setActiveVideoInput(0, true);
 
-function getVideoInputIdForSlotIndex(idx) {
-  if (idx === 0) return 'devlivecam0';
-  return 'devinput'+idx;
+function getVideoInputIdForSlotIndex(idx, isScreenshare) {
+  const suffix = isScreenshare ? '_sshare' : '';
+  if (idx === 0) return 'devlivecam0' + suffix;
+  else return 'devinput' + idx + suffix;
 }
 
 function setActiveVideoInput(idx, active, paused, isScreenshare) {
   g_activeVideoInputSlots[idx] = {
-    id: getVideoInputIdForSlotIndex(idx),
+    id: getVideoInputIdForSlotIndex(idx, isScreenshare),
     active: !!active,
     paused: !!paused,
     type: isScreenshare ? 'screenshare' : 'camera',
@@ -632,7 +633,7 @@ function screenshareToggled(ev) {
     if (g_activeVideoInputSlots[i].type !== 'screenshare') continue;
 
     const obj = {
-      id: getVideoInputIdForSlotIndex(i),
+      id: getVideoInputIdForSlotIndex(i, true),
       element: ssImageEl
     };
     sources.videoSlots.splice(i, 1, obj);
