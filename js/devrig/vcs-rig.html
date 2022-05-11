@@ -96,6 +96,24 @@ table {
   color: black;
 }
 
+#rightSplit .tabContent select {
+  display: inline-block;
+  background-color: transparent;
+  border: 1px solid var(--control-outline-color);
+  border-radius: 5px;
+  color: white;
+  padding: 2px;
+  outline: none;
+}
+#rightSplit .tabContent select option {
+  background-color: var(--bg-color);
+}
+
+#apicallOutputType {
+  text-align: center;
+  margin-bottom: 2em;
+}
+
 #apicallControls {
   text-align: center;
 }
@@ -461,6 +479,15 @@ table {
           <div id="browserInfo" style="font-weight: bold;"></div>
         </div>
         <div class="tabContent" data-id="apicall">
+          <div id="apiCallOutputType">
+            Daily API call:
+            <select id="apiCallOutputTypeSelect">
+              <option>startRecording</option>
+              <option>updateRecording</option>
+              <option>startLiveStreaming</option>
+              <option>updateLiveStreaming</option>
+            </select>
+          </div>
           <div id="apiCallControls">
             <button id="btn-apicall-rec">Record</button>
             <button id="btn-apicall-stop" class="disabled">Stop</button>
@@ -520,6 +547,16 @@ let g_paramValues = {};
 
 
 // --- UI actions ---
+
+g_apiCallName = 'startRecording';
+
+document.getElementById('apiCallOutputTypeSelect').addEventListener('change', function(ev) {
+  const sel = ev.target;
+  const opt = sel.options[sel.selectedIndex];
+  g_apiCallName = opt.value;
+
+  printApicallRec();
+});
 
 const decoEl = document.getElementById("deco");
 let isAtari = false;
@@ -1189,7 +1226,7 @@ function printApicallRec() {
 
   json = json.replace(/\n/g, '\n    '); // indent correctly for api call
 
-  const apicallStr = "call.updateLiveStreaming({\n"
+  const apicallStr = "call." + g_apiCallName + "({\n"
       + "  layout: {\n"
       + "    preset: \"custom\",\n"
       + "    composition_params: " + json
