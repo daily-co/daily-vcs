@@ -33,8 +33,7 @@ bool RenderDisplayListToRawBuffer(
   uint32_t rowBytes,
   CanvexAlphaMode alphaMode,
   const std::filesystem::path& resourceDir,
-  CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
-  GraphicsExecutionStats* stats // optional stats
+  CanvexSkiaResourceContext* skiaResCtx // optional cache between calls
 );
 
 } // namespace canvex

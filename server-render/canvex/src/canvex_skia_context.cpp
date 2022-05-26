@@ -110,8 +110,6 @@ void CanvexContext::strokeText(const std::string& text, double x, double y) {
 void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint) {
   auto& sf = stateStack_.back();
 
-  double t0 = getMonotonicTime();
-
   std::string fontFamily = (sf.fontName.empty()) ? "Roboto" : sf.fontName;
   auto fontFileNameOpt = skiaResCtx_.getFontFileName(fontFamily, sf.fontWeight, sf.fontIsItalic);
   if (!fontFileNameOpt.has_value()) {
@@ -144,10 +142,6 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
                     {sf.fontWeight, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant});
     */
   }
-
-  double t_typeface = getMonotonicTime() - t0;
-  #pragma unused(t_typeface)
-  //std::cout << "time spend on typeface::make: " << t_typeface*1000 << "ms" << std::endl;
 
   SkFont font(typeface, sf.fontSize);
   auto textBlob = SkTextBlob::MakeFromString(text.c_str(), font);

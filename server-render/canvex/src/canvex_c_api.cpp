@@ -87,8 +87,7 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   if (!RenderDisplayListToRawBuffer(*displayList, format,
     dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha,
     ctx->resourceDir,
-    &ctx->skiaResourceCtx,
-    nullptr)) {
+    &ctx->skiaResourceCtx)) {
     return CanvexRenderError_GraphicsUnspecifiedError;
   }
 
