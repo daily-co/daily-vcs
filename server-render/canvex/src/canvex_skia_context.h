@@ -64,6 +64,9 @@ class CanvexContext {
   void strokeText(const std::string& text, double x, double y);
 
   void drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h);
+  void drawImageWithSrcCoords(ImageSourceType type, const std::string& imageName,
+          double dstX, double dstY, double dstW, double dstH,
+          double srcX, double srcY, double srcW, double srcH);
 
   // commands that operate on current path
   void beginPath();
@@ -86,6 +89,9 @@ class CanvexContext {
 
   // cached resources
   CanvexSkiaResourceContext& skiaResCtx_;
+
+  // returns null if image can't be loaded, or cached image if already present in skiaResCtx
+  sk_sp<SkImage> getImage(ImageSourceType type, const std::string& imageName);
 
   // utils to access current state
   float getGlobalAlpha() {

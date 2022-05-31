@@ -308,7 +308,7 @@ static void renderDisplayListInSkCanvas(
       }
       case drawImage: {
         PRINTCMD_ARGS("drawImage")
-        if (cmd.args.size() != 5 || cmd.args[0].type != ArgType::assetRef
+        if (cmd.args.size() < 5 || cmd.args[0].type != ArgType::assetRef
            || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
            || cmd.args[3].type != ArgType::number || cmd.args[4].type != ArgType::number) {
           std::cout << "Invalid args for drawImage: "; debugPrintArgs(cmd, std::cout);
@@ -320,15 +320,28 @@ static void renderDisplayListInSkCanvas(
           auto& imgTypeStr = cmd.args[0].assetRefValue->first;
           auto& imgName = cmd.args[0].assetRefValue->second;
 
+          ImageSourceType srcType;
           if (imgTypeStr == "defaultAsset") {
-            ctx.drawImage(ImageSourceType::DefaultAsset, imgName,
-              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+            srcType = ImageSourceType::DefaultAsset;
           } else if (imgTypeStr == "compositionAsset") {
-            ctx.drawImage(ImageSourceType::CompositionAsset, imgName,
-              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+            srcType = ImageSourceType::CompositionAsset;
           } else {
             std::cout << "Unsupported type for drawImage: " << imgTypeStr << std::endl;
-           }
+            // default to composition asset
+            srcType = ImageSourceType::CompositionAsset;
+          }
+          
+          // drawImage has two argument formats that we support:
+          // - 5-argument version with srcDrawable + 4 dstRect coords
+          // - 9-argument version with srcDrawable + 4 srcRect coords + 4 dstRect coords
+          if (cmd.args.size() < 9) {
+            ctx.drawImage(srcType, imgName,
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+          } else {
+            ctx.drawImageWithSrcCoords(srcType, imgName,
+              cmd.args[5].numberValue, cmd.args[6].numberValue, cmd.args[7].numberValue, cmd.args[8].numberValue,
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+          }
 
           numCmds++;
         }

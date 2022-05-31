@@ -155,12 +155,8 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
-void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h) {
-  const auto& sf = stateStack_.back();
-
-  if (sf.globalAlpha <= 0.0) return; // --
-
-  if (imageName.empty()) return; // --
+sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& imageName) {
+  if (imageName.empty()) return nullptr; // --
 
   auto& cache = (type == CompositionAsset) ? skiaResCtx_.imageCache_compositionNamespace : skiaResCtx_.imageCache_defaultNamespace;
 
@@ -173,15 +169,25 @@ void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
       std::cerr << "drawImage: unable to load path " << assetsPath << std::endl;
-      return;
+      return image;
     }
     image = SkImage::MakeFromEncoded(data);
     if (!image) {
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
-      return;
+      return image;
     }
     cache[imageName] = image;
   }
+  return image;
+}
+
+void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h) {
+  const auto& sf = stateStack_.back();
+
+  if (sf.globalAlpha <= 0.0) return; // --
+
+  sk_sp<SkImage> image = getImage(type, imageName);
+  if (!image) return; // --
 
   SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};
   SkSamplingOptions sampleOptions(SkFilterMode::kLinear);
@@ -190,6 +196,26 @@ void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName
   paint.setAlpha(sf.globalAlpha * 255);
 
   canvas_->drawImageRect(image, rect, sampleOptions, &paint);
+}
+
+void CanvexContext::drawImageWithSrcCoords(ImageSourceType type, const std::string& imageName,
+          double dstX, double dstY, double dstW, double dstH,
+          double srcX, double srcY, double srcW, double srcH) {
+  const auto& sf = stateStack_.back();
+
+  if (sf.globalAlpha <= 0.0) return; // --
+
+  sk_sp<SkImage> image = getImage(type, imageName);
+  if (!image) return; // --
+
+  SkRect srcRect{(SkScalar)srcX, (SkScalar)srcY, (SkScalar)(srcX + srcW), (SkScalar)(srcY + srcH)};
+  SkRect dstRect{(SkScalar)dstX, (SkScalar)dstY, (SkScalar)(dstX + dstW), (SkScalar)(dstY + dstH)};
+  SkSamplingOptions sampleOptions(SkFilterMode::kLinear);
+
+  SkPaint paint;
+  paint.setAlpha(sf.globalAlpha * 255);
+
+  canvas_->drawImageRect(image, srcRect, dstRect, sampleOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
 }
 
 void CanvexContext::beginPath() {

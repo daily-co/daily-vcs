@@ -153,10 +153,13 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         break;
       }
       case IntrinsicNodeType.IMAGE: {
+        let placeholderFillColor = 'rgba(0, 150, 60, 0.5)';
+
         if (node.src && node.src.length > 0) {
           srcDrawable = images ? images[node.src] : null;
           if (!srcDrawable) {
             warningOutText = `Missing image:\n${node.src}`;
+            placeholderFillColor = 'rgba(0, 50, 200, 0.5)';
             if (!s_missingAssetsNotified.has(node.src)) {
               console.error(
                 'Unable to find specified source image: ',
@@ -168,7 +171,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
             }
           }
         }
-        if (!srcDrawable) fillColor = 'rgba(0, 50, 200, 0.5)';
+        if (!srcDrawable) fillColor = placeholderFillColor;
         break;
       }
       case IntrinsicNodeType.VIDEO: {
@@ -191,15 +194,21 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
 
     // apply scaling or crop, but only if we have a drawable from where to derive the content size.
     let srcDrawableRegion;
-    if (srcDrawable && srcDrawable.domElement) {
-      const domEl = srcDrawable.domElement;
+    if (srcDrawable) {
       let contentW, contentH;
-      if (domEl.videoWidth) {
-        contentW = domEl.videoWidth;
-        contentH = domEl.videoHeight;
-      } else if (domEl.width) {
-        contentW = domEl.width;
-        contentH = domEl.height;
+      if (srcDrawable.domElement) {
+        const domEl = srcDrawable.domElement;
+        if (domEl.videoWidth) {
+          contentW = domEl.videoWidth;
+          contentH = domEl.videoHeight;
+        } else if (domEl.width) {
+          contentW = domEl.width;
+          contentH = domEl.height;
+        }
+      } else {
+        // with the display list encoder, image size may be provided in the drawable descriptor
+        contentW = srcDrawable.width;
+        contentH = srcDrawable.height;
       }
 
       if (contentW > 0 && contentH > 0) {
@@ -237,37 +246,29 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
 
     if (srcDrawable) {
-      if (isVCSDisplayListEncoder) {
-        ctx.drawImage_vcsDrawable(
-          srcDrawable,
+      // for direct drawing, pass the domElement; for encoder, the drawable descriptor
+      const drawableForDrawCmd = isVCSDisplayListEncoder
+        ? srcDrawable
+        : srcDrawable.domElement;
+      const drawCmd = isVCSDisplayListEncoder
+        ? ctx.drawImage_vcsDrawable.bind(ctx)
+        : ctx.drawImage.bind(ctx);
+
+      if (srcDrawableRegion) {
+        // we're cropping the input
+        drawCmd(
+          drawableForDrawCmd,
+          srcDrawableRegion.x,
+          srcDrawableRegion.y,
+          srcDrawableRegion.w,
+          srcDrawableRegion.h,
           frame.x,
           frame.y,
           frame.w,
           frame.h
         );
       } else {
-        if (srcDrawableRegion) {
-          // we're cropping the input
-          ctx.drawImage(
-            srcDrawable.domElement,
-            srcDrawableRegion.x,
-            srcDrawableRegion.y,
-            srcDrawableRegion.w,
-            srcDrawableRegion.h,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h
-          );
-        } else {
-          ctx.drawImage(
-            srcDrawable.domElement,
-            frame.x,
-            frame.y,
-            frame.w,
-            frame.h
-          );
-        }
+        drawCmd(drawableForDrawCmd, frame.x, frame.y, frame.w, frame.h);
       }
     }
 

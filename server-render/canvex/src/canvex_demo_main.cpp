@@ -62,7 +62,6 @@ int main() {
         "example-data/rounded-sidebar.json";
         // "example-data/graphics-test-random-50.json";
         //"example-data/basic-labels.json";
-        
 
   std::cout << "Will read JSON from: " << jsonPath << std::endl;
 

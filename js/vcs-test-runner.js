@@ -58,6 +58,8 @@ for (let i = 0; i < 16; i++) {
 imageSources.compositionAssetImages['test_square'] = {
   vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
+  width: 320,
+  height: 320,
 };
 
 // this will receive the instance of our root container component

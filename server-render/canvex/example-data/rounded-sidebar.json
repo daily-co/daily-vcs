@@ -46,6 +46,19 @@
         72
       ]
     ],
+    [
+      "drawImage",
+      [
+        {
+          "type": "defaultAsset",
+          "id": "daily-logo-small-lightground.png"
+        },
+        28.8,
+        625.2,
+        150,
+        60
+      ]
+    ],
     ["restore"],
     ["restore"],
     ["restore"],
