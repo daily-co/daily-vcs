@@ -1,1 +1,1 @@
-[{"type":"video","id":0,"frame":{"x":36,"y":177,"w":293,"h":165},"attrs":{}},{"type":"video","id":2,"frame":{"x":365,"y":177,"w":293,"h":165},"attrs":{}},{"type":"video","id":3,"frame":{"x":695,"y":177,"w":293,"h":165},"attrs":{}},{"type":"video","id":4,"frame":{"x":36,"y":378,"w":293,"h":165},"attrs":{}},{"type":"video","id":5,"frame":{"x":365,"y":378,"w":293,"h":165},"attrs":{}}]
+[{"type":"video","id":0,"frame":{"x":36,"y":231,"w":458,"h":258},"attrs":{"scaleMode":"fill"}},{"type":"video","id":1,"frame":{"x":530,"y":231,"w":458,"h":258},"attrs":{"scaleMode":"fill"}}]
