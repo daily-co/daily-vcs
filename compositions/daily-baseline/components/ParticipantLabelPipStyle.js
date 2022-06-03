@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Label } from '#vcs-react/components';
+import { Box, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 
 export function ParticipantLabelPipStyle({
@@ -23,9 +23,9 @@ export function ParticipantLabelPipStyle({
   };
 
   const label = (
-    <Label style={labelStyle} layout={[layoutFuncs.offset, offsets]}>
+    <Text style={labelStyle} layout={[layoutFuncs.offset, offsets]}>
       {labelStr || ''}
-    </Label>
+    </Text>
   );
 
   if (outerLayout) {

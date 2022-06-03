@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Label, Video } from '#vcs-react/components';
+import { Box, Text, Video } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import Rand from 'random-seed';
 
@@ -68,7 +68,7 @@ function RandomGraphics() {
         style={style}
         transform={trs}
       >
-        <Label style={textStyle}>Hello random {i + 1}</Label>
+        <Text style={textStyle}>Hello random {i + 1}</Text>
       </Box>
     );
   }

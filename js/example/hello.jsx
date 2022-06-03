@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Image, Label, Video } from '#vcs-react/components';
+import { Box, Image, Text, Video } from '#vcs-react/components';
 import {
   useParams,
   useVideoTime,
@@ -113,9 +113,9 @@ function VideoGrid({ layout, showLabels, roundedCorners }) {
     let participantLabel;
     if (showLabels && activeIds.length > 1) {
       participantLabel = (
-        <Label style={labelStyle} layout={[layoutFuncs.offset, { y: -18 }]}>
+        <Text style={labelStyle} layout={[layoutFuncs.offset, { y: -18 }]}>
           {displayNamesById[videoId] || ''}
-        </Label>
+        </Text>
       );
     }
 
@@ -192,9 +192,9 @@ function TimedExampleGraphics({
     <Box layout={[layoutFuncs.pad, { pad: boxOuterPad }]}>
       <Box id="graphicsBox" style={boxStyle} layout={baseLayout}>
         <Box layout={[layoutFuncs.pad, { pad: textPad_px }]}>
-          <Label style={textStyle} layout={[layoutFuncs.demoText_bottomRight]}>
+          <Text style={textStyle} layout={[layoutFuncs.demoText_bottomRight]}>
             {demoText}
-          </Label>
+          </Text>
         </Box>
         <Image
           src="test_square"

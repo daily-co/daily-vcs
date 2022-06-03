@@ -55,7 +55,7 @@ for (let i = 0; i < 16; i++) {
     vcsSourceId: i,
   });
 }
-imageSources.compositionAssetImages['test_square'] = {
+imageSources.compositionAssetImages['test_square.png'] = {
   vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
   width: 320,

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Label } from '#vcs-react/components';
+import { Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { DEFAULT_FONT } from '../constants.js';
 
@@ -44,12 +44,12 @@ export default function TextOverlay({
   };
 
   return (
-    <Label
+    <Text
       style={textStyle}
       transform={textTrs}
       layout={[layoutFn, layoutParams]}
     >
       {content || ''}
-    </Label>
+    </Text>
   );
 }
