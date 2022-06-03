@@ -22,7 +22,7 @@ export const IntrinsicNodeType = {
   ROOT: 'root',
   BOX: 'box',
   IMAGE: 'image',
-  LABEL: 'label',
+  TEXT: 'label',
   VIDEO: 'video',
 };
 
@@ -60,8 +60,8 @@ export class Composition {
       case IntrinsicNodeType.IMAGE:
         node = new ImageNode();
         break;
-      case IntrinsicNodeType.LABEL:
-        node = new LabelNode();
+      case IntrinsicNodeType.TEXT:
+        node = new TextNode();
         break;
       case IntrinsicNodeType.VIDEO:
         node = new VideoNode();
@@ -382,8 +382,8 @@ class BoxNode extends StyledNodeBase {
   static nodeType = IntrinsicNodeType.BOX;
 }
 
-class LabelNode extends StyledNodeBase {
-  static nodeType = IntrinsicNodeType.LABEL;
+class TextNode extends StyledNodeBase {
+  static nodeType = IntrinsicNodeType.TEXT;
 
   shouldUpdate(container, oldProps, newProps) {
     if (super.shouldUpdate(container, oldProps, newProps)) return true;

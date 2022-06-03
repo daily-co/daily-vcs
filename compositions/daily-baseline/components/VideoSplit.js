@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Video, Label } from '#vcs-react/components';
+import { Box, Video, Text } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
@@ -41,13 +41,13 @@ export default function VideoSplit({
       let participantLabel;
       if (showLabels) {
         participantLabel = (
-          <Label
+          <Text
             key={key + '_label'}
             style={videoLabelStyle}
             layout={[layoutFuncs.offset, labelsOffset_px]}
           >
             {displayNamesById[videoId] || ''}
-          </Label>
+          </Text>
         );
       }
 

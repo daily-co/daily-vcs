@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-export function Label(props) {
+export function Text(props) {
   const text = Array.isArray(props.children)
     ? props.children.join(' ')
     : props.children || '';

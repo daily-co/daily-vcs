@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Label, Image } from '#vcs-react/components';
+import { Box, Text, Image } from '#vcs-react/components';
 import { useVideoTime } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 import { DEFAULT_FONT } from '../constants.js';
@@ -193,9 +193,9 @@ function ToastContent({
         {showIcon ? (
           <Image src={iconSrc} layout={[layoutFuncs.toastIcon]} />
         ) : null}
-        <Label style={textStyle} layout={[layoutFuncs.toastText, layoutParams]}>
+        <Text style={textStyle} layout={[layoutFuncs.toastText, layoutParams]}>
           {text}
-        </Label>
+        </Text>
       </Box>
     </Box>
   );

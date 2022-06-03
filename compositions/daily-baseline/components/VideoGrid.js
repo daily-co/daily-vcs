@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Video, Label } from '#vcs-react/components';
+import { Box, Video, Text } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
@@ -27,7 +27,7 @@ export default function VideoGrid({
     let participantLabel;
     if (showLabels && activeIds.length > 1) {
       participantLabel = (
-        <Label
+        <Text
           style={videoLabelStyle}
           layout={[
             layoutFuncs.gridLabel,
@@ -36,7 +36,7 @@ export default function VideoGrid({
           clip
         >
           {displayNamesById[videoId] || ''}
-        </Label>
+        </Text>
       );
     }
 
