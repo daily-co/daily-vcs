@@ -1,6 +1,12 @@
 import * as React from 'react';
 import { Box } from '#vcs-react/components';
-import { useParams, useGrid, useViewportSize } from '#vcs-react/hooks';
+import {
+  useParams,
+  useGrid,
+  useViewportSize,
+  useVideoPlaybackState,
+  PlaybackStateType,
+} from '#vcs-react/hooks';
 import * as layoutFuncs from './layouts.js';
 
 import {
@@ -21,6 +27,7 @@ import VideoGrid from './components/VideoGrid.js';
 import VideoPip from './components/VideoPip.js';
 import VideoSingle from './components/VideoSingle.js';
 import VideoSplit from './components/VideoSplit.js';
+import Slate from './components/Slate.js';
 
 // request all standard fonts
 const fontFamilies = [
@@ -651,6 +658,9 @@ export default function DailyBaselineVCS() {
   );
 
   graphics.push(<CustomOverlay key={gi++} />);
+
+  const inPostRoll = useVideoPlaybackState() === PlaybackStateType.POSTROLL;
+  graphics.push(<Slate key={gi++} show={inPostRoll} />);
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;
