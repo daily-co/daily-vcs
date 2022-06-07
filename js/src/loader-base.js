@@ -54,10 +54,11 @@ export function makeVCSRootContainer(
       }
     }
 
-    setVideoTime(t) {
+    setVideoTime(t, playbackState) {
       const newT = {
         ...this.state.time,
         currentTime: t,
+        playbackState: playbackState || ViewContexts.PlaybackStateType.PLAYING,
       };
       this.setState({ time: newT });
     }

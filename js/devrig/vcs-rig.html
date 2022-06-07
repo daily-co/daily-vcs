@@ -181,13 +181,18 @@ table {
   margin-left: 2em;
 }
 #deco > div#compOutput {
-  flex: 1 0 auto;
   text-align: right;
   font-size: 13px;
   margin-top: 3px;
 }
 
-#compOutput button {
+#deco > div#playbackControl {
+  flex: 1 0 auto;
+  margin-right: 2em;
+  text-align: right;
+}
+
+#deco button {
   background: var(--bg-color);
   color: white;
   border: none;
@@ -197,7 +202,7 @@ table {
   border-radius: 5px;
   margin-left: 5px;
 }
-#compOutput button.selected {
+#deco button.selected {
   background-color: var(--highlight-color);
   color: black;
 }
@@ -420,6 +425,9 @@ table {
             <div class="name"></div>
             <div class="description"></div>
           </div>
+          <div id="playbackControl">
+            <button>Stop</button>
+          </div>
           <div id="compOutput">
             <span>Output:</span>
             <span>
@@ -544,6 +552,8 @@ function setActiveVideoInput(idx, active, paused, isScreenshare) {
 }
 
 let g_paramValues = {};
+
+let g_running = false;
 
 
 // --- UI actions ---
@@ -1063,6 +1073,8 @@ async function start() {
 
   console.log("### start done.")
 
+  g_running = true;
+
   // print composition info
   const compInterface = g_vcsApi.getCompositionInterface();
   const {displayMeta} = compInterface;
@@ -1263,6 +1275,9 @@ document.getElementById('btn-apicall-clear').addEventListener('click', function(
   clearApicallRec();
 });
 
+const playbackBtn = document.querySelector("#playbackControl button");
+playbackBtn.addEventListener('click', playbackToggled);
+
 for (const el of document.querySelectorAll("#compOutput button")) {
   el.addEventListener('click', outputModeChanged);
 }
@@ -1294,6 +1309,17 @@ function tabBarButtonClicked(ev) {
     tabs[key].className = 'tabContent ';
   }
   tabs[id].className = 'tabContent visible';
+}
+
+async function playbackToggled(ev) {
+  g_running = !g_running;
+  playbackBtn.innerText = g_running ? "Stop" : "Restart";
+
+  if (g_running) {
+    await recreateVCSCanvasOutput();
+  } else {
+    stopVCS();
+  }
 }
 
 function outputModeChanged(ev) {
