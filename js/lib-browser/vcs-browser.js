@@ -73,6 +73,7 @@ class VCSBrowserOutput {
     this.startT = 0;
     this.lastT = 0;
     this.stopped = false;
+    this.inPostRoll = false;
     this.fps = fps || 20;
 
     // asset preloading
@@ -322,7 +323,9 @@ class VCSBrowserOutput {
     if (t - this.lastT >= 1 / this.fps) {
       const videoT = t - this.startT;
 
-      this.rootContainerRef.current.setVideoTime(videoT);
+      const playbackState = this.inPostRoll ? 'postroll' : 'playing'; // type defined in TimeContext.js
+
+      this.rootContainerRef.current.setVideoTime(videoT, playbackState);
 
       this.lastT = t;
 
@@ -367,7 +370,17 @@ class VCSBrowserOutput {
   }
 
   stop() {
-    this.stopped = true;
-    console.log('stopped VCS output %s', this.uuid);
+    // having a postroll gives the composition time to react to an "end stream" event,
+    // e.g. to display a closing slate (end titles).
+    // the length of the postroll (if any) is defined by the VCS host platform.
+    // 500 ms is a reasonable default - enough time to fade in a slate.
+    const postrollTime = 0.5;
+
+    this.inPostRoll = true;
+
+    setTimeout(() => {
+      this.stopped = true;
+      console.log('stopped VCS output %s', this.uuid);
+    }, postrollTime * 1000);
   }
 }
