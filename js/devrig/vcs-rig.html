@@ -1319,6 +1319,19 @@ async function playbackToggled(ev) {
     await recreateVCSCanvasOutput();
   } else {
     stopVCS();
+
+    playbackBtn.disabled = true;
+
+    // VCS doesn't actually stop its cached video elements,
+    // it just stops its own rendering loop.
+    // in the simulator we can do it manually, so even if a comp
+    // doesn't bring up a closing slate, videos are paused.
+    setTimeout(() => {
+      for (const video of document.querySelectorAll('video')) {
+        video.pause();
+      }
+      playbackBtn.disabled = false;
+    }, 350);
   }
 }
 
