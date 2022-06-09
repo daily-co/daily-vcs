@@ -278,7 +278,10 @@ class VCSBrowserOutput {
       makeVCSRootContainer(
         VCSComp.default,
         this.rootContainerRef,
-        this.viewportSize,
+        {
+          viewportSize: this.viewportSize,
+          pixelsPerGridUnit: this.comp.pixelsPerGridUnit,
+        },
         paramValues,
         this.errorCb
       ),

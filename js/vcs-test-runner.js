@@ -89,7 +89,10 @@ async function main() {
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
   render(
-    makeVCSRootContainer(ContentRoot, rootContainerRef, g_viewportSize),
+    makeVCSRootContainer(ContentRoot, rootContainerRef, {
+      viewportSize: g_viewportSize,
+      pixelsPerGridUnit: composition.pixelsPerGridUnit,
+    }),
     composition
   );
 
