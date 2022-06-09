@@ -26,6 +26,11 @@ export const IntrinsicNodeType = {
   VIDEO: 'video',
 };
 
+function getDefaultGridUnitSizeForViewport(viewportSize) {
+  const minDim = Math.min(viewportSize.w, viewportSize.h);
+  return minDim / 36;
+}
+
 export class Composition {
   constructor(viewportSize, cb) {
     console.assert(
@@ -40,6 +45,10 @@ export class Composition {
     }
 
     this.viewportSize = viewportSize;
+
+    this.pixelsPerGridUnit = getDefaultGridUnitSizeForViewport(
+      this.viewportSize
+    );
 
     this.nodes = [];
     this.rootNode = null;
@@ -129,6 +138,7 @@ export class Composition {
 
     const layoutCtxBase = {
       viewport: { x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h },
+      pixelsPerGridUnit: this.pixelsPerGridUnit,
     };
 
     const makeLayoutCtxHooks = this._makeLayoutCtxHooks;
@@ -405,11 +415,11 @@ class TextNode extends StyledNodeBase {
         console.error('** container missing for text node %s', this.uuid);
         return;
       }
-      const viewport = this.container.viewportSize;
       this.attrStringDesc = makeAttributedStringDesc(
         this.text,
         this.style || {},
-        viewport
+        this.container.viewportSize,
+        this.container.pixelsPerGridUnit
       );
 
       try {

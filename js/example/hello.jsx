@@ -1,11 +1,6 @@
 import * as React from 'react';
 import { Box, Image, Text, Video } from '#vcs-react/components';
-import {
-  useParams,
-  useVideoTime,
-  useViewportSize,
-  useActiveVideo,
-} from '#vcs-react/hooks';
+import { useParams, useVideoTime, useActiveVideo } from '#vcs-react/hooks';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -145,8 +140,6 @@ function TimedExampleGraphics({
   roundedCorners,
 }) {
   const t = useVideoTime();
-  const viewportSize = useViewportSize();
-  const outputAsp = viewportSize.w / viewportSize.h; // output aspect ratio
 
   // change some properties based on time
   let imageSize = 0.1;
@@ -161,17 +154,16 @@ function TimedExampleGraphics({
     imageLayoutFn = layoutFuncs.cornerBug_bottomLeft;
   }
 
-  let fontSize_vh = onSide ? 0.05 : 0.07;
-  if (outputAsp < 1) {
-    // use smaller relative font size if output is portrait
-    fontSize_vh *= 0.5;
-  }
+  // "gu" is the grid unit, a device-independent unit.
+  // for a 16:9 rendering, the default grid size is 1/36 of the height.
+  // in practice, 1 gu is text that's small but still readable on a TV.
+  let fontSize_gu = onSide ? 1.8 : 2.5;
 
   const textStyle = {
     textColor: 'rgba(255, 250, 200, 0.95)',
     fontFamily: 'Roboto',
     fontWeight: '300',
-    fontSize_vh,
+    fontSize_gu,
     //strokeColor: 'rgba(0, 0, 0, 0.95)',
     //strokeWidth_px: 12,
   };

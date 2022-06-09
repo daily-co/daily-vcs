@@ -10,6 +10,13 @@ export function useViewportSize() {
   return viewportSize;
 }
 
+export function useGrid() {
+  const { pixelsPerGridUnit } = React.useContext(MediaInputContext);
+  return {
+    pixelsPerGridUnit,
+  };
+}
+
 export function useActiveVideo(opts) {
   const { activeVideoInputSlots } = React.useContext(MediaInputContext);
 

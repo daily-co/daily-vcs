@@ -380,7 +380,9 @@ function drawStyledText(ctx, text, style, frame, comp) {
   ctx.fillStyle = ensureCssColor(color);
 
   let fontSize_px;
-  if (isFinite(style.fontSize_vh) && style.fontSize_vh > 0) {
+  if (isFinite(style.fontSize_gu) && style.fontSize_gu > 0) {
+    fontSize_px = Math.round(comp.pixelsPerGridUnit * style.fontSize_gu);
+  } else if (isFinite(style.fontSize_vh) && style.fontSize_vh > 0) {
     fontSize_px = Math.round(comp.viewportSize.h * style.fontSize_vh);
   } else {
     fontSize_px = Math.round(style.fontSize_px || 24);

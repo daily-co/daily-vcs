@@ -8,6 +8,10 @@ export const MediaInputContext = React.createContext({
     h: 0,
   },
 
+  // size of the grid unit.
+  // will be set when composition is inited (by default based on viewport size).
+  pixelsPerGridUnit: 20,
+
   // an array of truthy or falsy objects.
   // describes which video inputs are active.
   // depending on the application, these inputs may represent video call

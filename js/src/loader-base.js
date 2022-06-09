@@ -4,10 +4,13 @@ import * as ViewContexts from '../src/react/contexts/index.js';
 export function makeVCSRootContainer(
   ContentRoot,
   rootContainerRef,
-  viewportSize,
+  displayOpts,
   paramValues,
   errorCb
 ) {
+  const { viewportSize = { w: 1280, h: 720 }, pixelsPerGridUnit = 20 } =
+    displayOpts;
+
   // a root component that wraps the view we loaded from the external JSX source,
   // and provides the React Context interface for feeding external data from a JSON file.
   class RootContainer extends React.Component {
@@ -30,6 +33,7 @@ export function makeVCSRootContainer(
         },
         mediaInput: {
           viewportSize,
+          pixelsPerGridUnit,
           activeVideoInputSlots: [],
         },
       };

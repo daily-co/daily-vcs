@@ -3,12 +3,15 @@ import fontSetup from './font-setup.js';
 
 const kFallbackFont = fontSetup.fallbackFontFamily;
 
-function computeStyleAttributes(styledObj, viewport) {
+function computeStyleAttributes(styledObj, viewport, pxPerGu) {
   let size_px = Number.isFinite(styledObj.fontSize_px)
     ? styledObj.fontSize_px
     : 12.0;
 
-  if (styledObj.fontSize_vh > 0) {
+  if (styledObj.fontSize_gu > 0) {
+    // in grid units
+    size_px = styledObj.fontSize_gu * pxPerGu;
+  } else if (styledObj.fontSize_vh > 0) {
     // relative to viewport height
     size_px = styledObj.fontSize_vh * viewport.h;
   }
@@ -70,7 +73,7 @@ function computeStyleAttributes(styledObj, viewport) {
 // returned 'fragments' array is the pieces needed to construct a Fontkit AttributedString object.
 // we're returning also the font object, since our attributed strings are currently single-style
 // (no inline fonts in fragments, yet).
-export function makeAttributedStringDesc(string, styledObj, viewport) {
+export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
   let fragments = [];
 
   const {
@@ -80,7 +83,7 @@ export function makeAttributedStringDesc(string, styledObj, viewport) {
     fontWeight,
     fontStyle,
     textAlign,
-  } = computeStyleAttributes(styledObj, viewport);
+  } = computeStyleAttributes(styledObj, viewport, pxPerGu);
 
   let font;
   try {
