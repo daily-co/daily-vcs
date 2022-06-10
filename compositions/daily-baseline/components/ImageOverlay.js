@@ -7,8 +7,8 @@ export default function ImageOverlay({
   src = 'overlay.png',
   positionCorner,
   aspectRatio,
-  height_vh,
-  margin_vh,
+  height_gu,
+  margin_gu,
   fullScreen,
   opacity = 1,
   enableFade = false,
@@ -57,8 +57,8 @@ export default function ImageOverlay({
     const layoutProps = {
       positionCorner,
       aspectRatio,
-      height_vh,
-      margin_vh,
+      height_gu,
+      margin_gu,
     };
     layout = [layoutFuncs.pip, layoutProps];
   }

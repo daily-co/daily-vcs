@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box } from '#vcs-react/components';
-import { useParams } from '#vcs-react/hooks';
+import { useParams, useGrid, useViewportSize } from '#vcs-react/hooks';
 import * as layoutFuncs from './layouts.js';
 
 import {
@@ -147,16 +147,16 @@ export const compositionInterface = {
       step: 0.1,
     },
     {
-      id: 'videoSettings.pip.height_vh',
+      id: 'videoSettings.pip.height_gu',
       type: 'number',
-      defaultValue: 0.3,
-      step: 0.1,
+      defaultValue: 12,
+      step: 1,
     },
     {
-      id: 'videoSettings.pip.margin_vh',
+      id: 'videoSettings.pip.margin_gu',
       type: 'number',
-      defaultValue: 0.04,
-      step: 0.01,
+      defaultValue: 1.5,
+      step: 0.1,
     },
     {
       id: 'videoSettings.pip.followDomFlag',
@@ -181,14 +181,16 @@ export const compositionInterface = {
       defaultValue: 100,
     },
     {
-      id: 'videoSettings.labels.offset_x',
+      id: 'videoSettings.labels.offset_x_gu',
       type: 'number',
       defaultValue: 0,
+      step: 0.1,
     },
     {
-      id: 'videoSettings.labels.offset_y',
+      id: 'videoSettings.labels.offset_y_gu',
       type: 'number',
       defaultValue: 0,
+      step: 0.1,
     },
     {
       id: 'videoSettings.labels.color',
@@ -201,28 +203,28 @@ export const compositionInterface = {
       defaultValue: 'rgba(0, 0, 0, 0.9)',
     },
     {
-      id: 'videoSettings.margin.left_vw',
+      id: 'videoSettings.margin.left_gu',
       type: 'number',
       defaultValue: 0,
-      step: 0.01,
+      step: 1,
     },
     {
-      id: 'videoSettings.margin.right_vw',
+      id: 'videoSettings.margin.right_gu',
       type: 'number',
       defaultValue: 0,
-      step: 0.01,
+      step: 1,
     },
     {
-      id: 'videoSettings.margin.top_vh',
+      id: 'videoSettings.margin.top_gu',
       type: 'number',
       defaultValue: 0,
-      step: 0.01,
+      step: 1,
     },
     {
-      id: 'videoSettings.margin.bottom_vh',
+      id: 'videoSettings.margin.bottom_gu',
       type: 'number',
       defaultValue: 0,
-      step: 0.01,
+      step: 1,
     },
 
     // -- text overlay params --
@@ -245,17 +247,19 @@ export const compositionInterface = {
       values: ['top', 'bottom', 'center'],
     },
     {
-      id: 'text.offset_x',
+      id: 'text.offset_x_gu',
       type: 'number',
       defaultValue: 0,
+      step: 0.1,
     },
     {
-      id: 'text.offset_y',
+      id: 'text.offset_y_gu',
       type: 'number',
       defaultValue: 0,
+      step: 0.1,
     },
     {
-      id: 'text.rotationInDegrees',
+      id: 'text.rotation_deg',
       type: 'number',
       defaultValue: 0,
     },
@@ -278,9 +282,10 @@ export const compositionInterface = {
       values: ['normal', 'italic'],
     },
     {
-      id: 'text.fontSize_percentageOfViewH',
+      id: 'text.fontSize_gu',
       type: 'number',
-      defaultValue: 7,
+      defaultValue: 2.5,
+      step: 0.1,
     },
     {
       id: 'text.color',
@@ -317,16 +322,16 @@ export const compositionInterface = {
       step: 0.1,
     },
     {
-      id: 'image.height_vh',
+      id: 'image.height_gu',
       type: 'number',
-      defaultValue: 0.3,
-      step: 0.1,
+      defaultValue: 12,
+      step: 1,
     },
     {
-      id: 'image.margin_vh',
+      id: 'image.margin_gu',
       type: 'number',
-      defaultValue: 0.04,
-      step: 0.01,
+      defaultValue: 1.5,
+      step: 0.1,
     },
     {
       id: 'image.opacity',
@@ -410,6 +415,10 @@ export const compositionInterface = {
 // -- the root component of this composition --
 export default function DailyBaselineVCS() {
   const params = useParams();
+  const viewportSize = useViewportSize();
+  const pxPerGu = useGrid().pixelsPerGridUnit;
+  const guPerVh = viewportSize.h / pxPerGu;
+  const guPerVw = viewportSize.w / pxPerGu;
 
   // style applied to video elements.
   // placeholder is used if no video is available.
@@ -444,14 +453,28 @@ export default function DailyBaselineVCS() {
     showLabels: params['videoSettings.showParticipantLabels'],
     scaleMode: params['videoSettings.scaleMode'],
     labelsOffset_px: {
-      x: params['videoSettings.labels.offset_x']
-        ? parseInt(params['videoSettings.labels.offset_x'], 10)
+      x: params['videoSettings.labels.offset_x_gu']
+        ? parseFloat(params['videoSettings.labels.offset_x_gu']) * pxPerGu
         : 0,
-      y: params['videoSettings.labels.offset_y']
-        ? parseInt(params['videoSettings.labels.offset_y'], 10)
+      y: params['videoSettings.labels.offset_y_gu']
+        ? parseFloat(params['videoSettings.labels.offset_y_gu']) * pxPerGu
         : 0,
     },
   };
+  // bw compatibility - check for deprecated param names using absolute px units instead of gu
+  if (isFinite(params['videoSettings.labels.offset_x'])) {
+    videoProps.labelsOffset_px.x = parseInt(
+      params['videoSettings.labels.offset_x'],
+      10
+    );
+  }
+  if (isFinite(params['videoSettings.labels.offset_y'])) {
+    videoProps.labelsOffset_px.y = parseInt(
+      params['videoSettings.labels.offset_y'],
+      10
+    );
+  }
+
   let video;
   switch (params.mode) {
     default:
@@ -464,18 +487,33 @@ export default function DailyBaselineVCS() {
     case 'split':
       video = <VideoSplit {...videoProps} />;
       break;
-    case 'pip':
+    case 'pip': {
+      let h_gu;
+      let margin_gu;
+      // bw compatibility - deprecated params that used viewport height instead of gu
+      if (isFinite(params['videoSettings.pip.height_vh'])) {
+        h_gu = params['videoSettings.pip.height_vh'] * guPerVh;
+      } else {
+        h_gu = params['videoSettings.pip.height_gu'];
+      }
+      if (isFinite(params['videoSettings.pip.margin_vh'])) {
+        margin_gu = params['videoSettings.pip.margin_vh'] * guPerVh;
+      } else {
+        margin_gu = params['videoSettings.pip.margin_gu'];
+      }
+
       video = (
         <VideoPip
           {...videoProps}
           positionCorner={params['videoSettings.pip.position']}
           aspectRatio={params['videoSettings.pip.aspectRatio']}
-          height_vh={params['videoSettings.pip.height_vh']}
-          margin_vh={params['videoSettings.pip.margin_vh']}
+          height_gu={h_gu}
+          margin_gu={margin_gu}
           followDominantFlag={params['videoSettings.pip.followDomFlag']}
         />
       );
       break;
+    }
     case 'dominant':
       video = (
         <VideoDominant
@@ -494,13 +532,33 @@ export default function DailyBaselineVCS() {
   if (params.showTextOverlay) {
     // copy params to props and ensure types are what the component expects
     let overlayProps = params.text ? { ...params.text } : {};
-    overlayProps.offset_x = parseInt(overlayProps.offset_x, 10);
-    overlayProps.offset_y = parseInt(overlayProps.offset_y, 10);
-    overlayProps.rotationInDegrees = parseFloat(overlayProps.rotationInDegrees);
 
-    const fontSize_vh_pct = parseFloat(overlayProps.fontSize_percentageOfViewH);
-    overlayProps.fontSize_vh =
-      fontSize_vh_pct > 0 ? fontSize_vh_pct / 100 : null;
+    // bw compatibility: deprecated params that used absolute coords rather than gu
+    if (isFinite(overlayProps.offset_x)) {
+      overlayProps.offset_x_gu = parseInt(overlayProps.offset_x, 10) / pxPerGu;
+    } else {
+      overlayProps.offset_x_gu = parseFloat(overlayProps.offset_x_gu);
+    }
+    if (isFinite(overlayProps.offset_y)) {
+      overlayProps.offset_y_gu = parseInt(overlayProps.offset_y, 10) / pxPerGu;
+    } else {
+      overlayProps.offset_y_gu = parseFloat(overlayProps.offset_y_gu);
+    }
+
+    // bw compatibility: renamed param
+    if (isFinite(overlayProps.rotationInDegrees)) {
+      overlayProps.rotation_deg = parseFloat(overlayProps.rotationInDegrees);
+    } else {
+      overlayProps.rotation_deg = parseFloat(overlayProps.rotation_deg);
+    }
+
+    // bw compatibility: deprecated param that used view height rather than gu
+    if (isFinite(overlayProps.fontSize_percentageOfViewH)) {
+      overlayProps.fontSize_gu =
+        (parseFloat(overlayProps.fontSize_percentageOfViewH) / 100) * guPerVh;
+    } else {
+      overlayProps.fontSize_gu = parseFloat(overlayProps.fontSize_gu);
+    }
 
     overlayProps.color = overlayProps.color ? overlayProps.color.trim() : null;
 
@@ -514,21 +572,38 @@ export default function DailyBaselineVCS() {
   }
   gi++;
 
-  graphics.push(
-    <ImageOverlay
-      key={gi}
-      src={params['image.assetName']}
-      positionCorner={params['image.position']}
-      fullScreen={params['image.fullScreen']}
-      aspectRatio={params['image.aspectRatio']}
-      height_vh={params['image.height_vh']}
-      margin_vh={params['image.margin_vh']}
-      opacity={params['image.opacity']}
-      enableFade={params['image.enableFade']}
-      show={params.showImageOverlay}
-    />
-  );
-  gi++;
+  {
+    // image overlay
+    let h_gu;
+    let margin_gu;
+    // bw compatibility - deprecated params that used viewport height instead of gu
+    if (isFinite(params['image.height_vh'])) {
+      h_gu = params['image.height_vh'] * guPerVh;
+    } else {
+      h_gu = params['image.height_gu'];
+    }
+    if (isFinite(params['image.margin_vh'])) {
+      margin_gu = params['image.margin_vh'] * guPerVh;
+    } else {
+      margin_gu = params['image.margin_gu'];
+    }
+
+    graphics.push(
+      <ImageOverlay
+        key={gi}
+        src={params['image.assetName']}
+        positionCorner={params['image.position']}
+        fullScreen={params['image.fullScreen']}
+        aspectRatio={params['image.aspectRatio']}
+        height_gu={h_gu}
+        margin_gu={margin_gu}
+        opacity={params['image.opacity']}
+        enableFade={params['image.enableFade']}
+        show={params.showImageOverlay}
+      />
+    );
+    gi++;
+  }
 
   graphics.push(
     <Toast
@@ -565,22 +640,36 @@ export default function DailyBaselineVCS() {
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;
-  const videoMargins_rel = {
-    l: parseFloat(params['videoSettings.margin.left_vw']),
-    r: parseFloat(params['videoSettings.margin.right_vw']),
-    t: parseFloat(params['videoSettings.margin.top_vh']),
-    b: parseFloat(params['videoSettings.margin.bottom_vh']),
+  const videoMargins_gu = {
+    l: parseFloat(params['videoSettings.margin.left_gu']),
+    r: parseFloat(params['videoSettings.margin.right_gu']),
+    t: parseFloat(params['videoSettings.margin.top_gu']),
+    b: parseFloat(params['videoSettings.margin.bottom_gu']),
   };
+  // bw compatibility - deprecated params that use viewport dimensions instead of gu
+  if (isFinite(params['videoSettings.margin.left_vw'])) {
+    videoMargins_gu.l =
+      parseFloat(params['videoSettings.margin.left_vw']) * guPerVw;
+  }
+  if (isFinite(params['videoSettings.margin.right_vw'])) {
+    videoMargins_gu.r =
+      parseFloat(params['videoSettings.margin.right_vw']) * guPerVw;
+  }
+  if (isFinite(params['videoSettings.margin.top_vh'])) {
+    videoMargins_gu.t =
+      parseFloat(params['videoSettings.margin.top_vh']) * guPerVh;
+  }
+  if (isFinite(params['videoSettings.margin.bottom_vh'])) {
+    videoMargins_gu.b =
+      parseFloat(params['videoSettings.margin.bottom_vh']) * guPerVh;
+  }
   if (
-    videoMargins_rel.l !== 0 ||
-    videoMargins_rel.r !== 0 ||
-    videoMargins_rel.t !== 0 ||
-    videoMargins_rel.b !== 0
+    videoMargins_gu.l !== 0 ||
+    videoMargins_gu.r !== 0 ||
+    videoMargins_gu.t !== 0 ||
+    videoMargins_gu.b !== 0
   ) {
-    videoBoxLayout = [
-      layoutFuncs.pad,
-      { pad_viewportRelative: videoMargins_rel },
-    ];
+    videoBoxLayout = [layoutFuncs.pad, { pad_gu: videoMargins_gu }];
   }
 
   return (

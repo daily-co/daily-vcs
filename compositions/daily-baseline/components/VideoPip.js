@@ -13,8 +13,8 @@ export default function VideoPip({
   showLabels,
   positionCorner,
   aspectRatio,
-  height_vh,
-  margin_vh,
+  height_gu,
+  margin_gu,
   labelsOffset_px,
   followDominantFlag,
   preferScreenshare,
@@ -70,8 +70,8 @@ export default function VideoPip({
     const layoutProps = {
       positionCorner,
       aspectRatio,
-      height_vh,
-      margin_vh,
+      height_gu,
+      margin_gu,
     };
     const layout = [layoutFuncs.pip, layoutProps];
 
