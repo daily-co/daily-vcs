@@ -13,6 +13,17 @@ export function pad(parentFrame, params, layoutCtx) {
   // padding can be specified as either a value or an object with l/r/t/b
   if (Number.isFinite(params.pad)) {
     padL = padR = padT = padB = params.pad;
+  } else if (Number.isFinite(params.pad_gu)) {
+    const pxPerGu = layoutCtx.pixelsPerGridUnit;
+    padL = padR = padT = padB = params.pad * pxPerGu;
+  } else if (typeof params.pad_gu === 'object') {
+    const pxPerGu = layoutCtx.pixelsPerGridUnit;
+    let { l, r, t, b } = params.pad_gu;
+
+    if (Number.isFinite(l)) padL = l * pxPerGu;
+    if (Number.isFinite(r)) padR = r * pxPerGu;
+    if (Number.isFinite(t)) padT = t * pxPerGu;
+    if (Number.isFinite(b)) padB = b * pxPerGu;
   } else if (typeof params.pad_viewportRelative === 'object') {
     const { viewport } = layoutCtx;
     let { l, r, t, b } = params.pad_viewportRelative;
@@ -68,12 +79,15 @@ export function fit(parentFrame, params) {
 export function placeText(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
   const textSize = layoutCtx.useIntrinsicSize();
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
 
   w = textSize.w;
   h = textSize.h;
 
-  let xOff = params.xOffset || 0;
-  let yOff = params.yOffset || 0;
+  let xOff = params.xOffset_gu || 0;
+  let yOff = params.yOffset_gu || 0;
+  xOff *= pxPerGu;
+  yOff *= pxPerGu;
 
   switch (params.vAlign) {
     default:
@@ -245,13 +259,13 @@ export function pip(parentFrame, params, layoutCtx) {
   const {
     positionCorner = PositionCorner.TOP_LEFT,
     aspectRatio = 1,
-    height_vh = 0.2,
-    margin_vh = 0,
+    height_gu = 0.2,
+    margin_gu = 0,
   } = params;
-  const { viewport } = layoutCtx;
-  const margin = margin_vh * viewport.h;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const margin = margin_gu * pxPerGu;
 
-  h = Math.round(height_vh * viewport.h);
+  h = Math.round(height_gu * pxPerGu);
   w = Math.round(aspectRatio * h);
 
   if (

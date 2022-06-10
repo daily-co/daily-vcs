@@ -7,12 +7,12 @@ export default function TextOverlay({
   content,
   align_vertical,
   align_horizontal,
-  offset_x,
-  offset_y,
-  rotationInDegrees,
+  offset_x_gu,
+  offset_y_gu,
+  rotation_deg,
   color,
   fontFamily,
-  fontSize_vh,
+  fontSize_gu,
   fontWeight,
   fontStyle,
   strokeColor,
@@ -23,15 +23,15 @@ export default function TextOverlay({
     fontFamily: fontFamily || DEFAULT_FONT,
     fontWeight: fontWeight || '500',
     fontStyle: fontStyle || '',
-    fontSize_vh: fontSize_vh || 0.07,
+    fontSize_gu: fontSize_gu || 2.5,
     strokeColor,
     strokeWidth_px: useStroke ? 12 : 0,
     textAlign: align_horizontal,
   };
   let textTrs;
-  if (Number.isFinite(rotationInDegrees)) {
+  if (Number.isFinite(rotation_deg)) {
     textTrs = {
-      rotate_deg: rotationInDegrees,
+      rotate_deg: rotation_deg,
     };
   }
 
@@ -39,8 +39,8 @@ export default function TextOverlay({
   const layoutParams = {
     vAlign: align_vertical,
     hAlign: align_horizontal,
-    xOffset: offset_x,
-    yOffset: offset_y,
+    xOffset_gu: offset_x_gu,
+    yOffset_gu: offset_y_gu,
   };
 
   return (
