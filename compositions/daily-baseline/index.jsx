@@ -135,6 +135,18 @@ export const compositionInterface = {
       defaultValue: true,
     },
     {
+      id: 'videoSettings.dominant.itemInterval_gu',
+      type: 'number',
+      defaultValue: 0.7,
+      step: 0.1,
+    },
+    {
+      id: 'videoSettings.dominant.outerPadding_gu',
+      type: 'number',
+      defaultValue: 0.5,
+      step: 0.1,
+    },
+    {
       id: 'videoSettings.pip.position',
       type: 'enum',
       defaultValue: PositionCorner.TOP_RIGHT,
@@ -522,6 +534,8 @@ export default function DailyBaselineVCS() {
           splitPos={params['videoSettings.dominant.splitPos']}
           maxItems={params['videoSettings.dominant.numChiclets']}
           followDominantFlag={params['videoSettings.dominant.followDomFlag']}
+          itemInterval_gu={params['videoSettings.dominant.itemInterval_gu']}
+          outerPadding_gu={params['videoSettings.dominant.outerPadding_gu']}
         />
       );
       break;

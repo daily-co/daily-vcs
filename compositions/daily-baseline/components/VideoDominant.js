@@ -21,7 +21,12 @@ export default function VideoDominant({
   labelsOffset_px,
   followDominantFlag,
   preferScreenshare,
+  itemInterval_gu = 0,
+  outerPadding_gu = 0,
 }) {
+  itemInterval_gu = Math.max(0, itemInterval_gu);
+  outerPadding_gu = Math.max(0, outerPadding_gu);
+
   let { activeIds, dominantId, displayNamesById, pausedById } = useActiveVideo({
     preferScreenshare,
   });
@@ -102,7 +107,13 @@ export default function VideoDominant({
       const videoId = videoIds[i];
       const layout = [
         layoutFuncs.column,
-        { index: i, total: maxItems, makeRow: chicletsIsRow },
+        {
+          index: i,
+          total: maxItems,
+          makeRow: chicletsIsRow,
+          innerMargin_gu: itemInterval_gu,
+          outerMargin_gu: outerPadding_gu,
+        },
       ];
       items.push(
         pausedById[videoId] ? (
@@ -117,6 +128,7 @@ export default function VideoDominant({
             src={videoId}
             style={videoStyle}
             layout={layout}
+            scaleMode={scaleMode}
           />
         )
       );

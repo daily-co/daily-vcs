@@ -148,28 +148,25 @@ export function splitAcrossLongerDimension(parentFrame, params, layoutCtx) {
 }
 
 export function column(parentFrame, params, layoutCtx) {
-  const { index, total, makeRow = false } = params;
-  const { viewport } = layoutCtx;
-  const outputAsp = viewport.w / viewport.h;
+  const {
+    index,
+    total,
+    makeRow = false,
+    itemAspectRatio = 0,
+    innerMargin_gu = 0.7,
+    outerMargin_gu = 0.5,
+  } = params;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
 
   let outerMargins = { x: 0, y: 0 },
     innerMargins = { x: 0, y: 0 };
   if (total > 1) {
-    let marginRel; // a relative margin depending on aspect ratio
-    if (outputAsp > 1) {
-      marginRel = Math.round(viewport.h * 0.02);
-    } else if (outputAsp <= 1) {
-      marginRel = viewport.w * 0.04;
-    }
-    innerMargins.x = innerMargins.y = marginRel;
-    outerMargins.x = outerMargins.y = marginRel * 0.75;
+    innerMargins.x = innerMargins.y = innerMargin_gu * pxPerGu;
+    outerMargins.x = outerMargins.y = outerMargin_gu * pxPerGu;
   }
 
   const numCols = makeRow ? total : 1;
   const numRows = makeRow ? 1 : total;
-
-  // assume video item aspect ratio is same as output
-  const videoAsp = outputAsp;
 
   // apply outer margins by insetting frame
   parentFrame = { ...parentFrame };
@@ -177,6 +174,14 @@ export function column(parentFrame, params, layoutCtx) {
   parentFrame.y += outerMargins.y;
   parentFrame.w -= outerMargins.x * 2;
   parentFrame.h -= outerMargins.y * 2;
+
+  const videoAsp =
+    itemAspectRatio > 0
+      ? itemAspectRatio
+      : numRows === 1
+      ? (parentFrame.w - innerMargins.x * (total - 1)) / total / parentFrame.h
+      : parentFrame.w /
+        ((parentFrame.h - innerMargins.y * (total - 1)) / total);
 
   return computeGridItem({
     parentFrame,
