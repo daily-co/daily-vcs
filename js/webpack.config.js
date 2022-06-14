@@ -95,7 +95,7 @@ export default function wwwClientConfig(env) {
     target: 'web',
     output: {
       library: {
-        name: 'DailyVCS',
+        name: `VCSComposition_${compFilenameBase}`,
         type: 'window',
       },
       filename: useCompFilename
