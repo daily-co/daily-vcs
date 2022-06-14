@@ -523,6 +523,10 @@ table {
 
 <script>
 
+// the VCS composition bundle will be loaded here
+let g_vcsCompLib;
+
+
 // --- UI state ---
 
 const MAX_VIDEO_INPUTS = 20;
@@ -914,7 +918,7 @@ function createVideoInputsUI() {
   removeChildren(mainBox);
 
   const n = MAX_VIDEO_INPUTS;
-  for (i = 0; i < n; i++) {
+  for (let i = 0; i < n; i++) {
     const active = g_activeVideoInputSlots[i].active;
     const paused = g_activeVideoInputSlots[i].paused;
     const screenshare = g_activeVideoInputSlots[i].type === 'screenshare';
@@ -1089,6 +1093,14 @@ async function start() {
 }
 
 window.addEventListener('load', function(ev) {
+  const compLibName = Object.keys(window).find(s => s.indexOf('VCSComposition') === 0);
+  if (!compLibName) {
+    alert("Couldn't find a Daily VCS composition using the standard naming pattern.");
+    return; // --
+  }
+  g_vcsCompLib = window[compLibName];
+  console.log("Using VCS library: ", compLibName, g_vcsCompLib);
+
   start();
 });
 
@@ -1394,6 +1406,8 @@ function getAssetUrlCb(name, namespace, type) {
 }
 
 async function recreateVCSCanvasOutput() {
+  if (!g_vcsCompLib) return;
+
   let enablePreload = true;
 
   if (g_vcsApi) {
@@ -1404,7 +1418,7 @@ async function recreateVCSCanvasOutput() {
 
   const fps = 20; // frame rate for React videoTime updates
 
-  g_vcsApi = await DailyVCS.startDOMOutputAsync(
+  g_vcsApi = await g_vcsCompLib.startDOMOutputAsync(
     g_outputContainer,
     g_viewportSize.w, g_viewportSize.h,
     g_defaultSources,
