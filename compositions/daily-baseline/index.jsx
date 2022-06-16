@@ -92,6 +92,11 @@ export const compositionInterface = {
       type: 'boolean',
       defaultValue: false,
     },
+    {
+      id: 'enableStartTitles',
+      type: 'boolean',
+      defaultValue: false,
+    },
     // -- video layout params --
     {
       id: 'videoSettings.preferScreenshare',
@@ -428,6 +433,64 @@ export const compositionInterface = {
       type: 'number',
       defaultValue: 100,
     },
+
+    // -- opening slate (a.k.a. start titles) params --
+    {
+      id: 'startTitles.title',
+      type: 'text',
+      defaultValue: '',
+      shortHelpText: 'To preview start titles, click Stop, then Restart.',
+    },
+    {
+      id: 'startTitles.subtitle',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'startTitles.bgImageAssetName',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'startTitles.bgColor',
+      type: 'text',
+      defaultValue: 'rgba(0, 0, 0, 1)',
+    },
+    {
+      id: 'startTitles.textColor',
+      type: 'text',
+      defaultValue: 'rgba(255, 255, 255, 1)',
+    },
+    {
+      id: 'startTitles.fontFamily',
+      type: 'enum',
+      defaultValue: fontFamilies[0],
+      values: fontFamilies,
+    },
+    {
+      id: 'startTitles.fontWeight',
+      type: 'enum',
+      defaultValue: '400',
+      values: fontWeights,
+    },
+    {
+      id: 'startTitles.fontStyle',
+      type: 'enum',
+      defaultValue: '',
+      values: ['normal', 'italic'],
+    },
+    {
+      id: 'startTitles.fontSize_gu',
+      type: 'number',
+      defaultValue: 2.5,
+      step: 0.1,
+    },
+    {
+      id: 'startTitles.subtitleFontSize_pct',
+      type: 'number',
+      defaultValue: 80,
+      step: 1,
+    },
   ],
 };
 
@@ -660,7 +723,11 @@ export default function DailyBaselineVCS() {
   graphics.push(<CustomOverlay key={gi++} />);
 
   const inPostRoll = useVideoPlaybackState() === PlaybackStateType.POSTROLL;
-  graphics.push(<Slate key={gi++} show={inPostRoll} />);
+  graphics.push(<Slate key={gi++} id="closingSlate" show={inPostRoll} />);
+
+  graphics.push(
+    <Slate key={gi++} id="openingSlate" show={params['enableStartTitles']} />
+  );
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;
