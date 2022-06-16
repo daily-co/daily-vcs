@@ -32,15 +32,15 @@ function getDefaultGridUnitSizeForViewport(viewportSize) {
 }
 
 export class Composition {
-  constructor(viewportSize, cb) {
+  constructor(viewportSize, commitFinishedCb, sourceMetadataCb) {
     console.assert(
       viewportSize.w > 0 && viewportSize.h > 0,
       `** invalid Composition viewportSize arg: ${viewportSize}`
     );
-    if (cb) {
+    if (commitFinishedCb) {
       console.assert(
-        typeof cb === 'function',
-        `** invalid Composition cb arg: ${cb}`
+        typeof commitFinishedCb === 'function',
+        `** invalid Composition commitFinishedCb arg: ${commitFinishedCb}`
       );
     }
 
@@ -54,7 +54,9 @@ export class Composition {
     this.rootNode = null;
 
     this.uncommitted = true;
-    this.commitFinishedCb = cb;
+    this.commitFinishedCb = commitFinishedCb;
+
+    this.sourceMetadataCb = sourceMetadataCb;
   }
 
   createNode(type, props) {
@@ -213,6 +215,16 @@ export class Composition {
     encodeCanvasDisplayList_videoLayersPreview(this, encoder);
 
     return encoder.finalize();
+  }
+
+  getIntrinsicSizeForImageSrc(src) {
+    let ret;
+    if (src && this.sourceMetadataCb) {
+      ret = this.sourceMetadataCb(this, 'image', src);
+    }
+    // if callback didn't provide a valid size, return zero size
+    if (!ret || !isFinite(ret.w) || !isFinite(ret.h)) return { w: 0, h: 0 };
+    return ret;
   }
 }
 
@@ -492,6 +504,8 @@ class ImageNode extends StyledNodeBase {
     this.src = newProps.src;
 
     this.scaleMode = newProps.scaleMode;
+
+    this.intrinsicSize = this.container.getIntrinsicSizeForImageSrc(this.src);
   }
 }
 

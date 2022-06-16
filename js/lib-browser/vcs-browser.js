@@ -257,7 +257,11 @@ class VCSBrowserOutput {
 
     // the backing model for our views.
     // the callback passed here will be called every time React has finished an update.
-    this.comp = new Composition(this.viewportSize, this.compUpdated.bind(this));
+    this.comp = new Composition(
+      this.viewportSize,
+      this.compUpdated.bind(this),
+      this.compGetSourceMetadata.bind(this)
+    );
 
     await textPromise;
 
@@ -310,6 +314,18 @@ class VCSBrowserOutput {
       }
     }
     if (sceneDesc) this.updateCb(sceneDesc);
+  }
+
+  compGetSourceMetadata(comp, type, src) {
+    let ret = {};
+    if (type === 'image') {
+      const desc = this.imageSources.compositionAssetImages[src];
+      let img;
+      if (desc && (img = desc.domElement)) {
+        ret = { w: img.width, h: img.height };
+      }
+    }
+    return ret;
   }
 
   renderFrame() {

@@ -84,7 +84,11 @@ async function main() {
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.
-  const composition = new Composition(g_viewportSize, compUpdatedCb);
+  const composition = new Composition(
+    g_viewportSize,
+    compUpdatedCb,
+    compGetSourceMetadataCb
+  );
 
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
@@ -111,6 +115,17 @@ async function main() {
 
     rootContainerRef.current.setVideoTime(getVideoTime());
   }
+}
+
+function compGetSourceMetadataCb(comp, type, src) {
+  let ret = {};
+  if (type === 'image') {
+    const desc = imageSources.compositionAssetImages[src];
+    if (desc && desc.width > 0) {
+      ret = { w: desc.width, h: desc.height };
+    }
+  }
+  return ret;
 }
 
 function compUpdatedCb(comp) {
