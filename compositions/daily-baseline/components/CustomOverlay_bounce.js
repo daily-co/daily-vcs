@@ -11,26 +11,21 @@ import { useVideoTime } from '#vcs-react/hooks';
   for 1990s set-top player vibes.
 */
 
-let IMG_NAME, IMG_ASP;
-if (1) {
-  // default testing image, always available
-  IMG_NAME = 'test_square';
-  IMG_ASP = 1;
-} else {
-  // this image is expected to be provided in session assets
-  IMG_NAME = 'dvdlogo.png';
-  IMG_ASP = 480 / 212;
-}
+const IMG_NAME = 'test_square'; // default testing image, always available
+// 'overlay.png';
+// 'dvdlogo.png';  // this image is expected to be provided in session assets
 
 // we don't know the exact output rate in VCS,
 // but our modest bounce generally doesn't need to run at full rate,
 // so limit the update rate in our component to this.
 const FPS = 1 / 20;
 
+const ANIM_SPEED = 0.1;
+
 // computes new animation position with bounce at edges
 function updateAnim(prev, t, frame) {
   const dT = t - prev.t;
-  const speed = 0.1;
+  const speed = ANIM_SPEED;
   const pos = {
     x: prev.pos.x + prev.dir.x * speed * dT,
     y: prev.pos.y + prev.dir.y * speed * dT,
@@ -44,12 +39,14 @@ function updateAnim(prev, t, frame) {
     pos.y = Math.min(1, Math.max(0, pos.y));
     dir.y *= -1;
   }
+  const opacity = prev.opacity;
 
   return {
     t,
     frame,
     pos,
     dir,
+    opacity,
   };
 }
 
@@ -66,6 +63,7 @@ export default function CustomOverlay() {
       x: 1,
       y: 1,
     },
+    opacity: 0.5,
   });
 
   const t = useVideoTime();
@@ -79,24 +77,27 @@ export default function CustomOverlay() {
   return (
     <Image
       src={IMG_NAME}
-      style={{ opacity: animRef.current.opacity }}
+      blend={{ opacity: animRef.current.opacity }}
       layout={[placeImage, animRef.current.pos]}
     />
   );
 }
 
-function placeImage(parentFrame, params) {
+function placeImage(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
 
-  // image size is fixed at 20% of parent's height.
-  // image aspect ratio is hardcoded currently.
+  // get the source image aspect ratio using a layout system hook
+  const imgSize = layoutCtx.useIntrinsicSize();
+  const imgAsp = imgSize.h > 0 ? imgSize.w / imgSize.h : 1;
+
+  // image size is fixed at 20% of parent's height
   h = parentFrame.h * 0.2;
-  w = h * IMG_ASP;
+  w = h * imgAsp;
 
   // params x/y is a relative position with coords in range [0-1[.
   // place the image so it's always inside the available space.
-  x += Math.round(params.x * (parentFrame.w - w));
-  y += Math.round(params.y * (parentFrame.h - h));
+  x += params.x * (parentFrame.w - w);
+  y += params.y * (parentFrame.h - h);
 
   return { x, y, w, h };
 }
