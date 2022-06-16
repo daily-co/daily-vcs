@@ -21,6 +21,7 @@ export default function VideoDominant({
   labelsOffset_px,
   followDominantFlag,
   preferScreenshare,
+  omitPaused,
   itemInterval_gu = 0,
   outerPadding_gu = 0,
 }) {
@@ -29,6 +30,7 @@ export default function VideoDominant({
 
   let { activeIds, dominantId, displayNamesById, pausedById } = useActiveVideo({
     preferScreenshare,
+    omitPaused,
   });
 
   if (!followDominantFlag || !dominantId) {

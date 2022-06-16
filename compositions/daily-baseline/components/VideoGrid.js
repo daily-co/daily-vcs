@@ -12,9 +12,10 @@ export default function VideoGrid({
   placeholderStyle,
   labelsOffset_px,
   preferScreenshare,
+  omitPaused,
 }) {
   const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare });
+    useActiveVideo({ preferScreenshare, omitPaused });
 
   const items = activeIds.map((videoId, i) => {
     const key = 'videogrid_item' + i;

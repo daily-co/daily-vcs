@@ -12,9 +12,11 @@ export default function VideoSplit({
   placeholderStyle,
   labelsOffset_px,
   preferScreenshare,
+  omitPaused,
 }) {
   const { activeIds, displayNamesById, pausedById } = useActiveVideo({
     preferScreenshare,
+    omitPaused,
   });
 
   if (

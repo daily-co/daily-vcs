@@ -18,9 +18,10 @@ export default function VideoPip({
   labelsOffset_px,
   followDominantFlag,
   preferScreenshare,
+  omitPaused,
 }) {
   const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare });
+    useActiveVideo({ preferScreenshare, omitPaused });
 
   let firstVideoId = activeIds[0];
   if (followDominantFlag && dominantId) {
@@ -37,7 +38,7 @@ export default function VideoPip({
   } else {
     // render video with optional label
     const videoId = firstVideoId;
-    const key = 0;
+    const key = 'pipbase_' + videoId;
 
     items.push(
       pausedById[videoId] ? (
@@ -65,7 +66,7 @@ export default function VideoPip({
   if (otherVideoIds.length > 0) {
     // render second video inside PiP window
     const videoId = otherVideoIds[0];
-    const key = 1;
+    const key = 'pipwindow_' + videoId;
 
     const layoutProps = {
       positionCorner,
