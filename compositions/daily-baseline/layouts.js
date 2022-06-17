@@ -358,12 +358,14 @@ function computeGridItem({
 }
 
 function getLineH(params, layoutCtx) {
-  if (params.fontSize_px) {
+  if (isFinite(params.fontSize_px)) {
     return params.fontSize_px;
   }
-  const { viewport } = layoutCtx;
+  const { viewport, pixelsPerGridUnit } = layoutCtx;
+  if (isFinite(params.fontSize_gu)) {
+    return params.fontSize_gu * pixelsPerGridUnit;
+  }
   const { fontSize_vh = 0.05 } = params;
-
   return fontSize_vh * viewport.h;
 }
 

@@ -261,13 +261,16 @@ table {
   position: relative;
 }
 #controls .compInterface .params > div.shortHelpText {
-  padding-left: 30px;
+  margin-top: -4px;
+  padding-left: 0px;
   padding-right: 8px;
-  text-align: right;
+  text-align: left;
   font-size: 0.9em;
   color: var(--grey-text-color);
 }
-
+#controls .compInterface .params > div.shortHelpText:last-child {
+  margin-bottom: 8px;
+}
 #controls .compInterface .params label {
   width: var(--label-width);
   display: inline-block;
