@@ -21,8 +21,10 @@ export function useActiveVideo(opts) {
   const { activeVideoInputSlots } = React.useContext(MediaInputContext);
 
   let preferScreenshare = false;
+  let omitPaused = false;
   if (opts) {
     preferScreenshare = !!opts.preferScreenshare;
+    omitPaused = !!opts.omitPaused;
   }
 
   const memo = React.useMemo(() => {
@@ -38,17 +40,20 @@ export function useActiveVideo(opts) {
       if (!slot) continue;
 
       const videoId = slot.id !== undefined ? slot.id : i;
+      const paused = !!slot.paused;
 
-      activeIds.push(videoId);
+      if (!omitPaused || !paused) {
+        activeIds.push(videoId);
 
-      if (slot.type === 'screenshare') {
-        activeScreenshareIds.push(videoId);
-      }
-      if (dominantId === null && slot.dominant) {
-        dominantId = videoId;
+        if (slot.type === 'screenshare') {
+          activeScreenshareIds.push(videoId);
+        }
+        if (dominantId === null && slot.dominant) {
+          dominantId = videoId;
+        }
       }
       displayNamesById[videoId] = slot.displayName;
-      pausedById[videoId] = !!slot.paused;
+      pausedById[videoId] = paused;
     }
 
     if (preferScreenshare && activeScreenshareIds.length > 0) {
@@ -65,7 +70,7 @@ export function useActiveVideo(opts) {
       pausedById,
       maxSimultaneousVideoInputs,
     };
-  }, [activeVideoInputSlots, preferScreenshare]);
+  }, [activeVideoInputSlots, preferScreenshare, omitPaused]);
 
   return memo;
 }
