@@ -7,8 +7,9 @@ export default function VideoSingle({
   videoStyle,
   placeholderStyle,
   preferScreenshare,
+  omitPaused,
 }) {
-  const { activeIds } = useActiveVideo({ preferScreenshare });
+  const { activeIds } = useActiveVideo({ preferScreenshare, omitPaused });
   const activeId = activeIds.length > 0 ? activeIds[0] : null;
 
   if (activeId === null) {
