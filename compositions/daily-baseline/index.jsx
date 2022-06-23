@@ -92,6 +92,18 @@ export const compositionInterface = {
       type: 'boolean',
       defaultValue: false,
     },
+    {
+      id: 'showTitleSlate',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
+      id: 'enableAutoOpeningSlate',
+      type: 'boolean',
+      defaultValue: false,
+      shortHelpText:
+        'Shown immediately when stream starts. Goes away automatically.\nTo preview this slate, click Stop, then Restart.',
+    },
     // -- video layout params --
     {
       id: 'videoSettings.preferScreenshare',
@@ -433,6 +445,139 @@ export const compositionInterface = {
       type: 'number',
       defaultValue: 100,
     },
+
+    // -- opening slate (a.k.a. start titles) params --
+    {
+      id: 'openingSlate.duration_secs',
+      type: 'number',
+      defaultValue: 4,
+      shortHelpText:
+        'The slate is shown for this amount of time when the stream starts.',
+    },
+    {
+      id: 'openingSlate.title',
+      type: 'text',
+      defaultValue: 'Welcome',
+    },
+    {
+      id: 'openingSlate.subtitle',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'openingSlate.bgImageAssetName',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'openingSlate.bgColor',
+      type: 'text',
+      defaultValue: 'rgba(0, 0, 0, 1)',
+    },
+    {
+      id: 'openingSlate.textColor',
+      type: 'text',
+      defaultValue: 'rgba(255, 255, 255, 1)',
+    },
+    {
+      id: 'openingSlate.fontFamily',
+      type: 'enum',
+      defaultValue: 'Bitter',
+      values: fontFamilies,
+    },
+    {
+      id: 'openingSlate.fontWeight',
+      type: 'enum',
+      defaultValue: '500',
+      values: fontWeights,
+    },
+    {
+      id: 'openingSlate.fontStyle',
+      type: 'enum',
+      defaultValue: '',
+      values: ['normal', 'italic'],
+    },
+    {
+      id: 'openingSlate.fontSize_gu',
+      type: 'number',
+      defaultValue: 2.5,
+      step: 0.1,
+    },
+    {
+      id: 'openingSlate.subtitle.fontSize_pct',
+      type: 'number',
+      defaultValue: 75,
+      step: 1,
+    },
+    {
+      id: 'openingSlate.subtitle.fontWeight',
+      type: 'enum',
+      defaultValue: '400',
+      values: fontWeights,
+    },
+
+    // -- title slate params --
+    {
+      id: 'titleSlate.title',
+      type: 'text',
+      defaultValue: 'Title slate',
+    },
+    {
+      id: 'titleSlate.subtitle',
+      type: 'text',
+      defaultValue: 'Subtitle',
+    },
+    {
+      id: 'titleSlate.bgImageAssetName',
+      type: 'text',
+      defaultValue: '',
+    },
+    {
+      id: 'titleSlate.bgColor',
+      type: 'text',
+      defaultValue: 'rgba(0, 0, 0, 1)',
+    },
+    {
+      id: 'titleSlate.textColor',
+      type: 'text',
+      defaultValue: 'rgba(255, 255, 255, 1)',
+    },
+    {
+      id: 'titleSlate.fontFamily',
+      type: 'enum',
+      defaultValue: 'Bitter',
+      values: fontFamilies,
+    },
+    {
+      id: 'titleSlate.fontWeight',
+      type: 'enum',
+      defaultValue: '500',
+      values: fontWeights,
+    },
+    {
+      id: 'titleSlate.fontStyle',
+      type: 'enum',
+      defaultValue: '',
+      values: ['normal', 'italic'],
+    },
+    {
+      id: 'titleSlate.fontSize_gu',
+      type: 'number',
+      defaultValue: 2.5,
+      step: 0.1,
+    },
+    {
+      id: 'titleSlate.subtitle.fontSize_pct',
+      type: 'number',
+      defaultValue: 75,
+      step: 1,
+    },
+    {
+      id: 'titleSlate.subtitle.fontWeight',
+      type: 'enum',
+      defaultValue: '400',
+      values: fontWeights,
+    },
   ],
 };
 
@@ -663,10 +808,84 @@ export default function DailyBaselineVCS() {
     />
   );
 
+  // custom overlay is the topmost of non-fullscreen graphics.
+  // it's empty by default (meant to be overridden in session assets).
   graphics.push(<CustomOverlay key={gi++} />);
 
+  {
+    // title slate (a fullscreen graphic)
+    const titleStyle = {
+      textColor: params['titleSlate.textColor'] || 'white',
+      fontFamily: params['titleSlate.fontFamily'] || DEFAULT_FONT,
+      fontWeight: params['titleSlate.fontWeight'] || '500',
+      fontSize_gu: params['titleSlate.fontSize_gu'] || 2.5,
+    };
+    const subtitleStyle = {
+      ...titleStyle,
+      fontWeight: params['titleSlate.subtitle.fontWeight'] || '400',
+    };
+    if (isFinite(params['titleSlate.subtitle.fontSize_pct'])) {
+      subtitleStyle.fontSize_gu *=
+        params['titleSlate.subtitle.fontSize_pct'] / 100;
+    }
+
+    graphics.push(
+      <Slate
+        key={'titleslate_' + gi++}
+        id="titleSlate"
+        show={params['showTitleSlate']}
+        src={params['titleSlate.bgImageAssetName']}
+        bgColor={params['titleSlate.bgColor']}
+        title={params['titleSlate.title']}
+        subtitle={params['titleSlate.subtitle']}
+        titleStyle={titleStyle}
+        subtitleStyle={subtitleStyle}
+      />
+    );
+  }
+
+  // automatic opening slate, will be displayed at start of stream.
+  const enableOpeningSlate = params['enableAutoOpeningSlate'];
+  if (enableOpeningSlate) {
+    const titleStyle = {
+      textColor: params['openingSlate.textColor'] || 'white',
+      fontFamily: params['openingSlate.fontFamily'] || DEFAULT_FONT,
+      fontWeight: params['openingSlate.fontWeight'] || '500',
+      fontSize_gu: params['openingSlate.fontSize_gu'] || 2.5,
+    };
+    const subtitleStyle = {
+      ...titleStyle,
+      fontWeight: params['openingSlate.subtitle.fontWeight'] || '400',
+    };
+    if (isFinite(params['openingSlate.subtitle.fontSize_pct'])) {
+      subtitleStyle.fontSize_gu *=
+        params['openingSlate.subtitle.fontSize_pct'] / 100;
+    }
+
+    graphics.push(
+      <Slate
+        key={'openingslate_' + gi++}
+        id="openingSlate"
+        show={true}
+        isOpeningSlate={true}
+        openingWaitTime={params['openingSlate.duration_secs']}
+        src={params['openingSlate.bgImageAssetName']}
+        bgColor={params['openingSlate.bgColor']}
+        title={params['openingSlate.title']}
+        subtitle={params['openingSlate.subtitle']}
+        titleStyle={titleStyle}
+        subtitleStyle={subtitleStyle}
+      />
+    );
+  }
+
+  // automatic closing slate based on stream playback slate.
+  // currently this one isn't configurable because the server doesn't
+  // send the postroll transition event.
   const inPostRoll = useVideoPlaybackState() === PlaybackStateType.POSTROLL;
-  graphics.push(<Slate key={gi++} show={inPostRoll} />);
+  graphics.push(
+    <Slate key={'closingslate_' + gi++} id="closingSlate" show={inPostRoll} />
+  );
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;
