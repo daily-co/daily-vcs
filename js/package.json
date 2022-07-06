@@ -1,9 +1,8 @@
 {
-  "name": "daily-vcs",
+  "name": "daily-vcs-core",
   "version": "0.1.0",
   "author": "Daily.co",
-  "license": "Copyright (c) Daily.co",
-  "private": true,
+  "license": "BSD-2-Clause",
   "type": "module",
   "devDependencies": {
     "@babel/core": "^7.15.8",
