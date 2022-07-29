@@ -24,12 +24,12 @@ if system_mac
     message('Building for macOS ARM')
     skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
   endif
+  message('Using Skia libdir: {}', skia_libdir)
 else
   message('Building for Linux x86_64')
   skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
 endif
 
-message('Using Skia libdir: {}', skia_libdir)
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
 skia_include = include_directories('./canvex-skia')
