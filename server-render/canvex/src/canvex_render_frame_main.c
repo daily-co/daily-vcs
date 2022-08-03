@@ -103,14 +103,18 @@ int main(int argc, char *argv[]) {
   FILE* f = fopen(jsonPath, "r");
   if (!f) {
     printf("** Unable to open %s\n", jsonPath);
-    return 1;
+    return CanvexRenderError_InvalidArgument_JSONInput;
   }
 
   struct stat sb;
   stat(jsonPath, &sb);
 
-  char *json = malloc(sb.st_size);
-  fread(json, sb.st_size, 1, f);
+  char *json = malloc(sb.st_size + 1);
+  json[sb.st_size] = 0;
+  if (1 != fread(json, sb.st_size, 1, f)) {
+    printf("Reading JSON file failed (fread)\n");
+    return CanvexRenderError_InvalidArgument_JSONInput;
+  }
   fclose(f); f = NULL;
 
   int rowBytes = w * 4;

@@ -37,6 +37,8 @@ export function makeVCSRootContainer(
           activeVideoInputSlots: [],
         },
       };
+
+      this.pendingState = null;
     }
 
     static getDerivedStateFromError(error) {
@@ -60,15 +62,25 @@ export function makeVCSRootContainer(
         currentTime: t,
         playbackState: playbackState || ViewContexts.PlaybackStateType.PLAYING,
       };
-      this.setState({ time: newT });
+
+      let newState = this.pendingState || {};
+      this.pendingState = null;
+
+      newState.time = newT;
+
+      this.setState(newState);
     }
 
     setActiveVideoInputSlots(arr) {
-      const newObj = {
-        ...this.state.mediaInput,
+      if (!this.pendingState) this.pendingState = {};
+
+      const mediaInput = {
+        ...(this.pendingState.mediaInput
+          ? this.pendingState.mediaInput
+          : this.state.mediaInput),
         activeVideoInputSlots: arr,
       };
-      this.setState({ mediaInput: newObj });
+      this.pendingState.mediaInput = mediaInput;
     }
 
     applyParamValueToObj(obj, id, value) {
@@ -87,12 +99,18 @@ export function makeVCSRootContainer(
     }
 
     setParamValue(id, value) {
-      const compositionData = { ...this.state.compositionData };
+      if (!this.pendingState) this.pendingState = {};
+
+      const compositionData = {
+        ...(this.pendingState.compositionData
+          ? this.pendingState.compositionData
+          : this.state.compositionData),
+      };
       compositionData.params = { ...compositionData.params };
 
       this.applyParamValueToObj(compositionData.params, id, value);
 
-      this.setState({ compositionData });
+      this.pendingState.compositionData = compositionData;
     }
 
     render() {

@@ -332,6 +332,15 @@ std::unique_ptr<VCSCanvasDisplayList> ParseVCSDisplayListJSON(const char* jsonSt
     ss << "Display list can't be parsed, probably not valid JSON (error code ";
     ss << result.Code();
     ss << " at offset " << result.Offset() << ")";
+
+    if (result.Code() == kParseErrorDocumentRootNotSingular) {
+      size_t len = strlen(jsonStr);
+      ss << "; code = kParseErrorDocumentRootNotSingular; jsonStr len=" << len;
+      if (result.Offset() < len) {
+        ss << ", char code at error offset is: " << (uint32_t)(((uint8_t *)jsonStr)[result.Offset()]);
+      }
+    }
+
     throw std::runtime_error(ss.str());
   }
 
