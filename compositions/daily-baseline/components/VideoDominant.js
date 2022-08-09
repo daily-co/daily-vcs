@@ -1,40 +1,40 @@
 import * as React from 'react';
-import { Box, Video, Text } from '#vcs-react/components';
-import { useActiveVideo } from '#vcs-react/hooks';
+import { Box, Video } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PositionEdge } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import VideoSingle from './VideoSingle.js';
 
 const DOMINANT_SPLIT_DEFAULT = 0.8;
 const DOMINANT_MAXITEMS_DEFAULT = 5;
 
-export default function VideoDominant({
-  showLabels,
-  scaleMode,
-  videoStyle,
-  videoLabelStyle,
-  placeholderStyle,
-  positionEdge = PositionEdge.LEFT,
-  splitPos = DOMINANT_SPLIT_DEFAULT,
-  maxItems = DOMINANT_MAXITEMS_DEFAULT,
-  labelsOffset_px,
-  followDominantFlag = true,
-  preferScreenshare,
-  omitPaused,
-  itemInterval_gu = 0.7,
-  outerPadding_gu = 0.5,
-}) {
+export default function VideoDominant(props) {
+  let {
+    showLabels,
+    scaleMode,
+    videoStyle,
+    videoLabelStyle,
+    placeholderStyle,
+    positionEdge = PositionEdge.LEFT,
+    splitPos = DOMINANT_SPLIT_DEFAULT,
+    maxItems = DOMINANT_MAXITEMS_DEFAULT,
+    labelsOffset_px,
+    participantDescs,
+    dominantVideoId,
+    followDominantFlag = true,
+    itemInterval_gu = 0.7,
+    outerPadding_gu = 0.5,
+  } = props;
+
   itemInterval_gu = Math.max(0, itemInterval_gu);
   outerPadding_gu = Math.max(0, outerPadding_gu);
 
-  let { activeIds, dominantId, displayNamesById, pausedById } = useActiveVideo({
-    preferScreenshare,
-    omitPaused,
-  });
-
-  if (!followDominantFlag || !dominantId) {
-    dominantId = activeIds[0];
+  if (
+    !followDominantFlag ||
+    (!dominantVideoId && participantDescs.length > 0)
+  ) {
+    dominantVideoId = participantDescs[0].videoId;
   }
 
   const dominantFirst =
@@ -56,34 +56,11 @@ export default function VideoDominant({
   }
 
   function makeDominantItem(itemIdx) {
-    const key = 'videodominant_' + itemIdx;
-    const videoId = dominantId;
+    const key = 'videodominant_item' + itemIdx;
 
-    let content;
-    if (videoId === null || pausedById[videoId]) {
-      // show a placeholder
-      content = <PausedPlaceholder {...{ placeholderStyle }} />;
-    } else {
-      // render video with optional label
-      content = [
-        <Video
-          key={key + '_video'}
-          src={videoId}
-          style={videoStyle}
-          scaleMode={scaleMode}
-        />,
-      ];
-      if (showLabels) {
-        content.push(
-          <ParticipantLabelPipStyle
-            key={key + '_label'}
-            label={displayNamesById[videoId]}
-            labelStyle={videoLabelStyle}
-            labelsOffset_px={labelsOffset_px}
-          />
-        );
-      }
-    }
+    const participant = participantDescs.find(
+      (d) => d.videoId != null && d.videoId == dominantVideoId
+    );
 
     return (
       <Box
@@ -91,7 +68,11 @@ export default function VideoDominant({
         id={key}
         layout={[mainLayoutFn, { index: itemIdx, pos: splitPos }]}
       >
-        {content}
+        <VideoSingle
+          enableParticipantOverride={true}
+          overrideParticipant={participant}
+          {...props}
+        />
       </Box>
     );
   }
@@ -99,14 +80,18 @@ export default function VideoDominant({
   function makeChiclets(itemIdx) {
     const key = 'videodominant_tiles_' + itemIdx;
 
-    let videoIds = activeIds.filter((id) => id !== dominantId);
-    if (videoIds.length > maxItems) {
-      videoIds = videoIds.slice(0, maxItems);
+    let pArr = participantDescs.filter(
+      (d) => d.videoId == null || d.videoId !== dominantVideoId
+    );
+    if (pArr.length > maxItems) {
+      pArr = pArr.slice(0, maxItems);
     }
 
     const items = [];
-    for (let i = 0; i < videoIds.length; i++) {
-      const videoId = videoIds[i];
+    for (let i = 0; i < pArr.length; i++) {
+      const { videoId, paused, displayName } = pArr[i];
+      const key = 'videochiclet_' + pArr[i].key;
+
       const layout = [
         layoutFuncs.column,
         {
@@ -118,15 +103,15 @@ export default function VideoDominant({
         },
       ];
       items.push(
-        pausedById[videoId] ? (
+        paused || videoId == null ? (
           <PausedPlaceholder
-            key={videoId}
+            key={key}
             layout={layout}
             {...{ placeholderStyle }}
           />
         ) : (
           <Video
-            key={videoId}
+            key={key}
             src={videoId}
             style={videoStyle}
             layout={layout}
@@ -137,8 +122,8 @@ export default function VideoDominant({
       if (showLabels) {
         items.push(
           <ParticipantLabelPipStyle
-            key={videoId + '_label'}
-            label={displayNamesById[videoId]}
+            key={key + '_label'}
+            label={displayName}
             labelStyle={videoLabelStyle}
             labelsOffset_px={labelsOffset_px}
             layout={layout}

@@ -17,6 +17,7 @@ import {
   PositionEdge,
   PositionCorner,
 } from './constants.js';
+import { useActiveVideoAndAudio } from './participants.js';
 
 import CustomOverlay from './components/CustomOverlay.js';
 import ImageOverlay from './components/ImageOverlay.js';
@@ -614,10 +615,17 @@ export default function DailyBaselineVCS() {
   };
 
   // props passed to the video layout component
+  const { participantDescs, dominantVideoId } = useActiveVideoAndAudio({
+    preferScreenshare: params['videoSettings.preferScreenshare'],
+    omitPaused: params['videoSettings.omitPaused'],
+  });
+
   const videoProps = {
     videoStyle,
     placeholderStyle,
     videoLabelStyle,
+    participantDescs,
+    dominantVideoId,
     preferScreenshare: params['videoSettings.preferScreenshare'],
     omitPaused: params['videoSettings.omitPaused'],
     showLabels: params['videoSettings.showParticipantLabels'],

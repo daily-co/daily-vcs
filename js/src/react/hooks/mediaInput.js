@@ -48,7 +48,7 @@ export function useActiveVideo(opts) {
         if (slot.type === 'screenshare') {
           activeScreenshareIds.push(videoId);
         }
-        if (dominantId === null && slot.dominant) {
+        if (dominantId == null && slot.dominant) {
           dominantId = videoId;
         }
       }

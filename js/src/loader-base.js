@@ -8,8 +8,11 @@ export function makeVCSRootContainer(
   paramValues,
   errorCb
 ) {
-  const { viewportSize = { w: 1280, h: 720 }, pixelsPerGridUnit = 20 } =
-    displayOpts;
+  const {
+    viewportSize = { w: 1280, h: 720 },
+    pixelsPerGridUnit = 20,
+    renderingEnvironment = ViewContexts.RenderingEnvironmentType.UNKNOWN,
+  } = displayOpts;
 
   // a root component that wraps the view we loaded from the external JSX source,
   // and provides the React Context interface for feeding external data from a JSON file.
@@ -35,6 +38,10 @@ export function makeVCSRootContainer(
           viewportSize,
           pixelsPerGridUnit,
           activeVideoInputSlots: [],
+        },
+        room: {
+          renderingEnvironment,
+          availablePeers: [],
         },
       };
 
@@ -81,6 +88,16 @@ export function makeVCSRootContainer(
         activeVideoInputSlots: arr,
       };
       this.pendingState.mediaInput = mediaInput;
+    }
+
+    setRoomPeers(arr) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const room = {
+        ...(this.pendingState.room ? this.pendingState.room : this.state.room),
+        availablePeers: arr,
+      };
+      this.pendingState.room = room;
     }
 
     applyParamValueToObj(obj, id, value) {
@@ -136,9 +153,15 @@ export function makeVCSRootContainer(
               value: this.state.mediaInput,
             },
             React.createElement(
-              'root',
-              null,
-              React.createElement(ContentRoot, null)
+              ViewContexts.RoomContext.Provider,
+              {
+                value: this.state.room,
+              },
+              React.createElement(
+                'root',
+                null,
+                React.createElement(ContentRoot, null)
+              )
             )
           )
         )

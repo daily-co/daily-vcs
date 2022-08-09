@@ -241,7 +241,7 @@ table {
   font-weight: 600;
 }
 #controls .testImage {
-  margin-top: 1em;
+  margin-top: 1.5em;
 }
 #controls .compInterface {
   margin-top: 1.5em;
@@ -313,6 +313,20 @@ table {
 }
 #controls .compInterface .params input[type=checkbox]:checked {
   background-color: var(--highlight-color);
+}
+
+#controls .roomInput {
+  display: flex;
+  flex-direction: row;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+#controls .roomInput .audioParticipantInputContainer {
+  margin-left: 1em;
+}
+#controls .roomInput input {
+  width: 4em;
+  margin-top: -2px;
 }
 
 #controls .mediaInput {
@@ -451,6 +465,14 @@ table {
               </div>
               <div class="buttonContainer"></div>
             </div>
+            <div class="roomInput">
+              <div>
+                <div>Audio-only demo participants</div>
+              </div>
+              <div class="audioParticipantInputContainer">
+                <input type="number" value="0" step="1" />
+              </div>
+            </div>
           </div>
           <div class="testImage">
             <h3>Asset images</h3>
@@ -558,6 +580,8 @@ function setActiveVideoInput(idx, active, paused, isScreenshare) {
   };
 }
 
+let g_audioOnlyDemoPeers = [];
+
 let g_paramValues = {};
 
 let g_running = false;
@@ -603,6 +627,36 @@ tabBarEl.addEventListener('click', function(ev) {
   }
   ev.preventDefault();
 });
+
+function setAudioDemoParticipants(ev) {
+  const field = ev.target;
+  let newCount = field.value;
+  if (typeof newCount !== 'number') {
+    newCount = parseInt(newCount, 10);
+  }
+  const oldCount = g_audioOnlyDemoPeers.length;
+  if (newCount === oldCount || newCount < 0 || newCount > 50)
+    return;
+
+  if (newCount < oldCount) {
+    g_audioOnlyDemoPeers = g_audioOnlyDemoPeers.slice(0, newCount);
+  } else {
+    for (let i = oldCount; i < newCount; i++) {
+      const randomId = Math.floor(999 + Math.random() * 1000000);
+      g_audioOnlyDemoPeers.push({
+        id: 'demoAudioOnly_'+randomId,
+        displayName: 'Audio-Only Person ' + randomId,
+        video: {},
+        screenshareVideo: {},
+        audio: {
+          id: '',
+          paused: false
+        }
+      });
+    }
+  }
+  sendRoomPeers();
+}
 
 function randomizeParticipantName(ev) {
   const btn = ev.target;
@@ -999,6 +1053,9 @@ function createVideoInputsUI() {
 }
 
 createVideoInputsUI();
+
+const audioDemoParticipantsNumberField = document.querySelector("#controls .roomInput .audioParticipantInputContainer input");
+audioDemoParticipantsNumberField.addEventListener('change', setAudioDemoParticipants);
 
 
 // --- setup rendering ---
@@ -1495,6 +1552,38 @@ function sendActiveVideoInputSlots() {
   }
 
   g_vcsApi.setActiveVideoInputSlots(arr);
+
+  // always send this list too when our video slots were updated
+  sendRoomPeers();
+}
+
+function sendRoomPeers() {
+  if (!g_vcsApi) return;
+
+  // the list of simulated participants in the room is a combination of
+  // our video inputs and any audio-only demo participants
+  const arr = g_audioOnlyDemoPeers.slice();
+  for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
+    let obj = g_activeVideoInputSlots[i];
+    if (obj.active) {
+      const isScreenshare = obj.type === 'screenshare';
+      arr.push({
+        id: obj.id,
+        displayName: obj.displayName,
+        video: {
+          id: (isScreenshare) ? null : obj.id,
+          paused: (!isScreenshare && obj.paused)
+        },
+        screenshareVideo: {
+          id: (isScreenshare) ? obj.id : null,
+          paused: (isScreenshare && obj.paused)
+        },
+        audio: {}
+      });
+    }
+  }
+
+  g_vcsApi.setRoomPeers(arr);
 }
 
 function sendParam(paramId, value) {

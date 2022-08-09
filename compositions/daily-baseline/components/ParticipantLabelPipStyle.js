@@ -15,7 +15,7 @@ export function ParticipantLabelPipStyle({
   ) {
     labelsOffset_px = { x: 0, y: 0 };
   }
-  // apply a default offset for PiP mode so the offset comp param
+  // apply a default offset in this mode so the offset comp param
   // behaves more predictably when the mode param is switched
   const offsets = {
     x: 10 + labelsOffset_px.x,

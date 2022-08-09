@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
-import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
 
@@ -11,22 +10,25 @@ export default function VideoGrid({
   videoLabelStyle,
   placeholderStyle,
   labelsOffset_px = 0,
-  preferScreenshare,
-  omitPaused,
+  participantDescs,
 }) {
-  const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare, omitPaused });
+  const totalNumItems = participantDescs.length;
 
-  const items = activeIds.map((videoId, i) => {
-    const key = 'videogrid_item' + i;
+  function makeItem({
+    index,
+    key,
+    isAudioOnly,
+    videoId,
+    displayName,
+    highlighted,
+    paused,
+  }) {
+    key = 'videogriditem_' + key;
 
-    const itemLayout = [
-      layoutFuncs.grid,
-      { index: i, total: activeIds.length },
-    ];
+    const itemLayout = [layoutFuncs.grid, { index, total: totalNumItems }];
 
     let participantLabel;
-    if (showLabels && activeIds.length > 1) {
+    if (showLabels) {
       participantLabel = (
         <Text
           style={videoLabelStyle}
@@ -36,13 +38,13 @@ export default function VideoGrid({
           ]}
           clip
         >
-          {displayNamesById[videoId] || ''}
+          {displayName}
         </Text>
       );
     }
 
     let highlight;
-    if (videoId === dominantId) {
+    if (highlighted) {
       const highlightStyle = {
         strokeColor: '#fff',
         strokeWidth_px: 4,
@@ -59,7 +61,7 @@ export default function VideoGrid({
     }
 
     let video;
-    if (pausedById[videoId]) {
+    if (isAudioOnly || paused) {
       video = <PausedPlaceholder {...{ placeholderStyle }} />;
     } else {
       video = <Video src={videoId} style={videoStyle} scaleMode={scaleMode} />;
@@ -77,7 +79,7 @@ export default function VideoGrid({
     // always return an array so the item component keeps in place
     // in React's diffing.
     return highlight ? [item, highlight] : [item];
-  });
+  }
 
-  return <Box id="videogrid">{items}</Box>;
+  return <Box id="videogrid">{participantDescs.map((d) => makeItem(d))}</Box>;
 }

@@ -10,6 +10,7 @@ import { makeVCSRootContainer } from './src/loader-base.js';
 import { getCompPathFromId } from './comp-namespace-util.js';
 import { loadFontsAsync } from './lib-node/font-loader.js';
 import { prepareCompositionAtPath } from './lib-node/jsx-builder.js';
+import * as ViewContexts from './src/react/contexts/index.js';
 
 const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
@@ -125,6 +126,7 @@ async function main() {
     makeVCSRootContainer(ContentRoot, rootContainerRef, {
       viewportSize: g_viewportSize,
       pixelsPerGridUnit: composition.pixelsPerGridUnit,
+      renderingEnvironment: ViewContexts.RenderingEnvironmentType.MEDIA_SERVER,
     }),
     composition
   );
