@@ -913,10 +913,10 @@ export default function DailyBaselineVCS() {
       parseFloat(params['videoSettings.margin.bottom_vh']) * guPerVh;
   }
   if (
-    videoMargins_gu.l !== 0 ||
-    videoMargins_gu.r !== 0 ||
-    videoMargins_gu.t !== 0 ||
-    videoMargins_gu.b !== 0
+    (isFinite(videoMargins_gu.l) && videoMargins_gu.l !== 0) ||
+    (isFinite(videoMargins_gu.r) && videoMargins_gu.r !== 0) ||
+    (isFinite(videoMargins_gu.t) && videoMargins_gu.t !== 0) ||
+    (isFinite(videoMargins_gu.b) && videoMargins_gu.b !== 0)
   ) {
     videoBoxLayout = [layoutFuncs.pad, { pad_gu: videoMargins_gu }];
   }

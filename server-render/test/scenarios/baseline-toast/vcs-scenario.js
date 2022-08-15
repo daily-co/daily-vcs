@@ -11,7 +11,7 @@ const outputFrames = [10, 20, 60, 110, 130, 180];
 const kFrameIdx_toast1 = outputFrames[0];
 const kFrameIdx_toast2 = outputFrames[4] - 1; // send one frame early so we get the anim first frame
 
-const durationInFrames = outputFrames[outputFrames.length - 1] + 1;
+const durationInFrames = 1 + outputFrames[outputFrames.length - 1];
 
 let toastKey = 1;
 let toastText = 'First toast';

@@ -19,11 +19,11 @@ export default function VideoDominant({
   splitPos = DOMINANT_SPLIT_DEFAULT,
   maxItems = DOMINANT_MAXITEMS_DEFAULT,
   labelsOffset_px,
-  followDominantFlag,
+  followDominantFlag = true,
   preferScreenshare,
   omitPaused,
-  itemInterval_gu = 0,
-  outerPadding_gu = 0,
+  itemInterval_gu = 0.7,
+  outerPadding_gu = 0.5,
 }) {
   itemInterval_gu = Math.max(0, itemInterval_gu);
   outerPadding_gu = Math.max(0, outerPadding_gu);

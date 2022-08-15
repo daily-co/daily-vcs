@@ -206,7 +206,9 @@ function applyScenarioState(s) {
   const { activeVideoInputSlots, params } = s;
 
   if (Array.isArray(activeVideoInputSlots)) {
-    rootContainerRef.current.setActiveVideoInputSlots(activeVideoInputSlots);
+    rootContainerRef.current.setActiveVideoInputSlots(
+      activeVideoInputSlots.slice()
+    );
     console.log('setActiveVideoInputSlots: ', activeVideoInputSlots);
   }
   if (params) {

@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { Box, Video, Text } from '#vcs-react/components';
+import { Box, Video } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
+import { PositionCorner } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
 
@@ -11,11 +12,11 @@ export default function VideoPip({
   videoLabelStyle,
   placeholderStyle,
   showLabels,
-  positionCorner,
-  aspectRatio,
-  height_gu,
-  margin_gu,
-  labelsOffset_px,
+  positionCorner = PositionCorner.TOP_RIGHT,
+  aspectRatio = 1,
+  height_gu = 12,
+  margin_gu = 1.5,
+  labelsOffset_px = 0,
   followDominantFlag,
   preferScreenshare,
   omitPaused,
@@ -32,7 +33,7 @@ export default function VideoPip({
 
   const items = [];
 
-  if (!firstVideoId) {
+  if (firstVideoId == null) {
     // if nobody is active, show a placeholder
     items.push(<Box style={placeholderStyle} />);
   } else {

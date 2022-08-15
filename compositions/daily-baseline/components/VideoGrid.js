@@ -10,7 +10,7 @@ export default function VideoGrid({
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
-  labelsOffset_px,
+  labelsOffset_px = 0,
   preferScreenshare,
   omitPaused,
 }) {
