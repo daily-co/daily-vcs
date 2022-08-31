@@ -171,7 +171,14 @@ export class Composition {
   // if optional 'prev' is provided, this call returns
   // only those top-level keys that have changed from 'prev'
   writeSceneDescription(imageSources, prev) {
-    if (!this.rootNode) return null;
+    if (!this.rootNode) {
+      console.error(
+        "** can't write scene description, composition rootNode is null (nodes len %d, uncommitted %s)",
+        this.nodes.length,
+        this.uncommitted
+      );
+      throw new Error('Composition setup is invalid for scene description');
+    }
 
     // get foreground graphics as a display list
     const encoder = new CanvasDisplayListEncoder(
