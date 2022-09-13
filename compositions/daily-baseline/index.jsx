@@ -138,6 +138,11 @@ export const compositionInterface = {
       defaultValue: 'rgb(0, 50, 80)',
     },
     {
+      id: 'videoSettings.grid.useDominantForSharing',
+      type: 'boolean',
+      defaultValue: false,
+    },
+    {
       id: 'videoSettings.dominant.position',
       type: 'enum',
       defaultValue: PositionEdge.LEFT,
@@ -615,10 +620,11 @@ export default function DailyBaselineVCS() {
   };
 
   // props passed to the video layout component
-  const { participantDescs, dominantVideoId } = useActiveVideoAndAudio({
-    preferScreenshare: params['videoSettings.preferScreenshare'],
-    omitPaused: params['videoSettings.omitPaused'],
-  });
+  const { participantDescs, dominantVideoId, hasScreenShare } =
+    useActiveVideoAndAudio({
+      preferScreenshare: params['videoSettings.preferScreenshare'],
+      omitPaused: params['videoSettings.omitPaused'],
+    });
 
   const videoProps = {
     videoStyle,
@@ -653,8 +659,17 @@ export default function DailyBaselineVCS() {
     );
   }
 
+  let mode = params.mode;
+  if (
+    mode === 'grid' &&
+    params['videoSettings.grid.useDominantForSharing'] &&
+    hasScreenShare
+  ) {
+    mode = 'dominant';
+  }
+
   let video;
-  switch (params.mode) {
+  switch (mode) {
     default:
     case 'single':
       video = <VideoSingle {...videoProps} />;

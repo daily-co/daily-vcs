@@ -13,8 +13,13 @@ export function useActiveVideoAndAudio({
   preferScreenshare = false,
   omitPaused = false,
 }) {
-  const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare, omitPaused });
+  const {
+    activeIds,
+    activeScreenshareIds,
+    dominantId,
+    displayNamesById,
+    pausedById,
+  } = useActiveVideo({ preferScreenshare, omitPaused });
 
   const audioOnlyPeers = useAudioOnlyPeers();
 
@@ -49,5 +54,6 @@ export function useActiveVideoAndAudio({
   return {
     participantDescs: items,
     dominantVideoId: dominantId,
+    hasScreenShare: activeScreenshareIds.length > 0,
   };
 }
