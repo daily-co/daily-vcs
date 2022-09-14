@@ -31,8 +31,8 @@ export default function VideoDominant(props) {
   outerPadding_gu = Math.max(0, outerPadding_gu);
 
   if (
-    !followDominantFlag ||
-    (!dominantVideoId && participantDescs.length > 0)
+    (!followDominantFlag || !dominantVideoId) &&
+    participantDescs.length > 0
   ) {
     dominantVideoId = participantDescs[0].videoId;
   }
