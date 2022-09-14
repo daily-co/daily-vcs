@@ -1,14 +1,22 @@
 import * as Path from 'path';
 import * as React from 'react';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
-import { Composition, render } from './src';
-import { makeVCSRootContainer } from './src/loader-base';
-import { loadFontsAsync } from './lib-node/font-loader';
+import minimist from 'minimist';
+
+import { Composition, render } from './src/index.js';
+import { makeVCSRootContainer } from './src/loader-base.js';
+import { getCompPathFromId } from './comp-namespace-util.js';
+import { loadFontsAsync } from './lib-node/font-loader.js';
+import { prepareCompositionAtPath } from './lib-node/jsx-builder.js';
+import * as ViewContexts from './src/react/contexts/index.js';
+
+const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
 // CLI arguments.
 // --scenario is mandatory.
-const argmap = require('minimist')(process.argv.slice(2));
+const argmap = minimist(process.argv.slice(2));
 
 const scenarioPath = argmap['scenario'];
 if (!scenarioPath?.length) {
@@ -20,16 +28,28 @@ if (!scenarioPath?.length) {
 const outputPathPrefix = argmap['output'];
 
 // argument is a JS file specifying the test scenario, load it as a module
-const scenario = require(Path.resolve('.', scenarioPath)).default;
+const scenarioModule = await import(scenarioPath); //require(Path.resolve('.', scenarioPath)).default;
+const scenario = scenarioModule.default;
 if (!scenario) {
-  console.error('Error: no JS scenario module at: ', scenarioPath);
+  console.error(
+    'Error: no JS scenario module at: ',
+    scenarioPath,
+    scenarioModule
+  );
   process.exit(1);
 }
-console.log('scenario definition loaded: ', scenario);
+console.log('Scenario definition loaded: ', scenario);
 
-// currently we assume known compositions are in the example folder.
-// clearly this won't go far.
-const srcCompPath = `example/${scenario.compositionId}.jsx`;
+let srcCompPath = getCompPathFromId(scenario.compositionId, 'node');
+
+if (!srcCompPath?.length) {
+  console.error(
+    'Error: unable to find composition with id %s',
+    scenario.compositionId
+  );
+  process.exit(1);
+}
+
 const durationInFrames = parseInt(scenario.durationInFrames) || 100;
 const outputFrames = Array.isArray(scenario.outputFrames)
   ? scenario.outputFrames
@@ -40,10 +60,20 @@ if (outputFrames.length > 0 && !outputPathPrefix?.length) {
   process.exit(1);
 }
 
-const {
-  compositionInterface: compInterface,
-  default: ContentRoot,
-} = require(Path.resolve('.', srcCompPath));
+// do the JSX build step.
+// it will write into a temp dir that's accessible to node's import().
+// runUuid (optionally passed on CLI) will ensure any simultaneous sessions use a separate temp dir.
+// assetDir provides an optional overlay of session-specific assets that may contain JSX files.
+srcCompPath = await prepareCompositionAtPath(
+  srcCompPath,
+  scenario.compositionId,
+  'test-runner' // this is the run id; for parallel test runs, a unique id should be used here (probably passed from outside as CLI arg)
+);
+
+console.log('Composition prepared, will be loaded from: ', srcCompPath);
+
+const { compositionInterface: compInterface, default: ContentRoot } =
+  await import(srcCompPath);
 
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
@@ -96,6 +126,7 @@ async function main() {
     makeVCSRootContainer(ContentRoot, rootContainerRef, {
       viewportSize: g_viewportSize,
       pixelsPerGridUnit: composition.pixelsPerGridUnit,
+      renderingEnvironment: ViewContexts.RenderingEnvironmentType.MEDIA_SERVER,
     }),
     composition
   );
@@ -177,7 +208,9 @@ function applyScenarioState(s) {
   const { activeVideoInputSlots, params } = s;
 
   if (Array.isArray(activeVideoInputSlots)) {
-    rootContainerRef.current.setActiveVideoInputSlots(activeVideoInputSlots);
+    rootContainerRef.current.setActiveVideoInputSlots(
+      activeVideoInputSlots.slice()
+    );
     console.log('setActiveVideoInputSlots: ', activeVideoInputSlots);
   }
   if (params) {

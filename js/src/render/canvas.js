@@ -81,6 +81,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     Number.isFinite(node.style.cornerRadius_px) &&
     node.style.cornerRadius_px > 0;
 
+  let didInitialSave = false;
   if (writeContent || recurseChildren) {
     ctx.save();
 
@@ -96,6 +97,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         ctx.translate(-cx, -cy);
       }
     }
+    didInitialSave = true;
   }
 
   let inLayoutframeClip = false;
@@ -324,13 +326,16 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     }
   } // end if (writeContent)
 
-  if (recurseChildren) {
+  if (
+    recurseChildren &&
+    (renderMode === CanvasRenderMode.VIDEO_PREVIEW || writeContent)
+  ) {
     for (const c of node.children) {
       recurseRenderNode(ctx, renderMode, c, comp, imageSources);
     }
   }
 
-  if (writeContent || recurseChildren) {
+  if (didInitialSave) {
     ctx.restore();
   }
   if (inLayoutframeClip) {

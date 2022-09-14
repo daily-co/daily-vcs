@@ -7,6 +7,7 @@ subdir('src')
 cpp = meson.get_compiler('cpp')
 c = meson.get_compiler('c')
 
+zlib_dep = dependency('zlib')
 png_dep = dependency('libpng')
 freetype_dep = dependency('freetype2')
 
@@ -24,12 +25,12 @@ if system_mac
     message('Building for macOS ARM')
     skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
   endif
+  message('Using Skia libdir: {}', skia_libdir)
 else
   message('Building for Linux x86_64')
   skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
 endif
 
-message('Using Skia libdir: {}', skia_libdir)
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
 skia_include = include_directories('./canvex-skia')
@@ -55,6 +56,7 @@ if system_mac
   libwebp_turbo = cpp.find_library('webp', dirs : webp_lib_dir)
   mac_homebrew_deps = declare_dependency(
     dependencies : [
+      zlib_dep,
       png_dep,
       libjpeg_turbo,
       libwebp_turbo,
@@ -71,13 +73,12 @@ if system_mac
 else
   # Linux dependencies
   threads_dep = dependency('threads')
-  zlib_dep = dependency('zlib')
 
   skia_system_deps = declare_dependency(
     dependencies : [
-      threads_dep,
       zlib_dep,
-      freetype_dep
+      freetype_dep,
+      threads_dep,
     ],
   )
 endif

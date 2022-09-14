@@ -5,6 +5,7 @@ import { Composition, render } from '../src/index.js';
 import { renderCompInCanvas } from '../src/render/canvas.js';
 import { renderCompVideoLayersInDOM } from '../src/render/video-dom.js';
 import { makeVCSRootContainer } from '../src/loader-base.js';
+import * as ViewContexts from '../src/react/contexts/index.js';
 
 import { loadFontsAsync } from './font-loader.js';
 
@@ -286,6 +287,8 @@ class VCSBrowserOutput {
         {
           viewportSize: this.viewportSize,
           pixelsPerGridUnit: this.comp.pixelsPerGridUnit,
+          renderingEnvironment:
+            ViewContexts.RenderingEnvironmentType.PARTICIPANT_CLIENT,
         },
         paramValues,
         this.errorCb
@@ -376,13 +379,24 @@ class VCSBrowserOutput {
       );
       return;
     }
-    console.log('setActiveVideoInputSlots: ', JSON.stringify(arr));
+    //console.log('setActiveVideoInputSlots: ', JSON.stringify(arr));
     this.rootContainerRef.current.setActiveVideoInputSlots(arr);
   }
 
   setParamValue(id, value) {
-    console.log('setParamValue: ', id, value);
+    //console.log('setParamValue: ', id, value);
     this.rootContainerRef.current.setParamValue(id, value);
+  }
+
+  setRoomPeers(arr) {
+    if (!Array.isArray(arr)) {
+      console.error(
+        '** setRoomPeers: invalid object, expected array: ' + typeof arr
+      );
+      return;
+    }
+    //console.log('setRoomPeers: ', JSON.stringify(arr));
+    this.rootContainerRef.current.setRoomPeers(arr);
   }
 
   stop() {

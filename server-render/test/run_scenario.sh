@@ -1,11 +1,24 @@
 #!/bin/bash
 
+arch=$(uname -m)
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+  islinux=1
+  platform="linux_skia_$arch"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+  ismacos=1
+  platform="macos_skia_$arch"
+else
+  echo "Unsupported platform $OSTYPE."
+  exit 9
+fi
+
 set -e
 
 name=$1
 path="scenarios/$name"
 
-echo "Starting scenario $name..."
+echo "Starting scenario $name on platform $platform..."
 
 # scenario setup
 scenarioJsFile="$path/vcs-scenario.js"
@@ -49,8 +62,8 @@ for f in $outputCanvexJsonFiles
 do
   filename=$(basename $f)
   filename=${filename%.*} # remove extension
-  tmpimage="$tmpdir/$filename.png"
-  expimage="$path/$filename.png"
+  tmpimage="$tmpdir/$filename.$platform.png"
+  expimage="$path/$filename.$platform.png"
 
   # ( cd ../canvex && build/canvex_render_frame 1280 720 "$f" "$tmpimage" )
 

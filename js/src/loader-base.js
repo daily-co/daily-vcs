@@ -8,8 +8,11 @@ export function makeVCSRootContainer(
   paramValues,
   errorCb
 ) {
-  const { viewportSize = { w: 1280, h: 720 }, pixelsPerGridUnit = 20 } =
-    displayOpts;
+  const {
+    viewportSize = { w: 1280, h: 720 },
+    pixelsPerGridUnit = 20,
+    renderingEnvironment = ViewContexts.RenderingEnvironmentType.UNKNOWN,
+  } = displayOpts;
 
   // a root component that wraps the view we loaded from the external JSX source,
   // and provides the React Context interface for feeding external data from a JSON file.
@@ -36,7 +39,13 @@ export function makeVCSRootContainer(
           pixelsPerGridUnit,
           activeVideoInputSlots: [],
         },
+        room: {
+          renderingEnvironment,
+          availablePeers: [],
+        },
       };
+
+      this.pendingState = null;
     }
 
     static getDerivedStateFromError(error) {
@@ -60,15 +69,35 @@ export function makeVCSRootContainer(
         currentTime: t,
         playbackState: playbackState || ViewContexts.PlaybackStateType.PLAYING,
       };
-      this.setState({ time: newT });
+
+      let newState = this.pendingState || {};
+      this.pendingState = null;
+
+      newState.time = newT;
+
+      this.setState(newState);
     }
 
     setActiveVideoInputSlots(arr) {
-      const newObj = {
-        ...this.state.mediaInput,
+      if (!this.pendingState) this.pendingState = {};
+
+      const mediaInput = {
+        ...(this.pendingState.mediaInput
+          ? this.pendingState.mediaInput
+          : this.state.mediaInput),
         activeVideoInputSlots: arr,
       };
-      this.setState({ mediaInput: newObj });
+      this.pendingState.mediaInput = mediaInput;
+    }
+
+    setRoomPeers(arr) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const room = {
+        ...(this.pendingState.room ? this.pendingState.room : this.state.room),
+        availablePeers: arr,
+      };
+      this.pendingState.room = room;
     }
 
     applyParamValueToObj(obj, id, value) {
@@ -87,12 +116,18 @@ export function makeVCSRootContainer(
     }
 
     setParamValue(id, value) {
-      const compositionData = { ...this.state.compositionData };
+      if (!this.pendingState) this.pendingState = {};
+
+      const compositionData = {
+        ...(this.pendingState.compositionData
+          ? this.pendingState.compositionData
+          : this.state.compositionData),
+      };
       compositionData.params = { ...compositionData.params };
 
       this.applyParamValueToObj(compositionData.params, id, value);
 
-      this.setState({ compositionData });
+      this.pendingState.compositionData = compositionData;
     }
 
     render() {
@@ -118,9 +153,15 @@ export function makeVCSRootContainer(
               value: this.state.mediaInput,
             },
             React.createElement(
-              'root',
-              null,
-              React.createElement(ContentRoot, null)
+              ViewContexts.RoomContext.Provider,
+              {
+                value: this.state.room,
+              },
+              React.createElement(
+                'root',
+                null,
+                React.createElement(ContentRoot, null)
+              )
             )
           )
         )

@@ -1,5 +1,11 @@
+const state = {
+  activeVideoInputSlots: [true],
+  params: {},
+};
+
 export default {
-  compositionId: "graphics-test",
+  compositionId: 'example:graphics-test',
   durationInFrames: 50,
-  outputFrames: [ 49 ]
+  outputFrames: [49],
+  initialState: { ...state },
 };

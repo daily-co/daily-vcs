@@ -19,6 +19,12 @@ export const MediaInputContext = React.createContext({
   // the array is expected to be filled out to match the maximum number of inputs
   // available on the host application. (e.g. if host supports 16 inputs but
   // none of them is connected, this array would contain 16 null/false values.)
-  // additional metadata may be provided by passing an object value for a slot.
+  // NOTE: additional metadata may be provided by passing an object value for a slot.
+  // in this case each non-null input is expected to provide at least an 'id' property.
+  // (see hooks/mediaInput.js for a helper that reads this metadata.)
+  // the reason for allowing non-object values here is to make the simple case
+  // very simple: if a slot doesn't have the 'id' property, the video input ids
+  // are assumed to be simply indexes into this slot array. this is useful for
+  // offline compositing applications with a fixed set of inputs (e.g. test runners).
   activeVideoInputSlots: [],
 });

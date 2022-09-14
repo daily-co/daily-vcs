@@ -1,71 +1,54 @@
 import * as React from 'react';
-import { Box, Video, Text } from '#vcs-react/components';
-import { useActiveVideo } from '#vcs-react/hooks';
+import { Box, Video } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
+import { PositionCorner } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import VideoSingle from './VideoSingle.js';
 
-export default function VideoPip({
-  scaleMode,
-  videoStyle,
-  videoLabelStyle,
-  placeholderStyle,
-  showLabels,
-  positionCorner,
-  aspectRatio,
-  height_gu,
-  margin_gu,
-  labelsOffset_px,
-  followDominantFlag,
-  preferScreenshare,
-  omitPaused,
-}) {
-  const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare, omitPaused });
+export default function VideoPip(props) {
+  const {
+    scaleMode,
+    videoStyle,
+    videoLabelStyle,
+    placeholderStyle,
+    showLabels,
+    positionCorner = PositionCorner.TOP_RIGHT,
+    aspectRatio = 1,
+    height_gu = 12,
+    margin_gu = 1.5,
+    labelsOffset_px = 0,
+    participantDescs,
+    dominantVideoId,
+    followDominantFlag,
+  } = props;
 
-  let firstVideoId = activeIds[0];
-  if (followDominantFlag && dominantId) {
-    firstVideoId = dominantId;
+  let firstParticipant = participantDescs[0];
+
+  if (followDominantFlag && dominantVideoId) {
+    firstParticipant = participantDescs.find(
+      (d) => d.videoId != null && d.videoId == dominantVideoId
+    );
   }
 
-  let otherVideoIds = activeIds.filter((id) => id !== firstVideoId);
+  let otherParticipants = participantDescs.filter(
+    (d) => d !== firstParticipant || firstParticipant == null
+  );
 
   const items = [];
 
-  if (!firstVideoId) {
-    // if nobody is active, show a placeholder
-    items.push(<Box style={placeholderStyle} />);
-  } else {
-    // render video with optional label
-    const videoId = firstVideoId;
-    const key = 'pipbase_' + videoId;
+  items.push(
+    <VideoSingle
+      key="pipbase"
+      enableParticipantOverride={true}
+      overrideParticipant={firstParticipant}
+      {...props}
+    />
+  );
 
-    items.push(
-      pausedById[videoId] ? (
-        <PausedPlaceholder
-          key={key + '_video_paused'}
-          {...{ placeholderStyle }}
-        />
-      ) : (
-        <Video key={key + '_video'} src={videoId} scaleMode={scaleMode} />
-      )
-    );
-
-    if (showLabels) {
-      items.push(
-        <ParticipantLabelPipStyle
-          key={key + '_label'}
-          label={displayNamesById[videoId]}
-          labelStyle={videoLabelStyle}
-          labelsOffset_px={labelsOffset_px}
-        />
-      );
-    }
-  }
-
-  if (otherVideoIds.length > 0) {
+  if (otherParticipants.length > 0) {
     // render second video inside PiP window
-    const videoId = otherVideoIds[0];
+    const { videoId, displayName = '', paused } = otherParticipants[0];
     const key = 'pipwindow_' + videoId;
 
     const layoutProps = {
@@ -77,7 +60,7 @@ export default function VideoPip({
     const layout = [layoutFuncs.pip, layoutProps];
 
     items.push(
-      pausedById[videoId] ? (
+      paused || videoId == null ? (
         <PausedPlaceholder
           key={key + '_video_paused'}
           {...{ layout, placeholderStyle }}
@@ -96,8 +79,8 @@ export default function VideoPip({
     if (showLabels) {
       items.push(
         <ParticipantLabelPipStyle
-          key={key + '_label'}
-          label={displayNamesById[videoId]}
+          key={key + '_label_' + displayName}
+          label={displayName}
           labelStyle={videoLabelStyle}
           labelsOffset_px={labelsOffset_px}
           layout={layout}

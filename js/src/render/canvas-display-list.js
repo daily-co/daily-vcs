@@ -207,7 +207,7 @@ class CanvasEncodingContext {
 
   encodeCmd(cmd, params) {
     const arr = [cmd];
-    if (params) arr.push(params);
+    if (params !== undefined) arr.push(params);
     this.cmds.push(arr);
   }
 
