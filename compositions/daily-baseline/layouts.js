@@ -194,7 +194,8 @@ export function column(parentFrame, params, layoutCtx) {
 }
 
 export function grid(parentFrame, params, layoutCtx) {
-  const { index, total } = params;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { index, total, innerMargin_gu = -1, outerMargin_gu = -1 } = params;
   const { viewport } = layoutCtx;
   const outputAsp = viewport.w / viewport.h;
 
@@ -215,14 +216,23 @@ export function grid(parentFrame, params, layoutCtx) {
     } else if (outputAsp <= 1) {
       marginRel = viewport.w * 0.04;
     }
-    innerMargins.x = innerMargins.y = marginRel;
 
-    if (numCols === numRows) {
-      // when layout is tight, leave space in vertical margins for participant labels
-      if (outputAsp > 1) {
-        outerMargins.y = Math.round(marginRel * 0.7);
-      } else {
-        outerMargins.y = Math.round(marginRel * 1);
+    if (innerMargin_gu >= 0) {
+      innerMargins.x = innerMargins.y = innerMargin_gu * pxPerGu;
+    } else {
+      innerMargins.x = innerMargins.y = marginRel;
+    }
+
+    if (outerMargin_gu >= 0) {
+      outerMargins.x = outerMargins.y = outerMargin_gu * pxPerGu;
+    } else {
+      if (numCols === numRows) {
+        // when layout is tight, leave space in vertical margins for participant labels
+        if (outputAsp > 1) {
+          outerMargins.y = Math.round(marginRel * 0.7);
+        } else {
+          outerMargins.y = Math.round(marginRel * 1);
+        }
       }
     }
   }

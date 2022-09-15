@@ -143,6 +143,18 @@ export const compositionInterface = {
       defaultValue: false,
     },
     {
+      id: 'videoSettings.grid.itemInterval_gu',
+      type: 'number',
+      defaultValue: -1,
+      step: 0.1,
+    },
+    {
+      id: 'videoSettings.grid.outerPadding_gu',
+      type: 'number',
+      defaultValue: -1,
+      step: 0.1,
+    },
+    {
       id: 'videoSettings.dominant.position',
       type: 'enum',
       defaultValue: PositionEdge.LEFT,
@@ -675,7 +687,13 @@ export default function DailyBaselineVCS() {
       video = <VideoSingle {...videoProps} />;
       break;
     case 'grid':
-      video = <VideoGrid {...videoProps} />;
+      video = (
+        <VideoGrid
+          {...videoProps}
+          itemInterval_gu={params['videoSettings.grid.itemInterval_gu']}
+          outerPadding_gu={params['videoSettings.grid.outerPadding_gu']}
+        />
+      );
       break;
     case 'split':
       video = <VideoSplit {...videoProps} />;
