@@ -138,8 +138,10 @@ async function processCompDir(compDir, buildDir, assetDir) {
         logToHostInfo(' .. file %s', dirent.name, dirent.isDirectory());
         if (dirent.isDirectory()) continue;
 
-        const ext = Path.extname(dirent.name).toLowerCase();
+        const ext = Path.extname(dirent.name);
         const basename = Path.basename(dirent.name, ext);
+
+        // all code files at this point should have the .js extension
         const dst = Path.resolve(dstDir, `${basename}.js`);
 
         logToHostInfo('  ... src file %s, writing to %s', dirent.name, dst);
@@ -194,7 +196,7 @@ async function processCompDir(compDir, buildDir, assetDir) {
 
         recurseJobsForDir(path, newSubdir);
       } else {
-        const ext = Path.extname(dirent.name).toLowerCase();
+        const ext = Path.extname(dirent.name);
         const basename = Path.basename(dirent.name, ext);
         const dst = Path.resolve(dstDir, `${basename}.js`);
 
