@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box } from '#vcs-react/components';
+import { Box, WebFrame } from '#vcs-react/components';
 import {
   useParams,
   useGrid,
@@ -30,6 +30,7 @@ import VideoPip from './components/VideoPip.js';
 import VideoSingle from './components/VideoSingle.js';
 import VideoSplit from './components/VideoSplit.js';
 import Slate from './components/Slate.js';
+import WebFrameOverlay from './components/WebFrameOverlay.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -224,9 +225,8 @@ export default function DailyBaselineVCS() {
     overlayProps.useStroke =
       overlayProps.strokeColor && overlayProps.strokeColor.length > 0;
 
-    graphics.push(<TextOverlay key={gi} {...overlayProps} />);
+    graphics.push(<TextOverlay key={gi++} {...overlayProps} />);
   }
-  gi++;
 
   {
     // image overlay
@@ -246,7 +246,7 @@ export default function DailyBaselineVCS() {
 
     graphics.push(
       <ImageOverlay
-        key={gi}
+        key={gi++}
         src={params['image.assetName']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
@@ -258,8 +258,23 @@ export default function DailyBaselineVCS() {
         show={params.showImageOverlay}
       />
     );
-    gi++;
   }
+
+  graphics.push(
+    <WebFrameOverlay
+      key={gi++}
+      src={params['webFrame.url']}
+      viewportWidth_px={params['webFrame.viewportWidth_px']}
+      viewportHeight_px={params['webFrame.viewportHeight_px']}
+      positionCorner={params['webFrame.position']}
+      fullScreen={params['webFrame.fullScreen']}
+      height_gu={params['webFrame.height_gu']}
+      margin_gu={params['webFrame.margin_gu']}
+      opacity={params['webFrame.opacity']}
+      enableFade={params['webFrame.enableFade']}
+      show={params.showWebFrameOverlay}
+    />
+  );
 
   graphics.push(
     <Toast

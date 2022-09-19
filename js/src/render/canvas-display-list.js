@@ -297,6 +297,10 @@ class CanvasEncodingContext {
       id: srcDrawable.vcsSourceId,
     };
 
+    if (srcDrawable.liveAssetUpdateKey) {
+      srcDesc.id = `${srcDesc.id}#${srcDrawable.liveAssetUpdateKey}`;
+    }
+
     this.encodeCmd('drawImage', [srcDesc].concat(args));
   }
 

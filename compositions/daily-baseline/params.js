@@ -25,6 +25,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'showWebFrameOverlay',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'showTitleSlate',
     type: 'boolean',
     defaultValue: false,
@@ -326,6 +331,59 @@ export const compositionParams = [
   },
   {
     id: 'image.enableFade',
+    type: 'boolean',
+    defaultValue: true,
+  },
+
+  // -- webframe overlay params --
+  {
+    id: 'webFrame.url',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
+    id: 'webFrame.viewportWidth_px',
+    type: 'number',
+    defaultValue: 1280,
+    step: 1,
+  },
+  {
+    id: 'webFrame.viewportHeight_px',
+    type: 'number',
+    defaultValue: 720,
+    step: 1,
+  },
+  {
+    id: 'webFrame.position',
+    type: 'enum',
+    defaultValue: PositionCorner.TOP_RIGHT,
+    values: Object.values(PositionCorner),
+  },
+  {
+    id: 'webFrame.fullScreen',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'webFrame.height_gu',
+    type: 'number',
+    defaultValue: 12,
+    step: 1,
+  },
+  {
+    id: 'webFrame.margin_gu',
+    type: 'number',
+    defaultValue: 1.5,
+    step: 0.1,
+  },
+  {
+    id: 'webFrame.opacity',
+    type: 'number',
+    defaultValue: 1,
+    step: 0.1,
+  },
+  {
+    id: 'webFrame.enableFade',
     type: 'boolean',
     defaultValue: true,
   },

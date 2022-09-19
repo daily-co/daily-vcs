@@ -178,7 +178,7 @@ class VCSBrowserOutput {
   }
 
   updateImageSources(imageSources) {
-    this.imageSources = { videoSlots: [], compositionAssetImages: {} };
+    this.imageSources = { videoSlots: [], assetImages: {} };
 
     // the image sources we've received are raw DOM elements.
     // for display list encoding, we need metadata about each source,
@@ -196,20 +196,26 @@ class VCSBrowserOutput {
     if (this.preloadedImages) {
       for (const obj of this.preloadedImages) {
         const { name, image } = obj;
-        this.imageSources.compositionAssetImages[name] = {
+        this.imageSources.assetImages[name] = {
           vcsSourceType: 'compositionAsset',
           vcsSourceId: name,
           domElement: image,
         };
       }
     }
-    for (const key in imageSources.compositionAssetImages) {
-      this.imageSources.compositionAssetImages[key] = {
+    for (const key in imageSources.assetImages) {
+      this.imageSources.assetImages[key] = {
         vcsSourceType: 'compositionAsset',
         vcsSourceId: key,
-        domElement: imageSources.compositionAssetImages[key],
+        domElement: imageSources.assetImages[key],
       };
     }
+
+    // add the WebFrame renderer's singleton live asset
+    this.imageSources.assetImages['__webframe'] = {
+      vcsSourceType: 'liveAsset',
+      vcsSourceId: '__webframe',
+    };
   }
 
   resetOutputScalingCSS() {
@@ -302,7 +308,7 @@ class VCSBrowserOutput {
     requestAnimationFrame(this.renderFrame.bind(this));
   }
 
-  compUpdated(comp) {
+  compUpdated(comp, opts) {
     if (!this.updateCb || this.stopped) return;
 
     let sceneDesc;
@@ -317,12 +323,16 @@ class VCSBrowserOutput {
       }
     }
     if (sceneDesc) this.updateCb(sceneDesc);
+
+    if (opts && opts.webFramePropsUpdate) {
+      console.log('got webframe props update: ', opts.webFramePropsUpdate);
+    }
   }
 
   compGetSourceMetadata(comp, type, src) {
     let ret = {};
     if (type === 'image') {
-      const desc = this.imageSources.compositionAssetImages[src];
+      const desc = this.imageSources.assetImages[src];
       let img;
       if (desc && (img = desc.domElement)) {
         ret = { w: img.width, h: img.height };

@@ -24,6 +24,7 @@ export const IntrinsicNodeType = {
   IMAGE: 'image',
   TEXT: 'label',
   VIDEO: 'video',
+  WEBFRAME: 'webframe',
 };
 
 function getDefaultGridUnitSizeForViewport(viewportSize) {
@@ -57,6 +58,9 @@ export class Composition {
     this.commitFinishedCb = commitFinishedCb;
 
     this.sourceMetadataCb = sourceMetadataCb;
+
+    this.currentWebframeProps = {};
+    this.webFramePropsDidChange = false;
   }
 
   createNode(type, props) {
@@ -76,6 +80,9 @@ export class Composition {
         break;
       case IntrinsicNodeType.VIDEO:
         node = new VideoNode();
+        break;
+      case IntrinsicNodeType.WEBFRAME:
+        node = new WebFrameNode();
         break;
     }
 
@@ -110,11 +117,29 @@ export class Composition {
     this.uncommitted = false;
   }
 
+  didUpdateWebframePropsInCommit(newProps) {
+    const oldProps = this.currentWebframeProps || {};
+    if (
+      oldProps.src !== newProps.src ||
+      !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize)
+    ) {
+      this.webFramePropsDidChange = true;
+      this.currentWebframeProps = newProps;
+    }
+  }
+
   reactFinishedCommits() {
     this._performLayout();
 
+    const opts = {};
+
+    if (this.webFramePropsDidChange) {
+      opts.webFramePropsUpdate = { ...this.currentWebframeProps };
+      this.webFramePropsDidChange = false;
+    }
+
     if (this.commitFinishedCb) {
-      this.commitFinishedCb(this);
+      this.commitFinishedCb(this, opts);
     }
   }
 
@@ -268,6 +293,16 @@ function isEqualStyleOrTransform(oldStyle, newStyle) {
   if (oldStyle && !newStyle) return false;
 
   if (!deepEqual(newStyle, oldStyle)) return false;
+
+  return true;
+}
+
+function isEqualViewportSize(oldSize, newSize) {
+  if (!oldSize && !newSize) return true;
+  if (newSize && !oldSize) return false;
+  if (oldSize && !newSize) return false;
+
+  if (oldSize.w !== newSize.w || oldSize.h !== newSize.h) return false;
 
   return true;
 }
@@ -502,6 +537,9 @@ class ImageNode extends StyledNodeBase {
 
     if (oldProps.scaleMode !== newProps.scaleMode) return true;
 
+    if (oldProps.liveAssetUpdateKey !== newProps.liveAssetUpdateKey)
+      return true;
+
     return false;
   }
 
@@ -509,14 +547,47 @@ class ImageNode extends StyledNodeBase {
     super.commit(container, oldProps, newProps);
 
     this.src = newProps.src;
-
     this.scaleMode = newProps.scaleMode;
+    this.liveAssetUpdateKey = newProps.liveAssetUpdateKey;
 
     this.intrinsicSize = this.container.getIntrinsicSizeForImageSrc(this.src);
   }
 }
 
 class VideoNode extends ImageNode {
-  // inherits 'src'
+  // inherits 'src', etc.
   static nodeType = IntrinsicNodeType.VIDEO;
+}
+
+class WebFrameNode extends ImageNode {
+  // inherits 'src', etc.
+  static nodeType = IntrinsicNodeType.WEBFRAME;
+
+  static defaultViewportSize = { w: 1280, h: 720 };
+
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    const newViewportSize =
+      newProps.viewportSize || this.constructor.defaultViewportSize;
+    if (!isEqualViewportSize(oldProps.viewportSize, newViewportSize))
+      return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    this.viewportSize =
+      newProps.viewportSize || this.constructor.defaultViewportSize;
+
+    // webframe's intrinsic size is simply the size given by the user
+    this.intrinsicSize = this.viewportSize;
+
+    container.didUpdateWebframePropsInCommit({
+      src: this.src,
+      viewportSize: this.viewportSize,
+    });
+  }
 }
