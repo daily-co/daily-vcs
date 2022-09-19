@@ -152,13 +152,44 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
 sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& imageName) {
   if (imageName.empty()) return nullptr; // --
 
-  auto& cache = (type == CompositionAsset) ? skiaResCtx_.imageCache_compositionNamespace : skiaResCtx_.imageCache_defaultNamespace;
+  canvex::ImageCache* cache;
+  switch (type) {
+    case CompositionAsset:
+        cache = &skiaResCtx_.imageCache_compositionNamespace;
+        break;
+      case DefaultAsset:
+        cache = &skiaResCtx_.imageCache_defaultNamespace;
+        break;
+      case LiveAsset:
+        cache = &skiaResCtx_.imageCache_liveNamespace;
+        break;
+  }
 
-  sk_sp<SkImage> image = cache[imageName];
+  sk_sp<SkImage> image = (*cache)[imageName];
+
+  double tNow = getMonotonicTime();
+  if (image && type == LiveAsset) {
+    double tImg = skiaResCtx_.liveImageTimestampsByName[imageName];
+    if (tNow - tImg >= 1.0) {
+      // brute force live updates: always reload image if it's older than given interval
+      std::cerr << "updating live image: " << imageName << std::endl;
+      image = nullptr;
+    }
+  }
+
   if (!image) {
-    auto assetsPath = (type == CompositionAsset)
-                      ? resPath_ / imageName
-                      : resPath_ / "test-assets" / imageName;
+    std::filesystem::path assetsPath;
+    switch (type) {
+      case CompositionAsset:
+        assetsPath = resPath_ / imageName;
+        break;
+      case DefaultAsset:
+        assetsPath = resPath_ / "test-assets" / imageName;
+        break;
+      case LiveAsset:
+        assetsPath = resPath_ / "live" / imageName;
+        break;
+    }
 
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
@@ -170,7 +201,11 @@ sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& 
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
       return image;
     }
-    cache[imageName] = image;
+    (*cache)[imageName] = image;
+
+    if (type == LiveAsset) {
+      skiaResCtx_.liveImageTimestampsByName[imageName] = tNow;
+    }
   }
   return image;
 }

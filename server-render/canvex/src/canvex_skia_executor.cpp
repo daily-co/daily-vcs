@@ -318,15 +318,23 @@ static void renderDisplayListInSkCanvas(
           numInvalidArgErrors++;
         } else {
           auto& imgTypeStr = cmd.args[0].assetRefValue->first;
-          auto& imgName = cmd.args[0].assetRefValue->second;
+          std::string imgName = cmd.args[0].assetRefValue->second;
 
           ImageSourceType srcType;
           if (imgTypeStr == "defaultAsset") {
             srcType = ImageSourceType::DefaultAsset;
           } else if (imgTypeStr == "compositionAsset") {
             srcType = ImageSourceType::CompositionAsset;
+          } else if (imgTypeStr == "liveAsset") {
+            // the imgName argument may have an extra hash value to force an update on the React side.
+            // remove anything after the # sign.
+            auto hashIdx = imgName.find_last_of('#');
+            if (hashIdx != std::string::npos) {
+              imgName = imgName.substr(0, hashIdx);
+            }
+            srcType = ImageSourceType::LiveAsset;
           } else {
-            std::cout << "Unsupported type for drawImage: " << imgTypeStr << std::endl;
+            std::cout << "Unknown type string for drawImage: " << imgTypeStr << std::endl;
             // default to composition asset
             srcType = ImageSourceType::CompositionAsset;
           }

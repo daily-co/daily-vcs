@@ -20,6 +20,7 @@ enum JoinType {
 enum ImageSourceType {
   DefaultAsset,
   CompositionAsset,
+  LiveAsset,
 };
 
 // The canvas API has state that can be saved but is not part of Skia's save/restore.
