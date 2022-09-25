@@ -11,6 +11,7 @@ export default function VideoGrid({
   placeholderStyle,
   labelsOffset_px = 0,
   participantDescs,
+  highlightDominant = true,
   itemInterval_gu = -1,
   outerPadding_gu = -1,
 }) {
@@ -90,7 +91,7 @@ export default function VideoGrid({
     // to prevent the stroke from getting clipped.
     // always return an array so the item component keeps in place
     // in React's diffing.
-    return highlight ? [item, highlight] : [item];
+    return highlightDominant && highlight ? [item, highlight] : [item];
   }
 
   return <Box id="videogrid">{participantDescs.map((d) => makeItem(d))}</Box>;

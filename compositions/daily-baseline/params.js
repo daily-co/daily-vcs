@@ -98,6 +98,11 @@ export const compositionParams = [
     step: 0.1,
   },
   {
+    id: 'videoSettings.grid.highlightDominant',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'videoSettings.dominant.position',
     type: 'enum',
     defaultValue: PositionEdge.LEFT,
