@@ -10,6 +10,7 @@ import { useActiveVideo, useAudioOnlyPeers } from '#vcs-react/hooks';
 // to be able to render a useful view from whatever video inputs are available.
 //
 export function useActiveVideoAndAudio({
+  maxCamStreams = 25,
   preferScreenshare = false,
   omitPaused = false,
 }) {
@@ -19,7 +20,7 @@ export function useActiveVideoAndAudio({
     dominantId,
     displayNamesById,
     pausedById,
-  } = useActiveVideo({ preferScreenshare, omitPaused });
+  } = useActiveVideo({ maxCamStreams, preferScreenshare, omitPaused });
 
   const audioOnlyPeers = useAudioOnlyPeers();
 

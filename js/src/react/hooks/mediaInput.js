@@ -20,14 +20,12 @@ export function useGrid() {
 export function useActiveVideo(opts) {
   const { activeVideoInputSlots } = React.useContext(MediaInputContext);
 
-  let preferScreenshare = false;
-  let omitPaused = false;
-  if (opts) {
-    preferScreenshare = !!opts.preferScreenshare;
-    omitPaused = !!opts.omitPaused;
-  }
+  const maxCamStreams = opts?.maxCamStreams || 25;
+  const preferScreenshare = opts?.preferScreenshare || false;
+  const omitPaused = opts?.omitPaused || false;
 
   const memo = React.useMemo(() => {
+    let numCamStreams = 0;
     let activeIds = [];
     let activeScreenshareIds = [];
     let dominantId = null;
@@ -43,11 +41,22 @@ export function useActiveVideo(opts) {
       const paused = !!slot.paused;
 
       if (!omitPaused || !paused) {
-        activeIds.push(videoId);
-
         if (slot.type === 'screenshare') {
+          activeIds.push(videoId);
           activeScreenshareIds.push(videoId);
+        } else {
+          if (numCamStreams < maxCamStreams) {
+            // We have enough space
+            activeIds.push(videoId);
+            numCamStreams++;
+          } else if (slot.dominant) {
+            // We ran out of space, but prefer dominant video
+            // FIXME: do we need to deal with multiple dominants?
+            activeIds.pop();
+            activeIds.push(videoId);
+          }
         }
+
         if (dominantId == null && slot.dominant) {
           dominantId = videoId;
         }
@@ -70,7 +79,7 @@ export function useActiveVideo(opts) {
       pausedById,
       maxSimultaneousVideoInputs,
     };
-  }, [activeVideoInputSlots, preferScreenshare, omitPaused]);
+  }, [activeVideoInputSlots, maxCamStreams, preferScreenshare, omitPaused]);
 
   return memo;
 }
