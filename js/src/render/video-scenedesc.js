@@ -37,7 +37,8 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
       Number.isFinite(node.style.cornerRadius_px) &&
       node.style.cornerRadius_px > 0
     ) {
-      attrs.cornerRadius_px = node.style.cornerRadius_px;
+      // write out camelcase, not the VCS style that puts unit after underscore
+      attrs.cornerRadiusPx = node.style.cornerRadius_px;
     }
     if (node.scaleMode) {
       attrs.scaleMode = node.scaleMode;
