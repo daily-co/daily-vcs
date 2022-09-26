@@ -21,19 +21,34 @@ export default function VideoPip(props) {
     participantDescs,
     dominantVideoId,
     followDominantFlag,
+    preferScreenshare,
   } = props;
 
   let firstParticipant = participantDescs[0];
+  let otherParticipants;
 
   if (followDominantFlag && dominantVideoId) {
-    firstParticipant = participantDescs.find(
+    const participantWithDomFlag = participantDescs.find(
       (d) => d.videoId != null && d.videoId == dominantVideoId
     );
+
+    const hasDominantScreenshare =
+      preferScreenshare && firstParticipant && firstParticipant.isScreenshare;
+
+    if (hasDominantScreenshare && participantWithDomFlag) {
+      // if we have a dominant screenshare, it takes precedence,
+      // so put the dominant-flagged video into the PiP instead
+      otherParticipants = [participantWithDomFlag];
+    } else {
+      firstParticipant = participantWithDomFlag;
+    }
   }
 
-  let otherParticipants = participantDescs.filter(
-    (d) => d !== firstParticipant || firstParticipant == null
-  );
+  if (!otherParticipants) {
+    otherParticipants = participantDescs.filter(
+      (d) => d !== firstParticipant || firstParticipant == null
+    );
+  }
 
   const items = [];
 
