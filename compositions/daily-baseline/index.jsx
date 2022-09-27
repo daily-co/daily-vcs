@@ -332,6 +332,9 @@ export default function DailyBaselineVCS() {
       opacity={params['webFrame.opacity']}
       enableFade={params['webFrame.enableFade']}
       show={params.showWebFrameOverlay}
+      keyPressActionKey={params['webFrame.keyPress.key']}
+      keyPressActionName={params['webFrame.keyPress.keyName']}
+      keyPressModifiers={params['webFrame.keyPress.modifiers']}
     />
   );
 

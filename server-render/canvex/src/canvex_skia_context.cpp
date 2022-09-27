@@ -170,33 +170,48 @@ sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& 
   sk_sp<SkImage> image = (*cache)[imageName];
 
   if (image && type == LiveAsset) {
-    double tImg = skiaResCtx_.liveImageTimestampsByName[imageName];
-    if (tNow - tImg >= 1.0) {
-      // brute force live updates: always reload image if it's older than given interval
-      std::cerr << "updating live image: " << imageName << std::endl;
-      image = nullptr;
+    auto& imageTs = skiaResCtx_.liveImageTimestampsByName[imageName];
+    const double timeSinceLastPoll = tNow - imageTs.lastPollT;
+    const double pollIntv = 1.0 / 4.0;
+    if (timeSinceLastPoll >= pollIntv) {
+      imageTs.lastPollT = tNow;
+      
+      // check the latest write time on the file to see if it had an update
+      auto assetsPath = getImagePath(type, imageName);
+      std::error_code ec;
+      auto fileWriteTime = std::filesystem::last_write_time(assetsPath, ec);
+      if (ec) {
+        // this happens when the image is changing its size/source (e.g. webframe URL)
+        // and has been temporarily deleted by the writer.
+        // clear out cached image at this point because it's out of date.
+        std::cerr << "drawImage: clearing cache on poll for " << assetsPath << ", last_write_time() returned " << ec << std::endl;
+        (*cache)[imageName] = nullptr;
+        return nullptr;
+      } else {
+        if (fileWriteTime > imageTs.lastReadFst) {
+          // write time on disk is newer, so reload now
+          image = nullptr;
+          //std::cout << "drawImage: reloading changed file at " << assetsPath << std::endl;
+        } else {
+          //std::cout << "drawImage: no need to reload " << assetsPath << ", hasn't changed" << std::endl;
+        }
+      }
     }
   }
 
   if (!image) {
     if (stats) stats->wasCacheMiss = true;
 
-    std::filesystem::path assetsPath;
-    switch (type) {
-      case CompositionAsset:
-        assetsPath = resPath_ / imageName;
-        break;
-      case DefaultAsset:
-        assetsPath = resPath_ / "test-assets" / imageName;
-        break;
-      case LiveAsset:
-        assetsPath = resPath_ / "live" / imageName;
-        break;
+    auto assetsPath = getImagePath(type, imageName);
+    std::error_code ec;
+    auto fileWriteTime = std::filesystem::last_write_time(assetsPath, ec);
+    if (ec) {
+      std::cerr << "drawImage: unable to load path " << assetsPath << " - last_write_time() returned " << ec << std::endl;
+      return image;
     }
-
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
-      std::cerr << "drawImage: unable to load path " << assetsPath << std::endl;
+      std::cerr << "drawImage: MakeFromFileName was unable to load path " << assetsPath << std::endl;
       return image;
     }
     image = SkImage::MakeFromEncoded(data);
@@ -207,7 +222,7 @@ sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& 
     (*cache)[imageName] = image;
 
     if (type == LiveAsset) {
-      skiaResCtx_.liveImageTimestampsByName[imageName] = tNow;
+      skiaResCtx_.liveImageTimestampsByName[imageName] = {tNow, fileWriteTime};
     }
   }
 
@@ -216,6 +231,22 @@ sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& 
   }
 
   return image;
+}
+
+std::filesystem::path CanvexContext::getImagePath(ImageSourceType type, const std::string& imageName) {
+  std::filesystem::path assetsPath;
+  switch (type) {
+    case CompositionAsset:
+      assetsPath = resPath_ / imageName;
+      break;
+    case DefaultAsset:
+      assetsPath = resPath_ / "test-assets" / imageName;
+      break;
+    case LiveAsset:
+      assetsPath = resPath_ / "live" / imageName;
+      break;
+  }
+  return assetsPath;
 }
 
 void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName,

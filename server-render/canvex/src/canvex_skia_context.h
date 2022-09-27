@@ -104,6 +104,8 @@ class CanvexContext {
   // returns null if image can't be loaded, or cached image if already present in skiaResCtx
   sk_sp<SkImage> getImage(ImageSourceType type, const std::string& imageName, DrawImageStats* stats);
 
+  std::filesystem::path getImagePath(ImageSourceType type, const std::string& imageName);
+
   // utils to access current state
   float getGlobalAlpha() {
     const auto& sf = stateStack_.back();

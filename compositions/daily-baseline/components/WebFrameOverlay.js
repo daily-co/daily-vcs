@@ -20,6 +20,9 @@ export default function WebFrameOverlay({
   opacity = 1,
   enableFade = false,
   show = false,
+  keyPressActionKey = 0,
+  keyPressActionName = '',
+  keyPressModifiers = '',
 }) {
   const t = useVideoTime();
 
@@ -79,6 +82,11 @@ export default function WebFrameOverlay({
       viewportSize={{ w: viewportWidth_px, h: viewportHeight_px }}
       layout={layout}
       blend={{ opacity }}
+      keyPressAction={{
+        name: keyPressActionName,
+        key: keyPressActionKey,
+        modifiers: keyPressModifiers,
+      }}
     />
   );
 }

@@ -121,7 +121,8 @@ export class Composition {
     const oldProps = this.currentWebframeProps || {};
     if (
       oldProps.src !== newProps.src ||
-      !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize)
+      !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize) ||
+      !isEqualWebFrameAction(oldProps.keyPressAction, newProps.keyPressAction)
     ) {
       this.webFramePropsDidChange = true;
       this.currentWebframeProps = newProps;
@@ -134,7 +135,7 @@ export class Composition {
     const opts = {};
 
     if (this.webFramePropsDidChange) {
-      opts.webFramePropsUpdate = { ...this.currentWebframeProps };
+      opts.newWebFrameProps = { ...this.currentWebframeProps };
       this.webFramePropsDidChange = false;
     }
 
@@ -304,6 +305,18 @@ function isEqualViewportSize(oldSize, newSize) {
   if (oldSize && !newSize) return false;
 
   if (oldSize.w !== newSize.w || oldSize.h !== newSize.h) return false;
+
+  return true;
+}
+
+function isEqualWebFrameAction(oldAction, newAction) {
+  if (!oldAction && !newAction) return true;
+  if (newAction && !oldAction) return false;
+  if (oldAction && !newAction) return false;
+
+  if (oldAction.name !== newAction.name) return false;
+  if (oldAction.key !== newAction.key) return false;
+  if (oldAction.modifiers !== newAction.modifiers) return false;
 
   return true;
 }
@@ -566,12 +579,20 @@ class WebFrameNode extends ImageNode {
 
   static defaultViewportSize = { w: 1280, h: 720 };
 
+  constructor() {
+    super();
+    this.keyPressAction = { name: '', key: '' };
+  }
+
   shouldUpdate(container, oldProps, newProps) {
     if (super.shouldUpdate(container, oldProps, newProps)) return true;
 
-    const newViewportSize =
-      newProps.viewportSize || this.constructor.defaultViewportSize;
-    if (!isEqualViewportSize(oldProps.viewportSize, newViewportSize))
+    if (!isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize))
+      return true;
+
+    if (
+      !isEqualWebFrameAction(oldProps.keyPressAction, newProps.keyPressAction)
+    )
       return true;
 
     return false;
@@ -580,15 +601,30 @@ class WebFrameNode extends ImageNode {
   commit(container, oldProps, newProps) {
     super.commit(container, oldProps, newProps);
 
-    this.viewportSize =
-      newProps.viewportSize || this.constructor.defaultViewportSize;
-
     // webframe's intrinsic size is simply the size given by the user
     this.intrinsicSize = this.viewportSize;
+
+    // do prop eq checks again so we can record the time when they're actually updated.
+    // this is useful for debugging and optimizing rendering.
+
+    const newViewportSize =
+      newProps.viewportSize || this.constructor.defaultViewportSize;
+    if (!isEqualViewportSize(oldProps.viewportSize, newViewportSize)) {
+      this.viewportSize = newViewportSize;
+
+      this.viewportSizeLastUpdateTs = Date.now() / 1000;
+    }
+
+    if (!isEqualWebFrameAction(this.keyPressAction, newProps.keyPressAction)) {
+      this.keyPressAction = newProps.keyPressAction || { name: '', key: '' };
+
+      this.keyPressActionLastUpdateTs = Date.now() / 1000;
+    }
 
     container.didUpdateWebframePropsInCommit({
       src: this.src,
       viewportSize: this.viewportSize,
+      keyPressAction: this.keyPressAction,
     });
   }
 }
