@@ -77,6 +77,7 @@ export default function DailyBaselineVCS() {
   // props passed to the video layout component
   const { participantDescs, dominantVideoId, hasScreenShare } =
     useActiveVideoAndAudio({
+      maxCamStreams: params['videoSettings.maxCamStreams'],
       preferScreenshare: params['videoSettings.preferScreenshare'],
       omitPaused: params['videoSettings.omitPaused'],
     });

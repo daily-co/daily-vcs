@@ -38,6 +38,13 @@ export const compositionParams = [
   },
   // -- video layout params --
   {
+    id: 'videoSettings.maxCamStreams',
+    type: 'number',
+    defaultValue: 25,
+    shortHelpText:
+      'Limits the number of non-screenshare streams that are included in the output.',
+  },
+  {
     id: 'videoSettings.preferScreenshare',
     type: 'boolean',
     defaultValue: false,
@@ -67,6 +74,11 @@ export const compositionParams = [
     id: 'videoSettings.placeholder.bgColor',
     type: 'text',
     defaultValue: 'rgb(0, 50, 80)',
+  },
+  {
+    id: 'videoSettings.omitPaused',
+    type: 'boolean',
+    defaultValue: false,
   },
   {
     id: 'videoSettings.grid.useDominantForSharing',
