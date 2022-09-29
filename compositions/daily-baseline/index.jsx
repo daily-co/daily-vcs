@@ -135,6 +135,7 @@ export default function DailyBaselineVCS() {
       video = (
         <VideoGrid
           {...videoProps}
+          highlightDominant={params['videoSettings.grid.highlightDominant']}
           itemInterval_gu={params['videoSettings.grid.itemInterval_gu']}
           outerPadding_gu={params['videoSettings.grid.outerPadding_gu']}
         />
