@@ -1128,7 +1128,7 @@ async function start() {
 
   g_defaultSources = {
     videoSlots: videoInputElements,
-    compositionAssetImages: testImages,
+    assetImages: testImages,
   };
 
   console.log("--- awaiting DailyVCS start ---");
@@ -1197,7 +1197,7 @@ imgDropEl.addEventListener('drop', function(ev) {
 });
 
 function updateTestImage(img, assetName) {
-  const images = g_defaultSources.compositionAssetImages;
+  const images = g_defaultSources.assetImages;
   images[assetName] = img;
   console.log("images updated: ", images);
 

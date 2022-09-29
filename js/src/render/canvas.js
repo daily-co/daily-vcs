@@ -145,7 +145,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     let warningOutText;
 
     const videoSlots = imageSources ? imageSources.videoSlots : [];
-    const images = imageSources ? imageSources.compositionAssetImages : {};
+    const images = imageSources ? imageSources.assetImages : {};
 
     switch (node.constructor.nodeType) {
       case IntrinsicNodeType.BOX: {
@@ -171,9 +171,45 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
               // to reduce log spam, only write this error once
               s_missingAssetsNotified.add(node.src);
             }
+          } else if (srcDrawable.vcsSourceType === 'liveAsset') {
+            srcDrawable = {
+              ...srcDrawable,
+              liveAssetUpdateKey: node.liveAssetUpdateKey,
+            };
+
+            // TODO: render live asset with an actual preview
+            fillColor = 'white';
+            textContent = `Live asset placeholder: ${srcDrawable.vcsSourceId}`;
+            textStyle = { textColor: 'rgba(0, 0, 0, 0.5)' };
           }
         }
         if (!srcDrawable) fillColor = placeholderFillColor;
+        break;
+      }
+      case IntrinsicNodeType.WEBFRAME: {
+        if (
+          isVCSDisplayListEncoder &&
+          renderMode !== CanvasRenderMode.VIDEO_PREVIEW
+        ) {
+          // for command encoding, pass the magic identifier for the webframe singleton live asset
+          const WEBFRAME_ASSET_MAGIC_ID = '__webframe';
+          srcDrawable = images ? images[WEBFRAME_ASSET_MAGIC_ID] : null;
+          if (!srcDrawable) {
+            console.error(
+              `Can't encode WebFrame component, asset image ${WEBFRAME_ASSET_MAGIC_ID} is missing`
+            );
+          } else {
+            // also pass the live asset update key to ensure our sceneDesc output gets refreshed regularly
+            srcDrawable = {
+              ...srcDrawable,
+              liveAssetUpdateKey: node.liveAssetUpdateKey,
+            };
+          }
+        } else {
+          fillColor = 'white';
+          textContent = 'WebFrame: ' + node.src;
+          textStyle = { textColor: 'rgba(0, 0, 0, 0.5)' };
+        }
         break;
       }
       case IntrinsicNodeType.VIDEO: {
@@ -252,25 +288,27 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
       const drawableForDrawCmd = isVCSDisplayListEncoder
         ? srcDrawable
         : srcDrawable.domElement;
-      const drawCmd = isVCSDisplayListEncoder
-        ? ctx.drawImage_vcsDrawable.bind(ctx)
-        : ctx.drawImage.bind(ctx);
+      if (drawableForDrawCmd) {
+        const drawCmd = isVCSDisplayListEncoder
+          ? ctx.drawImage_vcsDrawable.bind(ctx)
+          : ctx.drawImage.bind(ctx);
 
-      if (srcDrawableRegion) {
-        // we're cropping the input
-        drawCmd(
-          drawableForDrawCmd,
-          srcDrawableRegion.x,
-          srcDrawableRegion.y,
-          srcDrawableRegion.w,
-          srcDrawableRegion.h,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h
-        );
-      } else {
-        drawCmd(drawableForDrawCmd, frame.x, frame.y, frame.w, frame.h);
+        if (srcDrawableRegion) {
+          // we're cropping the input
+          drawCmd(
+            drawableForDrawCmd,
+            srcDrawableRegion.x,
+            srcDrawableRegion.y,
+            srcDrawableRegion.w,
+            srcDrawableRegion.h,
+            frame.x,
+            frame.y,
+            frame.w,
+            frame.h
+          );
+        } else {
+          drawCmd(drawableForDrawCmd, frame.x, frame.y, frame.w, frame.h);
+        }
       }
     }
 
