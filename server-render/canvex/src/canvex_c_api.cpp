@@ -54,7 +54,8 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  CanvexAlphaMode dstAlpha
+  CanvexAlphaMode dstAlpha,
+  CanvexExecutionStats* stats // optional stats
 ) {
   if (!json) {
     return CanvexRenderError_InvalidArgument_JSONInput;
@@ -73,6 +74,8 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
     return CanvexRenderError_InvalidArgument_ResourceContext;
   }
 
+  double t0 = getMonotonicTime();
+
   std::unique_ptr<VCSCanvasDisplayList> displayList;
   try {
     displayList = ParseVCSDisplayListJSON(json);
@@ -81,13 +84,17 @@ static CanvexRenderResult CanvexRenderJSON_Raw(
     return CanvexRenderError_JSONParseFail;
   }
 
-  // TODO: provide stats to caller?
-  // currently no provision in C API for this
+  double t1 = getMonotonicTime();
+  if (stats) {
+    memset(stats, 0, sizeof(CanvexExecutionStats));
+    stats->json_parse_us = (t1 - t0) * 1.0e6;
+  }
 
   if (!RenderDisplayListToRawBuffer(*displayList, format,
     dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha,
     ctx->resourceDir,
-    &ctx->skiaResourceCtx)) {
+    &ctx->skiaResourceCtx,
+    stats)) {
     return CanvexRenderError_GraphicsUnspecifiedError;
   }
 
@@ -101,10 +108,11 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  CanvexAlphaMode dstAlpha
+  CanvexAlphaMode dstAlpha,
+  CanvexExecutionStats* stats // optional stats
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
+      ctx_c, canvex::RenderFormat::Rgba, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha, stats
   );
 }
 
@@ -115,9 +123,10 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  CanvexAlphaMode dstAlpha
+  CanvexAlphaMode dstAlpha,
+  CanvexExecutionStats* stats // optional stats
 ) {
   return CanvexRenderJSON_Raw(
-      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha
+      ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha, stats
   );
 }
