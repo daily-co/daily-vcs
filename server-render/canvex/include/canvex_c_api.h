@@ -24,6 +24,22 @@ typedef enum {
 
 typedef void *CanvexResourceCtx;
 
+typedef struct CanvexExecutionStats {
+  // -- high level operations --
+  int64_t json_parse_us;
+  int64_t render_total_us;
+  int64_t file_write_us; // not relevant unless writing to disk
+
+  // -- render timings --
+  int64_t render_detail_image_loading_us;
+  int64_t render_detail_draw_image_us;
+  int64_t render_detail_draw_shapes_us;
+  int64_t render_detail_draw_text_us;
+
+  // -- render operation stats --
+  int32_t num_image_cache_misses;
+} CanvexExecutionStats;
+
 
 /*
   A context must be created before rendering.
@@ -60,7 +76,8 @@ CanvexRenderResult CanvexRenderJSON_RGBA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  CanvexAlphaMode dstAlpha
+  CanvexAlphaMode dstAlpha,
+  CanvexExecutionStats* stats // optional stats
 );
 
 /*
@@ -82,7 +99,8 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   uint32_t dstImageW,
   uint32_t dstImageH,
   uint32_t dstImageRowBytes,
-  CanvexAlphaMode dstAlpha
+  CanvexAlphaMode dstAlpha,
+  CanvexExecutionStats* stats // optional stats
 );
 
 #ifdef __cplusplus

@@ -89,6 +89,7 @@ export default function Slate({
   if (title && title.length > 0) {
     contents.push(
       <Text
+        key={++ci}
         style={{ ...titleStyle, textAlign: 'center' }}
         layout={[layoutFuncs.placeText, { vAlign: 'center' }]}
       >
@@ -98,7 +99,10 @@ export default function Slate({
   }
   if (subtitle && subtitle.length > 0) {
     contents.push(
-      <Box layout={[layoutFuncs.splitHorizontal, { index: 1, pos: 0.4 }]}>
+      <Box
+        key={++ci}
+        layout={[layoutFuncs.splitHorizontal, { index: 1, pos: 0.4 }]}
+      >
         <Text
           style={{ ...subtitleStyle, textAlign: 'center' }}
           layout={[layoutFuncs.placeText, { vAlign: 'center' }]}

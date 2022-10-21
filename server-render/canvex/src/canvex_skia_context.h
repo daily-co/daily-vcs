@@ -20,6 +20,13 @@ enum JoinType {
 enum ImageSourceType {
   DefaultAsset,
   CompositionAsset,
+  LiveAsset,
+};
+
+struct DrawImageStats {
+  bool wasCacheMiss;
+  double timeSpent_imageLoad_s;
+  double timeSpent_skiaDraw_s;
 };
 
 // The canvas API has state that can be saved but is not part of Skia's save/restore.
@@ -63,10 +70,14 @@ class CanvexContext {
   void fillText(const std::string& text, double x, double y);
   void strokeText(const std::string& text, double x, double y);
 
-  void drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h);
+  void drawImage(ImageSourceType type, const std::string& imageName,
+          double x, double y, double w, double h,
+          DrawImageStats* stats);
+
   void drawImageWithSrcCoords(ImageSourceType type, const std::string& imageName,
           double dstX, double dstY, double dstW, double dstH,
-          double srcX, double srcY, double srcW, double srcH);
+          double srcX, double srcY, double srcW, double srcH,
+          DrawImageStats* stats);
 
   // commands that operate on current path
   void beginPath();
@@ -91,7 +102,7 @@ class CanvexContext {
   CanvexSkiaResourceContext& skiaResCtx_;
 
   // returns null if image can't be loaded, or cached image if already present in skiaResCtx
-  sk_sp<SkImage> getImage(ImageSourceType type, const std::string& imageName);
+  sk_sp<SkImage> getImage(ImageSourceType type, const std::string& imageName, DrawImageStats* stats);
 
   // utils to access current state
   float getGlobalAlpha() {

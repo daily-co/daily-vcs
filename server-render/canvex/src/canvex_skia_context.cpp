@@ -149,16 +149,50 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
-sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& imageName) {
+sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& imageName, DrawImageStats* stats) {
   if (imageName.empty()) return nullptr; // --
 
-  auto& cache = (type == CompositionAsset) ? skiaResCtx_.imageCache_compositionNamespace : skiaResCtx_.imageCache_defaultNamespace;
+  double tNow = getMonotonicTime();
 
-  sk_sp<SkImage> image = cache[imageName];
+  canvex::ImageCache* cache;
+  switch (type) {
+    case CompositionAsset:
+        cache = &skiaResCtx_.imageCache_compositionNamespace;
+        break;
+      case DefaultAsset:
+        cache = &skiaResCtx_.imageCache_defaultNamespace;
+        break;
+      case LiveAsset:
+        cache = &skiaResCtx_.imageCache_liveNamespace;
+        break;
+  }
+
+  sk_sp<SkImage> image = (*cache)[imageName];
+
+  if (image && type == LiveAsset) {
+    double tImg = skiaResCtx_.liveImageTimestampsByName[imageName];
+    if (tNow - tImg >= 1.0) {
+      // brute force live updates: always reload image if it's older than given interval
+      std::cerr << "updating live image: " << imageName << std::endl;
+      image = nullptr;
+    }
+  }
+
   if (!image) {
-    auto assetsPath = (type == CompositionAsset)
-                      ? resPath_ / imageName
-                      : resPath_ / "test-assets" / imageName;
+    if (stats) stats->wasCacheMiss = true;
+
+    std::filesystem::path assetsPath;
+    switch (type) {
+      case CompositionAsset:
+        assetsPath = resPath_ / imageName;
+        break;
+      case DefaultAsset:
+        assetsPath = resPath_ / "test-assets" / imageName;
+        break;
+      case LiveAsset:
+        assetsPath = resPath_ / "live" / imageName;
+        break;
+    }
 
     auto data = SkData::MakeFromFileName(assetsPath.c_str());
     if (!data) {
@@ -170,18 +204,31 @@ sk_sp<SkImage> CanvexContext::getImage(ImageSourceType type, const std::string& 
       std::cerr << "drawImage: unable to decode image at path " << assetsPath << std::endl;
       return image;
     }
-    cache[imageName] = image;
+    (*cache)[imageName] = image;
+
+    if (type == LiveAsset) {
+      skiaResCtx_.liveImageTimestampsByName[imageName] = tNow;
+    }
   }
+
+  if (stats) {
+    stats->timeSpent_imageLoad_s = getMonotonicTime() - tNow;
+  }
+
   return image;
 }
 
-void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName, double x, double y, double w, double h) {
+void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName,
+          double x, double y, double w, double h,
+          DrawImageStats* stats) {
   const auto& sf = stateStack_.back();
 
   if (sf.globalAlpha <= 0.0) return; // --
 
-  sk_sp<SkImage> image = getImage(type, imageName);
+  sk_sp<SkImage> image = getImage(type, imageName, stats);
   if (!image) return; // --
+
+  double ts = getMonotonicTime();
 
   SkRect rect{(SkScalar)x, (SkScalar)y, (SkScalar)(x + w), (SkScalar)(y + h)};
   SkSamplingOptions sampleOptions(SkFilterMode::kLinear);
@@ -190,17 +237,24 @@ void CanvexContext::drawImage(ImageSourceType type, const std::string& imageName
   paint.setAlpha(sf.globalAlpha * 255);
 
   canvas_->drawImageRect(image, rect, sampleOptions, &paint);
+
+  if (stats) {
+    stats->timeSpent_skiaDraw_s = getMonotonicTime() - ts;
+  }
 }
 
 void CanvexContext::drawImageWithSrcCoords(ImageSourceType type, const std::string& imageName,
           double dstX, double dstY, double dstW, double dstH,
-          double srcX, double srcY, double srcW, double srcH) {
+          double srcX, double srcY, double srcW, double srcH,
+          DrawImageStats* stats) {
   const auto& sf = stateStack_.back();
 
   if (sf.globalAlpha <= 0.0) return; // --
 
-  sk_sp<SkImage> image = getImage(type, imageName);
+  sk_sp<SkImage> image = getImage(type, imageName, stats);
   if (!image) return; // --
+
+  double ts = getMonotonicTime();
 
   SkRect srcRect{(SkScalar)srcX, (SkScalar)srcY, (SkScalar)(srcX + srcW), (SkScalar)(srcY + srcH)};
   SkRect dstRect{(SkScalar)dstX, (SkScalar)dstY, (SkScalar)(dstX + dstW), (SkScalar)(dstY + dstH)};
@@ -210,6 +264,10 @@ void CanvexContext::drawImageWithSrcCoords(ImageSourceType type, const std::stri
   paint.setAlpha(sf.globalAlpha * 255);
 
   canvas_->drawImageRect(image, srcRect, dstRect, sampleOptions, &paint, SkCanvas::kFast_SrcRectConstraint);
+
+  if (stats) {
+    stats->timeSpent_skiaDraw_s = getMonotonicTime() - ts;
+  }
 }
 
 void CanvexContext::beginPath() {

@@ -10,11 +10,17 @@ import { useActiveVideo, useAudioOnlyPeers } from '#vcs-react/hooks';
 // to be able to render a useful view from whatever video inputs are available.
 //
 export function useActiveVideoAndAudio({
+  maxCamStreams = 25,
   preferScreenshare = false,
   omitPaused = false,
 }) {
-  const { activeIds, dominantId, displayNamesById, pausedById } =
-    useActiveVideo({ preferScreenshare, omitPaused });
+  const {
+    activeIds,
+    activeScreenshareIds,
+    dominantId,
+    displayNamesById,
+    pausedById,
+  } = useActiveVideo({ maxCamStreams, preferScreenshare, omitPaused });
 
   const audioOnlyPeers = useAudioOnlyPeers();
 
@@ -23,6 +29,7 @@ export function useActiveVideoAndAudio({
       index: i,
       key: 'video_' + i,
       isAudioOnly: false,
+      isScreenshare: activeScreenshareIds.includes(videoId),
       videoId,
       displayName: displayNamesById[videoId] || '',
       highlighted: videoId === dominantId,
@@ -37,6 +44,7 @@ export function useActiveVideoAndAudio({
           index: items.length + i,
           key: 'audioOnly_' + i,
           isAudioOnly: true,
+          isScreenshare: false,
           videoId: null,
           displayName: peer.displayName || 'Audio participant',
           highlighted: false,
@@ -49,5 +57,6 @@ export function useActiveVideoAndAudio({
   return {
     participantDescs: items,
     dominantVideoId: dominantId,
+    hasScreenShare: activeScreenshareIds.length > 0,
   };
 }

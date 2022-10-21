@@ -78,14 +78,14 @@ const { compositionInterface: compInterface, default: ContentRoot } =
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
 // so image/video references can be resolved.
-const imageSources = { videoSlots: [], compositionAssetImages: {} };
+const imageSources = { videoSlots: [], assetImages: {} };
 for (let i = 0; i < 16; i++) {
   imageSources.videoSlots.push({
     vcsSourceType: 'video',
     vcsSourceId: i,
   });
 }
-imageSources.compositionAssetImages['test_square.png'] = {
+imageSources.assetImages['test_square.png'] = {
   vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
   width: 320,
@@ -151,7 +151,7 @@ async function main() {
 function compGetSourceMetadataCb(comp, type, src) {
   let ret = {};
   if (type === 'image') {
-    const desc = imageSources.compositionAssetImages[src];
+    const desc = imageSources.assetImages[src];
     if (desc && desc.width > 0) {
       ret = { w: desc.width, h: desc.height };
     }

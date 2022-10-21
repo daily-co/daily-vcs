@@ -41,7 +41,6 @@ class FontVariantMatcher {
 using TypefaceCache = std::unordered_map<std::string, sk_sp<SkTypeface>>;
 using ImageCache = std::unordered_map<std::string, sk_sp<SkImage>>;
 
-
 struct CanvexSkiaResourceContext {
   CanvexSkiaResourceContext();
 
@@ -51,6 +50,9 @@ struct CanvexSkiaResourceContext {
    TypefaceCache typefaceCache;
    ImageCache imageCache_defaultNamespace;
    ImageCache imageCache_compositionNamespace;
+   ImageCache imageCache_liveNamespace;
+
+   std::unordered_map<std::string, double> liveImageTimestampsByName;
 };
 
 } // namespace canvex

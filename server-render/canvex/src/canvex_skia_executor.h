@@ -11,17 +11,12 @@ enum RenderFormat {
   Bgra,
 };
 
-struct GraphicsExecutionStats {
-  int64_t graphicsRender_us;
-  int64_t fileWrite_us;
-};
-
 bool RenderDisplayListToPNG(
   const VCSCanvasDisplayList& dl,
   const std::filesystem::path& dstFile,
   const std::filesystem::path& resourceDir,
   CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
-  GraphicsExecutionStats* stats  // optional stats
+  CanvexExecutionStats* stats  // optional stats
 );
 
 bool RenderDisplayListToRawBuffer(
@@ -33,7 +28,8 @@ bool RenderDisplayListToRawBuffer(
   uint32_t rowBytes,
   CanvexAlphaMode alphaMode,
   const std::filesystem::path& resourceDir,
-  CanvexSkiaResourceContext* skiaResCtx // optional cache between calls
+  CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
+  CanvexExecutionStats* stats // optional stats
 );
 
 } // namespace canvex

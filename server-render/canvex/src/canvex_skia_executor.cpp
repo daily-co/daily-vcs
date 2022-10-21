@@ -40,8 +40,16 @@ static void renderDisplayListInSkCanvas(
     const VCSCanvasDisplayList& dl,
     std::shared_ptr<SkCanvas> canvas,
     const std::filesystem::path& resourceDir,
-    CanvexSkiaResourceContext* skiaResCtxPtr
+    CanvexSkiaResourceContext* skiaResCtxPtr,
+    CanvexExecutionStats* stats // optional stats
   ) {
+  // accumulated stats
+  double timeSpent_imageLoading_s = 0.0;
+  double timeSpent_drawImage_s = 0.0;
+  double timeSpent_drawShapes_s = 0.0;
+  double timeSpent_drawText_s = 0.0;
+  int numImageCacheMisses = 0;
+
   canvas->clear(SK_ColorTRANSPARENT);
 
   const auto canvasSize = canvas->getBaseLayerSize();
@@ -184,11 +192,13 @@ static void renderDisplayListInSkCanvas(
       case beginPath: {
         PRINTCMD_ARGS("beginPath")
         ctx.beginPath();
+        numCmds++;
         break;
       }
       case closePath: {
         PRINTCMD_ARGS("closePath")
         ctx.closePath();
+        numCmds++;
         break;
       }
       case moveTo: {
@@ -228,19 +238,30 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case clip: {
+        PRINTCMD_ARGS("clip")
+        ctx.clip();
+        numCmds++;
+        break;
+      }
       case fill: {
         PRINTCMD_ARGS("fill")
+        double ts = getMonotonicTime();
+
         ctx.fill();
+
+        timeSpent_drawShapes_s += getMonotonicTime() - ts;
+        numCmds++;
         break;
       }
       case stroke: {
         PRINTCMD_ARGS("stroke")
+        double ts = getMonotonicTime();
+
         ctx.stroke();
-        break;
-      }
-      case clip: {
-        PRINTCMD_ARGS("clip")
-        ctx.clip();
+
+        timeSpent_drawShapes_s += getMonotonicTime() - ts;
+        numCmds++;
         break;
       }
       case fillRect: {
@@ -251,7 +272,11 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid args for fillRect: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
         } else {
+          double ts = getMonotonicTime();
+
           ctx.fillRect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+
+          timeSpent_drawShapes_s += getMonotonicTime() - ts;
           numCmds++;
         }
         break;
@@ -264,7 +289,11 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid args for strokeRect: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
         } else {
+          double ts = getMonotonicTime();
+
           ctx.strokeRect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+
+          timeSpent_drawShapes_s += getMonotonicTime() - ts;
           numCmds++;
         }
         break;
@@ -277,7 +306,11 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid args for rect: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
         } else {
+          double ts = getMonotonicTime();
+
           ctx.rect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+
+          timeSpent_drawShapes_s += getMonotonicTime() - ts;
           numCmds++;
         }
         break;
@@ -289,7 +322,11 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid args for fillText: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
         } else {
+          double ts = getMonotonicTime();
+
           ctx.fillText(cmd.args[0].stringValue, cmd.args[1].numberValue, cmd.args[2].numberValue);
+
+          timeSpent_drawText_s += getMonotonicTime() - ts;
           numCmds++;
         }
         break;
@@ -301,7 +338,11 @@ static void renderDisplayListInSkCanvas(
           std::cout << "Invalid args for strokeText: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
         } else {
+          double ts = getMonotonicTime();
+
           ctx.strokeText(cmd.args[0].stringValue, cmd.args[1].numberValue, cmd.args[2].numberValue);
+
+          timeSpent_drawText_s += getMonotonicTime() - ts;
           numCmds++;
         }
         break;
@@ -318,30 +359,46 @@ static void renderDisplayListInSkCanvas(
           numInvalidArgErrors++;
         } else {
           auto& imgTypeStr = cmd.args[0].assetRefValue->first;
-          auto& imgName = cmd.args[0].assetRefValue->second;
+          std::string imgName = cmd.args[0].assetRefValue->second;
 
           ImageSourceType srcType;
           if (imgTypeStr == "defaultAsset") {
             srcType = ImageSourceType::DefaultAsset;
           } else if (imgTypeStr == "compositionAsset") {
             srcType = ImageSourceType::CompositionAsset;
+          } else if (imgTypeStr == "liveAsset") {
+            // the imgName argument may have an extra hash value to force an update on the React side.
+            // remove anything after the # sign.
+            auto hashIdx = imgName.find_last_of('#');
+            if (hashIdx != std::string::npos) {
+              imgName = imgName.substr(0, hashIdx);
+            }
+            srcType = ImageSourceType::LiveAsset;
           } else {
-            std::cout << "Unsupported type for drawImage: " << imgTypeStr << std::endl;
+            std::cout << "Unknown type string for drawImage: " << imgTypeStr << std::endl;
             // default to composition asset
             srcType = ImageSourceType::CompositionAsset;
           }
+
+          DrawImageStats drawImageStats{};
           
           // drawImage has two argument formats that we support:
           // - 5-argument version with srcDrawable + 4 dstRect coords
           // - 9-argument version with srcDrawable + 4 srcRect coords + 4 dstRect coords
           if (cmd.args.size() < 9) {
             ctx.drawImage(srcType, imgName,
-              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue,
+              &drawImageStats);
           } else {
             ctx.drawImageWithSrcCoords(srcType, imgName,
               cmd.args[5].numberValue, cmd.args[6].numberValue, cmd.args[7].numberValue, cmd.args[8].numberValue,
-              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue);
+              cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue, cmd.args[4].numberValue,
+              &drawImageStats);
           }
+
+          timeSpent_drawImage_s += drawImageStats.timeSpent_skiaDraw_s;
+          timeSpent_imageLoading_s += drawImageStats.timeSpent_imageLoad_s;
+          if (drawImageStats.wasCacheMiss) numImageCacheMisses++;
 
           numCmds++;
         }
@@ -349,6 +406,14 @@ static void renderDisplayListInSkCanvas(
         break;
       }
     }
+  }
+
+  if (stats) {
+    stats->render_detail_image_loading_us = timeSpent_imageLoading_s * 1.0e6;
+    stats->render_detail_draw_image_us = timeSpent_drawImage_s * 1.0e6;
+    stats->render_detail_draw_shapes_us = timeSpent_drawShapes_s * 1.0e6;
+    stats->render_detail_draw_text_us = timeSpent_drawText_s * 1.0e6;
+    stats->num_image_cache_misses = numImageCacheMisses;
   }
 }
 
@@ -380,7 +445,7 @@ bool RenderDisplayListToPNG(
   const std::filesystem::path& dstFile,
   const std::filesystem::path& resourceDir,
   CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
-  GraphicsExecutionStats* stats // optional stats
+  CanvexExecutionStats* stats // optional stats
 ) {
   const auto w = dl.width;
   const auto h = dl.height;
@@ -400,7 +465,7 @@ bool RenderDisplayListToPNG(
 
   double t1 = getMonotonicTime();
 
-  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx);
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx, stats);
 
   double t2 = getMonotonicTime();
 
@@ -411,8 +476,8 @@ bool RenderDisplayListToPNG(
 
   double t3 = getMonotonicTime();
   if (stats) {
-    stats->graphicsRender_us = (t2 - t1) * 1.0e6;
-    stats->fileWrite_us = (t3 - t2) * 1.0e6;
+    stats->render_total_us = (t2 - t1) * 1.0e6;
+    stats->file_write_us = (t3 - t2) * 1.0e6;
   }
   return ok;
 }
@@ -426,7 +491,8 @@ bool RenderDisplayListToRawBuffer(
   uint32_t rowBytes,
   CanvexAlphaMode alphaMode,
   const std::filesystem::path& resourceDir,
-  CanvexSkiaResourceContext* skiaResCtx // optional cache between calls
+  CanvexSkiaResourceContext* skiaResCtx, // optional cache between calls
+  CanvexExecutionStats* stats // optional stats
 ) {
   SkColorType skFormat;
   SkImageInfo imageInfo;
@@ -453,9 +519,14 @@ bool RenderDisplayListToRawBuffer(
 
   std::shared_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(imageInfo, imageBuffer, rowBytes);
 
-  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx);
+  double t1 = getMonotonicTime();
 
-  // TODO: collect stats in this call too (refactor from above)
+  renderDisplayListInSkCanvas(dl, canvas, resourceDir, skiaResCtx, stats);
+
+  double t2 = getMonotonicTime();
+  if (stats) {
+    stats->render_total_us = (t2 - t1) * 1.0e6;
+  }
 
   return true;
 }
