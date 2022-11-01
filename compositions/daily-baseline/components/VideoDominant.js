@@ -25,6 +25,8 @@ export default function VideoDominant(props) {
     followDominantFlag = true,
     itemInterval_gu = 0.7,
     outerPadding_gu = 0.5,
+    splitMargin_gu = 0,
+    disableRoundedCornersOnMain = false,
   } = props;
 
   itemInterval_gu = Math.max(0, itemInterval_gu);
@@ -66,11 +68,15 @@ export default function VideoDominant(props) {
       <Box
         key={key}
         id={key}
-        layout={[mainLayoutFn, { index: itemIdx, pos: splitPos }]}
+        layout={[
+          mainLayoutFn,
+          { index: itemIdx, pos: splitPos, margin_gu: splitMargin_gu },
+        ]}
       >
         <VideoSingle
           enableParticipantOverride={true}
           overrideParticipant={participant}
+          disableRoundedCorners={disableRoundedCornersOnMain}
           {...props}
         />
       </Box>

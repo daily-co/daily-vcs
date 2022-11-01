@@ -22,6 +22,7 @@ export default function VideoPip(props) {
     dominantVideoId,
     followDominantFlag,
     preferScreenshare,
+    disableRoundedCornersOnMain = false,
   } = props;
 
   let firstParticipant = participantDescs[0];
@@ -57,6 +58,7 @@ export default function VideoPip(props) {
       key="pipbase"
       enableParticipantOverride={true}
       overrideParticipant={firstParticipant}
+      disableRoundedCorners={disableRoundedCornersOnMain}
       {...props}
     />
   );

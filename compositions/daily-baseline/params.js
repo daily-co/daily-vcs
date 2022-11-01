@@ -70,6 +70,12 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.cornerRadius_gu',
+    type: 'number',
+    defaultValue: 1.2,
+    step: 0.1,
+  },
+  {
     id: 'videoSettings.scaleMode',
     type: 'enum',
     defaultValue: 'fill',
@@ -84,6 +90,12 @@ export const compositionParams = [
     id: 'videoSettings.omitPaused',
     type: 'boolean',
     defaultValue: false,
+  },
+  {
+    id: 'videoSettings.split.margin_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 0.1,
   },
   {
     id: 'videoSettings.grid.useDominantForSharing',
@@ -142,6 +154,17 @@ export const compositionParams = [
     step: 0.1,
   },
   {
+    id: 'videoSettings.dominant.splitMargin_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 0.1,
+  },
+  {
+    id: 'videoSettings.dominant.sharpCornersOnMain',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'videoSettings.pip.position',
     type: 'enum',
     defaultValue: PositionCorner.TOP_RIGHT,
@@ -169,6 +192,11 @@ export const compositionParams = [
     id: 'videoSettings.pip.followDomFlag',
     type: 'boolean',
     defaultValue: false,
+  },
+  {
+    id: 'videoSettings.pip.sharpCornersOnMain',
+    type: 'boolean',
+    defaultValue: true,
   },
   {
     id: 'videoSettings.labels.fontFamily',

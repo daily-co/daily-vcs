@@ -109,29 +109,37 @@ export function placeText(parentFrame, params, layoutCtx) {
   return { x, y, w, h };
 }
 
-export function splitVertical(parentFrame, params) {
-  let { index, pos = 0.5 } = params;
+export function splitVertical(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  let { index, pos = 0.5, margin_gu = 0 } = params;
   let { x, y, w, h } = parentFrame;
 
+  const margin_px = margin_gu * pxPerGu;
+  const availableW = parentFrame.w - margin_px;
+
   if (index === 0) {
-    w *= pos;
+    w = availableW * pos;
   } else {
-    w *= 1 - pos;
-    x += parentFrame.w * pos;
+    w = availableW * (1 - pos);
+    x += availableW * pos + margin_px;
   }
 
   return { x, y, w, h };
 }
 
-export function splitHorizontal(parentFrame, params) {
-  let { index, pos = 0.5 } = params;
+export function splitHorizontal(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  let { index, pos = 0.5, margin_gu = 0 } = params;
   let { x, y, w, h } = parentFrame;
 
+  const margin_px = margin_gu * pxPerGu;
+  const availableH = parentFrame.h - margin_px;
+
   if (index === 0) {
-    h *= pos;
+    h = availableH * pos;
   } else {
-    h *= 1 - pos;
-    y += parentFrame.h * pos;
+    h = availableH * (1 - pos);
+    y += availableH * pos + margin_px;
   }
 
   return { x, y, w, h };
@@ -141,9 +149,9 @@ export function splitAcrossLongerDimension(parentFrame, params, layoutCtx) {
   const { viewport } = layoutCtx;
   const asp = viewport.w / viewport.h;
   if (asp >= 1) {
-    return splitVertical(parentFrame, params);
+    return splitVertical(parentFrame, params, layoutCtx);
   } else {
-    return splitHorizontal(parentFrame, params);
+    return splitHorizontal(parentFrame, params, layoutCtx);
   }
 }
 

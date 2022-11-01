@@ -13,6 +13,7 @@ export default function VideoSingle({
   participantDescs,
   enableParticipantOverride,
   overrideParticipant,
+  disableRoundedCorners = false,
 }) {
   if (
     !labelsOffset_px ||
@@ -35,18 +36,19 @@ export default function VideoSingle({
     : null;
   const { videoId, paused, displayName = '' } = d || {};
 
-  // clear out rounded corners, it doesn't look good for full-screen video
-  if (videoStyle && videoStyle.cornerRadius_px > 0) {
-    videoStyle = {
-      ...videoStyle,
-      cornerRadius_px: 0,
-    };
-  }
-  if (placeholderStyle && placeholderStyle.cornerRadius_px > 0) {
-    placeholderStyle = {
-      ...placeholderStyle,
-      cornerRadius_px: 0,
-    };
+  if (disableRoundedCorners) {
+    if (videoStyle && videoStyle.cornerRadius_px > 0) {
+      videoStyle = {
+        ...videoStyle,
+        cornerRadius_px: 0,
+      };
+    }
+    if (placeholderStyle && placeholderStyle.cornerRadius_px > 0) {
+      placeholderStyle = {
+        ...placeholderStyle,
+        cornerRadius_px: 0,
+      };
+    }
   }
 
   if (videoId == null && displayName.length < 1) {

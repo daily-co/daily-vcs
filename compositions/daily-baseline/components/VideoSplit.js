@@ -4,15 +4,17 @@ import * as layoutFuncs from '../layouts.js';
 import VideoSingle from './VideoSingle.js';
 
 export default function VideoSplit(props) {
-  const { participantDescs } = props;
-
+  const { participantDescs = [], margin_gu = 0 } = props;
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
     return (
       <Box
         key={key}
         id={key}
-        layout={[layoutFuncs.splitAcrossLongerDimension, { index: itemIdx }]}
+        layout={[
+          layoutFuncs.splitAcrossLongerDimension,
+          { index: itemIdx, margin_gu },
+        ]}
       >
         <VideoSingle
           enableParticipantOverride={true}

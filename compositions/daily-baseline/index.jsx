@@ -12,7 +12,6 @@ import {
   DEFAULT_FONT,
   DEFAULT_LABEL_FONT_SIZE_PX,
   DEFAULT_TOAST_FONT_SIZE_PX,
-  DEFAULT_CORNER_RADIUS_PX,
   fontFamilies,
 } from './constants.js';
 import { imagePreloads } from './preloads.js';
@@ -55,7 +54,7 @@ export default function DailyBaselineVCS() {
   // placeholder is used if no video is available.
   const videoStyle = {
     cornerRadius_px: params['videoSettings.roundedCorners']
-      ? DEFAULT_CORNER_RADIUS_PX
+      ? params['videoSettings.cornerRadius_gu'] * pxPerGu
       : 0,
   };
   const placeholderStyle = {
@@ -142,7 +141,12 @@ export default function DailyBaselineVCS() {
       );
       break;
     case 'split':
-      video = <VideoSplit {...videoProps} />;
+      video = (
+        <VideoSplit
+          margin_gu={params['videoSettings.split.margin_gu']}
+          {...videoProps}
+        />
+      );
       break;
     case 'pip': {
       let h_gu;
@@ -167,6 +171,9 @@ export default function DailyBaselineVCS() {
           height_gu={h_gu}
           margin_gu={margin_gu}
           followDominantFlag={params['videoSettings.pip.followDomFlag']}
+          disableRoundedCornersOnMain={
+            params['videoSettings.pip.sharpCornersOnMain']
+          }
         />
       );
       break;
@@ -181,6 +188,10 @@ export default function DailyBaselineVCS() {
           followDominantFlag={params['videoSettings.dominant.followDomFlag']}
           itemInterval_gu={params['videoSettings.dominant.itemInterval_gu']}
           outerPadding_gu={params['videoSettings.dominant.outerPadding_gu']}
+          splitMargin_gu={params['videoSettings.dominant.splitMargin_gu']}
+          disableRoundedCornersOnMain={
+            params['videoSettings.dominant.sharpCornersOnMain']
+          }
         />
       );
       break;
