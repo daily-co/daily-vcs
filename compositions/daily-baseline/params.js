@@ -120,6 +120,11 @@ export const compositionParams = [
     defaultValue: true,
   },
   {
+    id: 'videoSettings.grid.preserveAspectRatio',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'videoSettings.dominant.position',
     type: 'enum',
     defaultValue: PositionEdge.LEFT,
