@@ -87,11 +87,6 @@ export const compositionParams = [
     defaultValue: 'rgb(0, 50, 80)',
   },
   {
-    id: 'videoSettings.omitPaused',
-    type: 'boolean',
-    defaultValue: false,
-  },
-  {
     id: 'videoSettings.split.margin_gu',
     type: 'number',
     defaultValue: 0,
