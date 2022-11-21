@@ -178,7 +178,18 @@ export default function DailyBaselineVCS() {
       );
       break;
     }
-    case 'dominant':
+    case 'dominant': {
+      // If we prefer screenshare but are following dominant, ignore the
+      // dominant and use the first video (which will be a screenshare because
+      // preferScreenshare is true)
+      if (
+        params['videoSettings.dominant.followDomFlag'] &&
+        params['videoSettings.preferScreenshare'] &&
+        hasScreenShare
+      ) {
+        videoProps.dominantVideoId = participantDescs[0].videoId;
+      }
+
       video = (
         <VideoDominant
           {...videoProps}
@@ -195,6 +206,7 @@ export default function DailyBaselineVCS() {
         />
       );
       break;
+    }
   }
 
   let graphics = [];
