@@ -137,6 +137,9 @@ export default function DailyBaselineVCS() {
           highlightDominant={params['videoSettings.grid.highlightDominant']}
           itemInterval_gu={params['videoSettings.grid.itemInterval_gu']}
           outerPadding_gu={params['videoSettings.grid.outerPadding_gu']}
+          preserveItemAspectRatio={
+            params['videoSettings.grid.preserveAspectRatio']
+          }
         />
       );
       break;

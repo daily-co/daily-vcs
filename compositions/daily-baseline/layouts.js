@@ -203,7 +203,13 @@ export function column(parentFrame, params, layoutCtx) {
 
 export function grid(parentFrame, params, layoutCtx) {
   const pxPerGu = layoutCtx.pixelsPerGridUnit;
-  const { index, total, innerMargin_gu = -1, outerMargin_gu = -1 } = params;
+  const {
+    index,
+    total,
+    innerMargin_gu = -1,
+    outerMargin_gu = -1,
+    preserveItemAspectRatio = true,
+  } = params;
   const { viewport } = layoutCtx;
   const outputAsp = viewport.w / viewport.h;
 
@@ -234,13 +240,18 @@ export function grid(parentFrame, params, layoutCtx) {
     if (outerMargin_gu >= 0) {
       outerMargins.x = outerMargins.y = outerMargin_gu * pxPerGu;
     } else {
-      if (numCols === numRows) {
-        // when layout is tight, leave space in vertical margins for participant labels
-        if (outputAsp > 1) {
-          outerMargins.y = Math.round(marginRel * 0.7);
-        } else {
-          outerMargins.y = Math.round(marginRel * 1);
+      if (preserveItemAspectRatio) {
+        if (numCols === numRows) {
+          // when layout is tight, leave space in vertical margins for participant labels
+          if (outputAsp > 1) {
+            outerMargins.y = Math.round(marginRel * 0.7);
+          } else {
+            outerMargins.y = Math.round(marginRel * 1);
+          }
         }
+      } else {
+        // when asked not to preserve item aspect ratio, don't try to guess positioning
+        // - just use all available space (i.e. leave outerMargins to zero)
       }
     }
   }
@@ -262,6 +273,7 @@ export function grid(parentFrame, params, layoutCtx) {
     numRows,
     videoAsp,
     innerMargins,
+    preserveItemAspectRatio,
   });
 }
 
@@ -329,28 +341,39 @@ function computeGridItem({
   numRows,
   videoAsp,
   innerMargins,
+  preserveItemAspectRatio = true,
 }) {
-  const parentAsp = parentFrame.w / parentFrame.h;
-  const contentAsp = (numCols * videoAsp) / numRows;
-
   let { x, y, w, h } = parentFrame;
   let itemW, itemH;
+  //: parentFrame.w / numCols / (parentFrame.h / numRows);
 
-  // item size depends on whether our content is wider or narrower than the parent frame
-  if (contentAsp >= parentAsp) {
-    itemW = (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
-    itemH = itemW / videoAsp;
+  if (preserveItemAspectRatio) {
+    const parentAsp = parentFrame.w / parentFrame.h;
+    const contentAsp = (numCols * videoAsp) / numRows;
 
-    // center grid vertically
-    y +=
-      (parentFrame.h - (numRows * itemH + innerMargins.y * (numRows - 1))) / 2;
+    // item size depends on whether our content is wider or narrower than the parent frame
+    if (contentAsp >= parentAsp) {
+      itemW = (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
+      itemH = itemW / videoAsp;
+
+      // center grid vertically
+      y +=
+        (parentFrame.h - (numRows * itemH + innerMargins.y * (numRows - 1))) /
+        2;
+    } else {
+      itemH = (parentFrame.h - (numRows - 1) * innerMargins.y) / numRows;
+      itemW = itemH * videoAsp;
+
+      // center grid horizontally
+      x +=
+        (parentFrame.w - (numCols * itemW + innerMargins.x * (numCols - 1))) /
+        2;
+    }
   } else {
+    // if we don't need to preserve the item aspect ratio,
+    // the item size is simply maximum available
+    itemW = (parentFrame.w - (numCols - 1) * innerMargins.x) / numCols;
     itemH = (parentFrame.h - (numRows - 1) * innerMargins.y) / numRows;
-    itemW = itemH * videoAsp;
-
-    // center grid horizontally
-    x +=
-      (parentFrame.w - (numCols * itemW + innerMargins.x * (numCols - 1))) / 2;
   }
 
   const col = index % numCols;

@@ -14,6 +14,7 @@ export default function VideoGrid({
   highlightDominant = true,
   itemInterval_gu = -1,
   outerPadding_gu = -1,
+  preserveItemAspectRatio = true,
 }) {
   const totalNumItems = participantDescs.length;
   itemInterval_gu = Math.max(-1, itemInterval_gu);
@@ -37,6 +38,7 @@ export default function VideoGrid({
         total: totalNumItems,
         innerMargin_gu: itemInterval_gu,
         outerMargin_gu: outerPadding_gu,
+        preserveItemAspectRatio,
       },
     ];
 
