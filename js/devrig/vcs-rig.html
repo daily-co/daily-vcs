@@ -261,6 +261,9 @@ table {
   height: 30px;
   position: relative;
 }
+#controls .compInterface .params > div.status-experimental {
+  font-style: italic;
+}
 #controls .compInterface .params > div.shortHelpText {
   margin-top: -4px;
   padding-left: 0px;
@@ -856,7 +859,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
     box.className = 'params';
 
     for (const paramDesc of group.items) {
-      const {id, type, defaultValue, shortHelpText} = paramDesc;
+      const {id, type, defaultValue, shortHelpText, status} = paramDesc;
       let displayName = id;
       if (!group.isMain) {
         const idx = id.indexOf('.');
@@ -926,6 +929,10 @@ function createParamsUI(compInterface, groupsContainerEl) {
         const div = document.createElement('div');
         const label = document.createElement('label');
         label.innerText = displayName || '<No id provided>';
+
+        if (status && status.length > 0) {
+          div.setAttribute('class', 'status-'+status);
+        }
         
         if (posLeft) {
           div.appendChild(el);
