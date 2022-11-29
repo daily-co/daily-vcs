@@ -143,6 +143,11 @@ export default function wwwClientConfig(env) {
       breakOnWarningPlugin,
       moduleReplacementPlugin,
 
+      // pass env variable so we can customize for production build (e.g. hide experimental settings)
+      new webpack.DefinePlugin({
+        VCS_BUILD_IS_PROD: isDev ? 'false' : 'true',
+      }),
+
       // following buffer plugin is needed by textkit (from react-pdf)
       new webpack.ProvidePlugin({
         Buffer: ['buffer', 'Buffer'],

@@ -56,6 +56,8 @@ class VCSBrowserOutput {
   constructor(w, h, fps, scaleFactor, updateCb, errorCb, getAssetUrlCb) {
     this.viewportSize = { w, h };
 
+    this.isProductionBuild = VCS_BUILD_IS_PROD;
+
     this.uuid = uuidv4();
 
     // this will receive the instance of our root container component
@@ -229,10 +231,32 @@ class VCSBrowserOutput {
     this.resetOutputScalingCSS();
   }
 
+  preprocessCompositionInterface(orig) {
+    const obj = orig ? { ...orig } : {};
+
+    if (!obj.params) {
+      obj.params = [];
+    } else {
+      const arr = [];
+      for (const paramDesc of obj.params) {
+        // in production mode, skip params declared experimental
+        if (this.isProductionBuild) {
+          const { status } = paramDesc;
+          if (status === 'experimental') continue;
+        }
+        arr.push(paramDesc);
+      }
+      obj.params = arr;
+    }
+    return obj;
+  }
+
   async initRenderingAsync(rootEl, imageSources) {
     // the interface definition object.
     // initializing fonts and other preloads needs this.
-    this.compositionInterface = { ...VCSComp.compositionInterface };
+    this.compositionInterface = this.preprocessCompositionInterface(
+      VCSComp.compositionInterface
+    );
 
     // load fonts and images.
     // these calls will make network loads and can take a while,
