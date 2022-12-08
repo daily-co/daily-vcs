@@ -61,6 +61,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.omitAudioOnly',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.showParticipantLabels',
     type: 'boolean',
     defaultValue: false,

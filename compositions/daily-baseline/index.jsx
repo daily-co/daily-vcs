@@ -80,6 +80,7 @@ export default function DailyBaselineVCS() {
       maxCamStreams: params['videoSettings.maxCamStreams'],
       preferScreenshare: params['videoSettings.preferScreenshare'],
       omitPaused: params['videoSettings.omitPaused'],
+      omitAudioOnly: params['videoSettings.omitAudioOnly'],
     });
 
   const videoProps = {
@@ -89,7 +90,6 @@ export default function DailyBaselineVCS() {
     participantDescs,
     dominantVideoId,
     preferScreenshare: params['videoSettings.preferScreenshare'],
-    omitPaused: params['videoSettings.omitPaused'],
     showLabels: params['videoSettings.showParticipantLabels'],
     scaleMode: params['videoSettings.scaleMode'],
     labelsOffset_px: {

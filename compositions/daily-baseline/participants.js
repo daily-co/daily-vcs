@@ -13,6 +13,7 @@ export function useActiveVideoAndAudio({
   maxCamStreams = 25,
   preferScreenshare = false,
   omitPaused = false,
+  omitAudioOnly = false,
 }) {
   const {
     activeIds,
@@ -37,7 +38,7 @@ export function useActiveVideoAndAudio({
     };
   });
 
-  if (audioOnlyPeers.length > 0) {
+  if (!omitAudioOnly && audioOnlyPeers.length > 0) {
     items = items.concat(
       audioOnlyPeers.map((peer, i) => {
         return {
