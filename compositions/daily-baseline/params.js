@@ -66,6 +66,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.omitExtraScreenshares',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.showParticipantLabels',
     type: 'boolean',
     defaultValue: false,
@@ -85,6 +90,12 @@ export const compositionParams = [
     id: 'videoSettings.scaleMode',
     type: 'enum',
     defaultValue: 'fill',
+    values: ['fill', 'fit'],
+  },
+  {
+    id: 'videoSettings.scaleModeForScreenshare',
+    type: 'enum',
+    defaultValue: 'fit',
     values: ['fill', 'fit'],
   },
   {

@@ -14,6 +14,7 @@ export function useActiveVideoAndAudio({
   preferScreenshare = false,
   omitPaused = false,
   omitAudioOnly = false,
+  omitExtraScreenshares = false,
 }) {
   const {
     activeIds,
@@ -21,7 +22,12 @@ export function useActiveVideoAndAudio({
     dominantId,
     displayNamesById,
     pausedById,
-  } = useActiveVideo({ maxCamStreams, preferScreenshare, omitPaused });
+  } = useActiveVideo({
+    maxCamStreams,
+    preferScreenshare,
+    omitPaused,
+    omitExtraScreenshares,
+  });
 
   const audioOnlyPeers = useAudioOnlyPeers();
 

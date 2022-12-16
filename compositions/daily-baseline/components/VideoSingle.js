@@ -6,6 +6,7 @@ import { PausedPlaceholder } from './PausedPlaceholder.js';
 export default function VideoSingle({
   showLabels,
   scaleMode,
+  scaleModeForScreenshare,
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
@@ -34,7 +35,7 @@ export default function VideoSingle({
     : participantDescs.length > 0
     ? participantDescs[0]
     : null;
-  const { videoId, paused, displayName = '' } = d || {};
+  const { videoId, paused, isScreenshare, displayName = '' } = d || {};
 
   if (disableRoundedCorners) {
     if (videoStyle && videoStyle.cornerRadius_px > 0) {
@@ -81,7 +82,7 @@ export default function VideoSingle({
         key="video"
         src={videoId}
         style={videoStyle}
-        scaleMode={scaleMode}
+        scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
       />
     );
   }

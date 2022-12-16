@@ -6,6 +6,7 @@ import { PausedPlaceholder } from './PausedPlaceholder.js';
 export default function VideoGrid({
   showLabels,
   scaleMode,
+  scaleModeForScreenshare,
   videoStyle,
   videoLabelStyle,
   placeholderStyle,
@@ -24,6 +25,7 @@ export default function VideoGrid({
     index,
     key,
     isAudioOnly,
+    isScreenshare,
     videoId,
     displayName,
     highlighted,
@@ -79,7 +81,13 @@ export default function VideoGrid({
     if (isAudioOnly || paused) {
       video = <PausedPlaceholder {...{ placeholderStyle }} />;
     } else {
-      video = <Video src={videoId} style={videoStyle} scaleMode={scaleMode} />;
+      video = (
+        <Video
+          src={videoId}
+          style={videoStyle}
+          scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
+        />
+      );
     }
 
     const item = (
