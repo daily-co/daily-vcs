@@ -728,20 +728,12 @@ function pauseToggled(ev) {
   createVideoInputsUI();
 }
 
-function screenshareToggled(ev) {
-  const btn = ev.target;
-  const idx = parseInt(btn.dataset.index, 10);
-
-  const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
-
-  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
-
-  sendActiveVideoInputSlots();
-
-  // for any screenshares, replace the default source with a screenshare input
+function makeCurrentImageSources() {
   let sources = {...g_defaultSources};
+
   sources.videoSlots = g_defaultSources.videoSlots.slice();
 
+  // for any screenshares, replace the default source with a screenshare input
   const ssImageEl = document.getElementById('screenshare_standin');
   for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
     if (g_activeVideoInputSlots[i].type !== 'screenshare') continue;
@@ -753,7 +745,20 @@ function screenshareToggled(ev) {
     sources.videoSlots.splice(i, 1, obj);
   }
 
-  sendUpdateImageSources(sources);
+  return sources;
+}
+
+function screenshareToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
+
+  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
+
+  sendActiveVideoInputSlots();
+
+  sendUpdateImageSources(makeCurrentImageSources());
   
   createVideoInputsUI();
 }
@@ -1496,7 +1501,7 @@ async function recreateVCSCanvasOutput() {
   g_vcsApi = await g_vcsCompLib.startDOMOutputAsync(
     g_outputContainer,
     g_viewportSize.w, g_viewportSize.h,
-    g_defaultSources,
+    makeCurrentImageSources(),
     { updateCb: compUpdatedCb,
       errorCb: vcsErrorCb,
       getAssetUrlCb,

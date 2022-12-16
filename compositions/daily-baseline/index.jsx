@@ -81,6 +81,7 @@ export default function DailyBaselineVCS() {
       preferScreenshare: params['videoSettings.preferScreenshare'],
       omitPaused: params['videoSettings.omitPaused'],
       omitAudioOnly: params['videoSettings.omitAudioOnly'],
+      omitExtraScreenshares: params['videoSettings.omitExtraScreenshares'],
     });
 
   const videoProps = {
@@ -92,6 +93,7 @@ export default function DailyBaselineVCS() {
     preferScreenshare: params['videoSettings.preferScreenshare'],
     showLabels: params['videoSettings.showParticipantLabels'],
     scaleMode: params['videoSettings.scaleMode'],
+    scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
     labelsOffset_px: {
       x: params['videoSettings.labels.offset_x_gu']
         ? parseFloat(params['videoSettings.labels.offset_x_gu']) * pxPerGu

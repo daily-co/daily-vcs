@@ -23,6 +23,7 @@ export function useActiveVideo(opts) {
   const maxCamStreams = opts?.maxCamStreams || 25;
   const preferScreenshare = opts?.preferScreenshare || false;
   const omitPaused = opts?.omitPaused || false;
+  const omitExtraScreenshares = opts?.omitExtraScreenshares || false;
 
   const memo = React.useMemo(() => {
     let numCamStreams = 0;
@@ -42,8 +43,10 @@ export function useActiveVideo(opts) {
 
       if (!omitPaused || !paused) {
         if (slot.type === 'screenshare') {
-          activeIds.push(videoId);
-          activeScreenshareIds.push(videoId);
+          if (!omitExtraScreenshares || activeScreenshareIds.length < 1) {
+            activeIds.push(videoId);
+            activeScreenshareIds.push(videoId);
+          }
         } else {
           if (numCamStreams < maxCamStreams) {
             // We have enough space
@@ -79,7 +82,13 @@ export function useActiveVideo(opts) {
       pausedById,
       maxSimultaneousVideoInputs,
     };
-  }, [activeVideoInputSlots, maxCamStreams, preferScreenshare, omitPaused]);
+  }, [
+    activeVideoInputSlots,
+    maxCamStreams,
+    preferScreenshare,
+    omitPaused,
+    omitExtraScreenshares,
+  ]);
 
   return memo;
 }
