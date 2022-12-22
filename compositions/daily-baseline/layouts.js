@@ -388,8 +388,8 @@ function computeGridItem({
   w = itemW;
   h = itemH;
 
-  x = Math.round(x);
-  y = Math.round(y);
+  x = Math.floor(x);
+  y = Math.floor(y);
   w = Math.ceil(w);
   h = Math.ceil(h);
 
