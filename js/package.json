@@ -48,6 +48,7 @@
   },
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
+    "#vcs-react/contexts": "./src/react/contexts/index.js",
     "#vcs-react/hooks": "./src/react/hooks/index.js"
   },
   "scripts": {

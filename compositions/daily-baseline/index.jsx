@@ -14,10 +14,11 @@ import {
   DEFAULT_TOAST_FONT_SIZE_PX,
   fontFamilies,
 } from './constants.js';
+import * as layoutFuncs from './layouts.js';
 import { imagePreloads } from './preloads.js';
 import { compositionParams } from './params.js';
 import { useActiveVideoAndAudio } from './participants.js';
-import * as layoutFuncs from './layouts.js';
+import { usePreferredParticipantIdsParam } from './preferred-video-ids.js';
 
 import CustomOverlay from './components/CustomOverlay.js';
 import ImageOverlay from './components/ImageOverlay.js';
@@ -75,7 +76,7 @@ export default function DailyBaselineVCS() {
   };
 
   // props passed to the video layout component
-  const { participantDescs, dominantVideoId, hasScreenShare } =
+  let { participantDescs, dominantVideoId, hasScreenShare } =
     useActiveVideoAndAudio({
       maxCamStreams: params['videoSettings.maxCamStreams'],
       preferScreenshare: params['videoSettings.preferScreenshare'],
@@ -83,6 +84,34 @@ export default function DailyBaselineVCS() {
       omitAudioOnly: params['videoSettings.omitAudioOnly'],
       omitExtraScreenshares: params['videoSettings.omitExtraScreenshares'],
     });
+
+  const { preferredVideoIds, includeOtherVideoIds } =
+    usePreferredParticipantIdsParam(params);
+
+  if (preferredVideoIds.length > 0 || !includeOtherVideoIds) {
+    const pref = [];
+    if (hasScreenShare && params['videoSettings.preferScreenshare']) {
+      // if 'preferScreenshare' is enabled, ensure those inputs are kept at the front
+      for (let i = 0; i < participantDescs.length; i++) {
+        const d = participantDescs[i];
+        if (d.isScreenshare) {
+          pref.push(d);
+          participantDescs.splice(i, 1);
+        }
+      }
+    }
+    for (const videoId of preferredVideoIds) {
+      const idx = participantDescs.findIndex((d) => d.videoId === videoId);
+      if (idx >= 0) {
+        const d = participantDescs[idx];
+        pref.push(d);
+        participantDescs.splice(idx, 1);
+      }
+    }
+    participantDescs = includeOtherVideoIds
+      ? pref.concat(participantDescs)
+      : pref;
+  }
 
   const videoProps = {
     videoStyle,

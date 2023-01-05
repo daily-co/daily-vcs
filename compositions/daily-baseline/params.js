@@ -51,6 +51,11 @@ export const compositionParams = [
       'Limits the number of non-screenshare streams that are included in the output.',
   },
   {
+    id: 'videoSettings.preferredParticipantIds',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
     id: 'videoSettings.preferScreenshare',
     type: 'boolean',
     defaultValue: false,

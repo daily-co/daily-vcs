@@ -197,11 +197,12 @@ export class Composition {
   // only those top-level keys that have changed from 'prev'
   writeSceneDescription(imageSources, prev) {
     if (!this.rootNode) {
-      console.error(
+      // this happens if the React render cycle ended up in an error state
+      /*console.error(
         "** can't write scene description, composition rootNode is null (nodes len %d, uncommitted %s)",
         this.nodes.length,
         this.uncommitted
-      );
+      );*/
       throw new Error('Composition setup is invalid for scene description');
     }
 

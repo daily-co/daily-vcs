@@ -21,17 +21,11 @@ export default function VideoGrid({
   itemInterval_gu = Math.max(-1, itemInterval_gu);
   outerPadding_gu = Math.max(-1, outerPadding_gu);
 
-  function makeItem({
+  function makeItem(
     index,
-    key,
-    isAudioOnly,
-    isScreenshare,
-    videoId,
-    displayName,
-    highlighted,
-    paused,
-  }) {
-    key = 'videogriditem_' + key;
+    { isAudioOnly, isScreenshare, videoId, displayName, highlighted, paused }
+  ) {
+    let key = 'videogriditem_' + index;
 
     const itemLayout = [
       layoutFuncs.grid,
@@ -104,5 +98,9 @@ export default function VideoGrid({
     return highlightDominant && highlight ? [item, highlight] : [item];
   }
 
-  return <Box id="videogrid">{participantDescs.map((d) => makeItem(d))}</Box>;
+  return (
+    <Box id="videogrid">
+      {participantDescs.map((d, idx) => makeItem(idx, d))}
+    </Box>
+  );
 }

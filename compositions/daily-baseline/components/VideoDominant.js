@@ -39,6 +39,7 @@ export default function VideoDominant(props) {
     dominantVideoId = participantDescs[0].videoId;
   }
 
+  const single = participantDescs.length == 1;
   const dominantFirst =
     positionEdge === PositionEdge.LEFT || positionEdge === PositionEdge.TOP;
   const isVerticalSplit =
@@ -49,12 +50,14 @@ export default function VideoDominant(props) {
   }
 
   let mainLayoutFn, chicletsIsRow;
-  if (isVerticalSplit) {
-    mainLayoutFn = layoutFuncs.splitVertical;
-    chicletsIsRow = false;
-  } else {
-    mainLayoutFn = layoutFuncs.splitHorizontal;
-    chicletsIsRow = true;
+  if (!single) {
+    if (isVerticalSplit) {
+      mainLayoutFn = layoutFuncs.splitVertical;
+      chicletsIsRow = false;
+    } else {
+      mainLayoutFn = layoutFuncs.splitHorizontal;
+      chicletsIsRow = true;
+    }
   }
 
   function makeDominantItem(itemIdx) {

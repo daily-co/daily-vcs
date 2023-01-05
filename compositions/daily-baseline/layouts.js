@@ -269,6 +269,8 @@ export function grid(parentFrame, params, layoutCtx) {
   return computeGridItem({
     parentFrame,
     index,
+    total,
+    centerRemainder: true,
     numCols,
     numRows,
     videoAsp,
@@ -342,6 +344,8 @@ function computeGridItem({
   videoAsp,
   innerMargins,
   preserveItemAspectRatio = true,
+  total,
+  centerRemainder = false,
 }) {
   let { x, y, w, h } = parentFrame;
   let itemW, itemH;
@@ -378,6 +382,18 @@ function computeGridItem({
 
   const col = index % numCols;
   const row = Math.floor(index / numCols);
+  const remainder = total - numCols * (numRows - 1);
+
+  // This is a grid, and we want the remained in the last row centered if it
+  // doesn't fill all the columns
+  if (
+    centerRemainder &&
+    row + 1 === numRows &&
+    remainder > 0 &&
+    remainder < numCols
+  ) {
+    x += ((itemW + innerMargins.x) * (numCols - remainder)) / 2;
+  }
 
   x += col * itemW;
   x += col * innerMargins.x;
@@ -388,8 +404,8 @@ function computeGridItem({
   w = itemW;
   h = itemH;
 
-  x = Math.round(x);
-  y = Math.round(y);
+  x = Math.floor(x);
+  y = Math.floor(y);
   w = Math.ceil(w);
   h = Math.ceil(h);
 
