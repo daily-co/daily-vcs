@@ -5,6 +5,9 @@ import VideoSingle from './VideoSingle.js';
 
 export default function VideoSplit(props) {
   const { participantDescs = [], margin_gu = 0 } = props;
+  // Make sure we have exactly one or two boxes
+  const totalItems = Math.max(1, Math.min(participantDescs.length, 2));
+
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
     return (
@@ -13,7 +16,7 @@ export default function VideoSplit(props) {
         id={key}
         layout={[
           layoutFuncs.splitAcrossLongerDimension,
-          { index: itemIdx, margin_gu },
+          { index: itemIdx, margin_gu, pos: 1 / totalItems },
         ]}
       >
         <VideoSingle
@@ -25,5 +28,9 @@ export default function VideoSplit(props) {
     );
   }
 
-  return <Box id="videosplit">{[makeItem(0), makeItem(1)]}</Box>;
+  if (totalItems === 1) {
+    return <Box id="videosplit">{[makeItem(0)]}</Box>;
+  } else {
+    return <Box id="videosplit">{[makeItem(0), makeItem(1)]}</Box>;
+  }
 }
