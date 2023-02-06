@@ -196,7 +196,7 @@ export class Composition {
 
   // if optional 'prev' is provided, this call returns
   // only those top-level keys that have changed from 'prev'
-  writeSceneDescription(imageSources, prev) {
+  writeSceneDescription(imageSources, prev, opts) {
     if (!this.rootNode) {
       // this happens if the React render cycle ended up in an error state
       /*console.error(
@@ -218,7 +218,7 @@ export class Composition {
     const fgDisplayList = encoder.finalize();
 
     // get video elements
-    const videoLayers = encodeCompVideoSceneDesc(this, imageSources);
+    const videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
 
     if (prev) {
       // if the caller provides their previous cached sceneDesc,

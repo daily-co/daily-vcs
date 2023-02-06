@@ -1,14 +1,14 @@
 import { IntrinsicNodeType } from '../comp-backing-model.js';
 
-export function encodeCompVideoSceneDesc(comp, imageSources) {
+export function encodeCompVideoSceneDesc(comp, imageSources, opts) {
   const sceneDesc = [];
 
-  recurseEncodeNode(sceneDesc, comp.rootNode, comp, imageSources);
+  recurseEncodeNode(sceneDesc, comp.rootNode, comp, imageSources, opts);
 
   return sceneDesc;
 }
 
-function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
+function recurseEncodeNode(sceneDesc, node, comp, imageSources, opts) {
   let srcDrawable;
 
   switch (node.constructor.nodeType) {
@@ -29,6 +29,14 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
     frame.y = Math.round(frame.y);
     frame.w = Math.round(frame.w);
     frame.h = Math.round(frame.h);
+
+    if (opts && opts.disallowNegativeFrameCoords) {
+      // some destination compositors don't support negative x/y coordinates
+      frame.x = Math.max(0, frame.x);
+      frame.y = Math.max(0, frame.y);
+      frame.w = Math.max(0, frame.w);
+      frame.h = Math.max(0, frame.h);
+    }
 
     const attrs = {};
 
@@ -53,6 +61,6 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources) {
   }
 
   for (const c of node.children) {
-    recurseEncodeNode(sceneDesc, c, comp, imageSources);
+    recurseEncodeNode(sceneDesc, c, comp, imageSources, opts);
   }
 }
