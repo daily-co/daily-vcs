@@ -86,7 +86,7 @@ export default function DailyBaselineVCS() {
     });
 
   const { preferredVideoIds, includeOtherVideoIds } =
-    usePreferredParticipantIdsParam(params);
+    usePreferredParticipantIdsParam(params, dominantVideoId, hasScreenShare);
 
   if (preferredVideoIds.length > 0 || !includeOtherVideoIds) {
     const pref = [];
@@ -178,6 +178,7 @@ export default function DailyBaselineVCS() {
       video = (
         <VideoSplit
           margin_gu={params['videoSettings.split.margin_gu']}
+          splitDirection={params['videoSettings.split.direction']}
           {...videoProps}
         />
       );

@@ -4,9 +4,22 @@ import * as layoutFuncs from '../layouts.js';
 import VideoSingle from './VideoSingle.js';
 
 export default function VideoSplit(props) {
-  const { participantDescs = [], margin_gu = 0 } = props;
+  const { participantDescs = [], margin_gu = 0, splitDirection } = props;
   // Make sure we have exactly one or two boxes
   const totalItems = Math.max(1, Math.min(participantDescs.length, 2));
+
+  let layoutFn;
+  switch (splitDirection) {
+    default:
+      layoutFn = layoutFuncs.splitAcrossLongerDimension;
+      break;
+    case 'horizontal':
+      layoutFn = layoutFuncs.splitHorizontal;
+      break;
+    case 'vertical':
+      layoutFn = layoutFuncs.splitVertical;
+      break;
+  }
 
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
@@ -14,10 +27,7 @@ export default function VideoSplit(props) {
       <Box
         key={key}
         id={key}
-        layout={[
-          layoutFuncs.splitAcrossLongerDimension,
-          { index: itemIdx, margin_gu, pos: 1 / totalItems },
-        ]}
+        layout={[layoutFn, { index: itemIdx, margin_gu, pos: 1 / totalItems }]}
       >
         <VideoSingle
           enableParticipantOverride={true}

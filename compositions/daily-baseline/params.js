@@ -115,6 +115,12 @@ export const compositionParams = [
     step: 0.1,
   },
   {
+    id: 'videoSettings.split.direction',
+    type: 'enum',
+    defaultValue: 'auto-by-viewport',
+    values: ['auto-by-viewport', 'vertical', 'horizontal'],
+  },
+  {
     id: 'videoSettings.grid.useDominantForSharing',
     type: 'boolean',
     defaultValue: false,

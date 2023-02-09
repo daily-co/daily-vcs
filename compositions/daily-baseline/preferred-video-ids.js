@@ -1,7 +1,11 @@
 import * as React from 'react';
 import { RoomContext } from '#vcs-react/contexts';
 
-export function usePreferredParticipantIdsParam(params) {
+export function usePreferredParticipantIdsParam(
+  params,
+  dominantVideoId, // these unused args are provided as a convenience for overriding this file
+  hasScreenShare
+) {
   const { availablePeers } = React.useContext(RoomContext);
 
   // allow user to pass a comma-separated list of peer ids as a string.
@@ -23,7 +27,7 @@ export function usePreferredParticipantIdsParam(params) {
     return arr;
   }, [availablePeers, preferredParticipantIdsStr]);
 
-  // provided here as an override point if someone doesn't want this behavior
+  // this value is returned as an override point if someone doesn't want this behavior
   const includeOtherVideoIds = true;
 
   return { preferredVideoIds, includeOtherVideoIds };
