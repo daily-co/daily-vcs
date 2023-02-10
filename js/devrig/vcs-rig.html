@@ -247,6 +247,22 @@ table {
 #controls .compInterface {
   margin-top: 1.5em;
 }
+#controls .compInterface .paramsJumpMenu {
+  position: sticky;
+  top: -12px;
+  text-align: right;
+  font-size: 11px;
+  z-index: 999;
+}
+#controls .compInterface .paramsJumpMenu select {
+  font-size: 11px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--control-outline-color);
+  border-radius: 5px;
+  color: white;
+  padding: 2px;
+
+}
 #controls .compInterface .paramsContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -490,6 +506,11 @@ table {
           </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
+            <div class="paramsJumpMenu">
+              <label>Jump to:</label>
+              <select>
+              </select>
+            </div>
             <div class="paramsContainer">
             </div>
           </div>
@@ -818,6 +839,41 @@ function paramEnumSelected(ev) {
   sendParam(paramId, newValue);
 }
 
+function paramGroupJumpSelected(ev) {
+  const sel = ev.target;
+  const opt = sel.options[sel.selectedIndex];
+  const groupName = opt.value;
+
+  sel.blur();
+
+  const groupEl = document.getElementById('paramGroup_'+groupName);
+  if (groupEl) {
+    groupEl.scrollIntoView();
+  }
+}
+
+function createParamGroupJumpMenuUI(groups, sel) {
+  let hasGroups = false;
+
+  for (const group of groups) {
+    if (group.items.length < 1) continue;
+    hasGroups = true;
+
+    const opt = document.createElement('option');
+    opt.setAttribute('value', group.name);
+    opt.innerText = group.name;
+    sel.appendChild(opt);
+  }
+
+  if (hasGroups) {
+    sel.addEventListener('change', paramGroupJumpSelected);
+  } else {
+    const parent = sel.parentElement;
+    parent.parentElement.removeChild(parent);
+  }
+
+}
+
 function createParamsUI(compInterface, groupsContainerEl) {
   // collect param groups
   const groups = [];
@@ -847,6 +903,8 @@ function createParamsUI(compInterface, groupsContainerEl) {
 
     const groupBox = document.createElement('div');
     groupsContainerEl.appendChild(groupBox);
+
+    groupBox.setAttribute('id', 'paramGroup_'+group.name);
 
     if (group.isMain && groups.length > 1) {
       // put main params box above groups
@@ -957,6 +1015,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
       }
     }
   }
+  return groups;
 }
 
 function createEnumUI(enumValues, paramId, sel) {
@@ -1169,7 +1228,9 @@ async function start() {
   document.querySelector("#compInfo .description").innerHTML = displayMeta.description;
 
   // create composition UI
-  createParamsUI(compInterface, document.querySelector("#controls .compInterface .paramsContainer"));
+  const groups = createParamsUI(compInterface, document.querySelector("#controls .compInterface .paramsContainer"));
+
+  createParamGroupJumpMenuUI(groups, document.querySelector("#controls .compInterface .paramsJumpMenu select"));
 }
 
 window.addEventListener('load', function(ev) {
