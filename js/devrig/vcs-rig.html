@@ -548,6 +548,7 @@ table {
       <img id="demoperson_missfury_square" src="example-assets/demoperson_missfury_square.png" />
       <img id="demoperson_moongirl_square" src="example-assets/demoperson_moongirl_square.png" />
       <img id="screenshare_standin" src="example-assets/screenshare_standin_1600x900.png" />
+      <img id="screenshare_standin2" src="example-assets/screenshare_standin2_1600x1000.png" />
       <img id="image_test_square" src="example-assets/test_square_320px.png" />
     </div>
   </body>
@@ -565,10 +566,19 @@ const MAX_VIDEO_INPUTS = 20;
 const g_activeVideoInputSlots = [];
 let g_dominantIdx = -1;
 
+let g_audioOnlyDemoPeers = [];
+let g_currentRoomPeers = [];
+
+let g_paramValues = {};
+
+let g_running = false;
+
+
 for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
   setActiveVideoInput(i, false);
 }
 setActiveVideoInput(0, true);
+
 
 function getVideoInputIdForSlotIndex(idx, isScreenshare) {
   const suffix = isScreenshare ? '_sshare' : '';
@@ -584,13 +594,11 @@ function setActiveVideoInput(idx, active, paused, isScreenshare) {
     type: isScreenshare ? 'screenshare' : 'camera',
     displayName: 'Participant ' + (idx+1)
   };
+
+  // this call will consolidate screenshares together with cameras where possible
+  // to make the room metadata more realistic
+  updateRoomPeers();
 }
-
-let g_audioOnlyDemoPeers = [];
-
-let g_paramValues = {};
-
-let g_running = false;
 
 
 // --- UI actions ---
@@ -661,6 +669,7 @@ function setAudioDemoParticipants(ev) {
       });
     }
   }
+  updateRoomPeers();
   sendRoomPeers();
 }
 
@@ -677,6 +686,8 @@ function randomizeParticipantName(ev) {
   }
 
   g_activeVideoInputSlots[idx].displayName = s;
+
+  updateRoomPeers();
 
   sendActiveVideoInputSlots();
 }
@@ -734,13 +745,16 @@ function makeCurrentImageSources() {
   sources.videoSlots = g_defaultSources.videoSlots.slice();
 
   // for any screenshares, replace the default source with a screenshare input
-  const ssImageEl = document.getElementById('screenshare_standin');
+  const ssImageEls = [
+    document.getElementById('screenshare_standin'),
+    document.getElementById('screenshare_standin2')
+  ];
   for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
     if (g_activeVideoInputSlots[i].type !== 'screenshare') continue;
 
     const obj = {
       id: getVideoInputIdForSlotIndex(i, true),
-      element: ssImageEl
+      element: ssImageEls[i % 2]
     };
     sources.videoSlots.splice(i, 1, obj);
   }
@@ -1577,33 +1591,83 @@ function sendActiveVideoInputSlots() {
   sendRoomPeers();
 }
 
-function sendRoomPeers() {
-  if (!g_vcsApi) return;
-
+function updateRoomPeers() {
   // the list of simulated participants in the room is a combination of
-  // our video inputs and any audio-only demo participants
+  // our video inputs and any audio-only demo participants.
   const arr = g_audioOnlyDemoPeers.slice();
+  
+  // for screenshares, we want to combine them with regular camera inputs;
+  // this better simulates the real world situation of a video call where
+  // screenshares are generally associated with a participant already present.
+  let screenshareIndexes = [];
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     let obj = g_activeVideoInputSlots[i];
-    if (obj.active) {
-      const isScreenshare = obj.type === 'screenshare';
-      arr.push({
-        id: obj.id,
+    if (obj.active && obj.type === 'screenshare') {
+      screenshareIndexes.push(i);
+    }
+  }
+  
+  for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
+    let obj = g_activeVideoInputSlots[i];
+    if (obj.active && obj.type !== 'screenshare') {
+      const d = {
+        id: 'peer' + (i + 1),
         displayName: obj.displayName,
         video: {
-          id: (isScreenshare) ? null : obj.id,
-          paused: (!isScreenshare && obj.paused)
-        },
-        screenshareVideo: {
-          id: (isScreenshare) ? obj.id : null,
-          paused: (isScreenshare && obj.paused)
+          id: obj.id,
+          paused: obj.paused
         },
         audio: {}
-      });
+      };
+      if (screenshareIndexes.length > 0) {
+        const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];
+        screenshareIndexes.splice(0, 1);
+
+        // attach available screenshare to this participant
+        d.screenshareVideo = {
+          id: ssobj.id,
+          paused: ssobj.paused
+        };
+      }
+      arr.push(d);
     }
   }
 
-  g_vcsApi.setRoomPeers(arr);
+  // any remaining screenshares get their own screenshare-only participant
+  for (const ssidx of screenshareIndexes) {
+    const ssobj = g_activeVideoInputSlots[ssidx];
+    arr.push({
+      id: 'peer' + (ssidx + 1),
+      displayName: 'ScreenshareOnly '+(ssidx + 1),
+      video: {},
+      audio: {},
+      screenshareVideo: {
+        id: ssobj.id,
+        paused: ssobj.paused
+      }
+    })
+  }
+
+  g_currentRoomPeers = arr;
+
+  // update our screenshare inputs' displayNames to match the room metadata
+  for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
+    const obj = g_activeVideoInputSlots[i];
+    if (obj.type === 'screenshare') {
+      const peer = g_currentRoomPeers.find((p) => p.screenshareVideo.id === obj.id);
+      if (!peer) {
+        console.warn("Couldn't find room peer for screenshare " + obj.id);
+      } else {
+        obj.displayName = peer.displayName + " screenshare";
+      }
+    }
+  }
+}
+
+function sendRoomPeers() {
+  if (!g_vcsApi) return;
+
+  g_vcsApi.setRoomPeers(g_currentRoomPeers);
 }
 
 function sendParam(paramId, value) {
