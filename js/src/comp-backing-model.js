@@ -218,7 +218,40 @@ export class Composition {
     const fgDisplayList = encoder.finalize();
 
     // get video elements
-    const videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
+    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
+
+    if (
+      videoLayers &&
+      videoLayers.length > 0 &&
+      opts &&
+      opts.disallowMultipleVideoLayersPerInputId
+    ) {
+      // VCS elements can be composed to render the same input many times,
+      // but compositing targets may not support this (if they have a fixed set
+      // of output layers where each input is represented once).
+      // this flag ensures we don't write incompatible output in such a setup.
+      const newLayers = [];
+      const usedIds = new Set();
+      const duplicatedIds = new Set();
+      for (const vl of videoLayers) {
+        if (vl.type !== 'video' || !vl.id) continue;
+
+        if (usedIds.has(vl.id)) {
+          duplicatedIds.add(vl.id);
+          continue;
+        }
+        newLayers.push(vl);
+        usedIds.add(vl.id);
+      }
+      videoLayers = newLayers;
+
+      if (duplicatedIds.size > 0) {
+        console.error(
+          'Composition#writeSceneDescription: found and removed duplicated video ids: ',
+          duplicatedIds
+        );
+      }
+    }
 
     if (prev) {
       // if the caller provides their previous cached sceneDesc,
