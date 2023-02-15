@@ -109,6 +109,17 @@ export const compositionParams = [
     defaultValue: 'rgb(0, 50, 80)',
   },
   {
+    id: 'videoSettings.highlight.color',
+    type: 'text',
+    defaultValue: 'rgb(255, 255, 255)',
+  },
+  {
+    id: 'videoSettings.highlight.stroke_gu',
+    type: 'number',
+    defaultValue: 0.2,
+    step: 0.05,
+  },
+  {
     id: 'videoSettings.split.margin_gu',
     type: 'number',
     defaultValue: 0,

@@ -57,6 +57,10 @@ export default function DailyBaselineVCS() {
     cornerRadius_px: params['videoSettings.roundedCorners']
       ? params['videoSettings.cornerRadius_gu'] * pxPerGu
       : 0,
+    highlightColor: params['videoSettings.highlight.color'] || '#fff',
+    highlightStrokeWidth_px: params['videoSettings.highlight.stroke_gu']
+      ? params['videoSettings.highlight.stroke_gu'] * pxPerGu
+      : 4,
   };
   const placeholderStyle = {
     fillColor: params['videoSettings.placeholder.bgColor'] || '#008',
