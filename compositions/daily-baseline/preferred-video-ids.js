@@ -14,18 +14,23 @@ export function usePreferredParticipantIdsParam(
   // according to the array we return.
   const preferredParticipantIdsStr =
     params['videoSettings.preferredParticipantIds'];
+  const preferScreenshare = params['videoSettings.preferScreenshare'];
 
   const preferredVideoIds = React.useMemo(() => {
     const wantedIds = parseCommaSeparatedList(preferredParticipantIdsStr);
     const arr = [];
     for (const wantedId of wantedIds) {
       const p = availablePeers.find((p) => p.id === wantedId);
-      if (p) {
-        arr.push(p.video.id || p.screenshareVideo.id);
-      }
+      if (!p) continue;
+
+      arr.push(
+        p.screenshareVideo.id && preferScreenshare
+          ? p.screenshareVideo.id
+          : p.video.id
+      );
     }
     return arr;
-  }, [availablePeers, preferredParticipantIdsStr]);
+  }, [availablePeers, preferredParticipantIdsStr, preferScreenshare]);
 
   // this value is returned as an override point if someone doesn't want this behavior
   const includeOtherVideoIds = true;

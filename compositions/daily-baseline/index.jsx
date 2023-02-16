@@ -90,16 +90,6 @@ export default function DailyBaselineVCS() {
 
   if (preferredVideoIds.length > 0 || !includeOtherVideoIds) {
     const pref = [];
-    if (hasScreenShare && params['videoSettings.preferScreenshare']) {
-      // if 'preferScreenshare' is enabled, ensure those inputs are kept at the front
-      for (let i = 0; i < participantDescs.length; i++) {
-        const d = participantDescs[i];
-        if (d.isScreenshare) {
-          pref.push(d);
-          participantDescs.splice(i, 1);
-        }
-      }
-    }
     for (const videoId of preferredVideoIds) {
       const idx = participantDescs.findIndex((d) => d.videoId === videoId);
       if (idx >= 0) {
