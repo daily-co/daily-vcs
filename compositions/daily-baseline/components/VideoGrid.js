@@ -57,8 +57,8 @@ export default function VideoGrid({
     let highlight;
     if (highlighted) {
       const highlightStyle = {
-        strokeColor: '#fff',
-        strokeWidth_px: 4,
+        strokeColor: videoStyle.highlightColor,
+        strokeWidth_px: videoStyle.highlightStrokeWidth_px,
         cornerRadius_px: videoStyle.cornerRadius_px,
       };
 
