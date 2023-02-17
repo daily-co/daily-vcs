@@ -22,9 +22,10 @@ export function usePreferredParticipantIdsParam(
     for (const wantedId of wantedIds) {
       const p = availablePeers.find((p) => p.id === wantedId);
       if (!p) continue;
+      if (!p.video && !p.screenshareVideo) continue;
 
       arr.push(
-        p.screenshareVideo.id && preferScreenshare
+        preferScreenshare && p.screenshareVideo && p.screenshareVideo.id
           ? p.screenshareVideo.id
           : p.video.id
       );
