@@ -1,7 +1,9 @@
 {
-  "name": "daily-vcs-core",
-  "version": "0.1.0",
-  "author": "Daily.co",
+  "name": "@daily-co/vcs-core",
+  "version": "0.1.2",
+  "author": "Daily (https://daily.co)",
+  "homepage": "https://docs.daily.co/reference/vcs",
+  "repository": "github:daily-co/daily-vcs",
   "license": "BSD-2-Clause",
   "type": "module",
   "devDependencies": {
