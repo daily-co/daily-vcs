@@ -121,7 +121,8 @@ export class Composition {
     const oldProps = this.currentWebframeProps || {};
     if (
       oldProps.src !== newProps.src ||
-      !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize)
+      !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize) ||
+      !isEqualWebFrameAction(oldProps.keyPressAction, newProps.keyPressAction)
     ) {
       this.webFramePropsDidChange = true;
       this.currentWebframeProps = newProps;
@@ -134,7 +135,7 @@ export class Composition {
     const opts = {};
 
     if (this.webFramePropsDidChange) {
-      opts.webFramePropsUpdate = { ...this.currentWebframeProps };
+      opts.newWebFrameProps = { ...this.currentWebframeProps };
       this.webFramePropsDidChange = false;
     }
 
@@ -195,7 +196,7 @@ export class Composition {
 
   // if optional 'prev' is provided, this call returns
   // only those top-level keys that have changed from 'prev'
-  writeSceneDescription(imageSources, prev) {
+  writeSceneDescription(imageSources, prev, opts) {
     if (!this.rootNode) {
       // this happens if the React render cycle ended up in an error state
       /*console.error(
@@ -217,7 +218,40 @@ export class Composition {
     const fgDisplayList = encoder.finalize();
 
     // get video elements
-    const videoLayers = encodeCompVideoSceneDesc(this, imageSources);
+    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
+
+    if (
+      videoLayers &&
+      videoLayers.length > 0 &&
+      opts &&
+      opts.disallowMultipleVideoLayersPerInputId
+    ) {
+      // VCS elements can be composed to render the same input many times,
+      // but compositing targets may not support this (if they have a fixed set
+      // of output layers where each input is represented once).
+      // this flag ensures we don't write incompatible output in such a setup.
+      const newLayers = [];
+      const usedIds = new Set();
+      const duplicatedIds = new Set();
+      for (const vl of videoLayers) {
+        if (vl.type !== 'video' || !vl.id) continue;
+
+        if (usedIds.has(vl.id)) {
+          duplicatedIds.add(vl.id);
+          continue;
+        }
+        newLayers.push(vl);
+        usedIds.add(vl.id);
+      }
+      videoLayers = newLayers;
+
+      if (duplicatedIds.size > 0) {
+        console.error(
+          'Composition#writeSceneDescription: found and removed duplicated video ids: ',
+          duplicatedIds
+        );
+      }
+    }
 
     if (prev) {
       // if the caller provides their previous cached sceneDesc,
@@ -304,6 +338,18 @@ function isEqualViewportSize(oldSize, newSize) {
   if (oldSize && !newSize) return false;
 
   if (oldSize.w !== newSize.w || oldSize.h !== newSize.h) return false;
+
+  return true;
+}
+
+function isEqualWebFrameAction(oldAction, newAction) {
+  if (!oldAction && !newAction) return true;
+  if (newAction && !oldAction) return false;
+  if (oldAction && !newAction) return false;
+
+  if (oldAction.name !== newAction.name) return false;
+  if (oldAction.key !== newAction.key) return false;
+  if (oldAction.modifiers !== newAction.modifiers) return false;
 
   return true;
 }
@@ -566,12 +612,20 @@ class WebFrameNode extends ImageNode {
 
   static defaultViewportSize = { w: 1280, h: 720 };
 
+  constructor() {
+    super();
+    this.keyPressAction = { name: '', key: '' };
+  }
+
   shouldUpdate(container, oldProps, newProps) {
     if (super.shouldUpdate(container, oldProps, newProps)) return true;
 
-    const newViewportSize =
-      newProps.viewportSize || this.constructor.defaultViewportSize;
-    if (!isEqualViewportSize(oldProps.viewportSize, newViewportSize))
+    if (!isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize))
+      return true;
+
+    if (
+      !isEqualWebFrameAction(oldProps.keyPressAction, newProps.keyPressAction)
+    )
       return true;
 
     return false;
@@ -580,15 +634,30 @@ class WebFrameNode extends ImageNode {
   commit(container, oldProps, newProps) {
     super.commit(container, oldProps, newProps);
 
-    this.viewportSize =
-      newProps.viewportSize || this.constructor.defaultViewportSize;
-
     // webframe's intrinsic size is simply the size given by the user
     this.intrinsicSize = this.viewportSize;
+
+    // do prop eq checks again so we can record the time when they're actually updated.
+    // this is useful for debugging and optimizing rendering.
+
+    const newViewportSize =
+      newProps.viewportSize || this.constructor.defaultViewportSize;
+    if (!isEqualViewportSize(oldProps.viewportSize, newViewportSize)) {
+      this.viewportSize = newViewportSize;
+
+      this.viewportSizeLastUpdateTs = Date.now() / 1000;
+    }
+
+    if (!isEqualWebFrameAction(this.keyPressAction, newProps.keyPressAction)) {
+      this.keyPressAction = newProps.keyPressAction || { name: '', key: '' };
+
+      this.keyPressActionLastUpdateTs = Date.now() / 1000;
+    }
 
     container.didUpdateWebframePropsInCommit({
       src: this.src,
       viewportSize: this.viewportSize,
+      keyPressAction: this.keyPressAction,
     });
   }
 }

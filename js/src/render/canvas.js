@@ -191,24 +191,51 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
           isVCSDisplayListEncoder &&
           renderMode !== CanvasRenderMode.VIDEO_PREVIEW
         ) {
-          // for command encoding, pass the magic identifier for the webframe singleton live asset
-          const WEBFRAME_ASSET_MAGIC_ID = '__webframe';
-          srcDrawable = images ? images[WEBFRAME_ASSET_MAGIC_ID] : null;
-          if (!srcDrawable) {
-            console.error(
-              `Can't encode WebFrame component, asset image ${WEBFRAME_ASSET_MAGIC_ID} is missing`
-            );
-          } else {
-            // also pass the live asset update key to ensure our sceneDesc output gets refreshed regularly
-            srcDrawable = {
-              ...srcDrawable,
-              liveAssetUpdateKey: node.liveAssetUpdateKey,
-            };
+          let canDrawWebFrame = true;
+
+          if (node.viewportSizeLastUpdateTs > 0) {
+            const tSinceUpdate =
+              Date.now() / 1000 - node.viewportSizeLastUpdateTs;
+            if (tSinceUpdate < 0.2) {
+              // if the viewport size was just changed, don't render.
+              // this prevents a flash of mis-shaped content on the server.
+              canDrawWebFrame = false;
+            }
+          }
+
+          if (canDrawWebFrame) {
+            // for command encoding, pass the magic identifier for the webframe singleton live asset
+            const WEBFRAME_ASSET_MAGIC_ID = '__webframe';
+            srcDrawable = images ? images[WEBFRAME_ASSET_MAGIC_ID] : null;
+            if (!srcDrawable) {
+              console.error(
+                `Can't encode WebFrame component, asset image ${WEBFRAME_ASSET_MAGIC_ID} is missing`
+              );
+            } else {
+              // also pass the live asset update key to ensure our sceneDesc output gets refreshed regularly
+              srcDrawable = {
+                ...srcDrawable,
+                liveAssetUpdateKey: node.liveAssetUpdateKey,
+              };
+            }
           }
         } else {
+          // draw a non-live preview of the webframe
           fillColor = 'white';
           textContent = 'WebFrame: ' + node.src;
           textStyle = { textColor: 'rgba(0, 0, 0, 0.5)' };
+
+          if (node.keyPressActionLastUpdateTs > 0) {
+            const tSinceKeypress =
+              Date.now() / 1000 - node.keyPressActionLastUpdateTs;
+            if (
+              tSinceKeypress < 1 &&
+              node.keyPressAction.name &&
+              node.keyPressAction.name.length > 0
+            ) {
+              textContent = 'Key pressed: ' + node.keyPressAction.name;
+            }
+          }
         }
         break;
       }

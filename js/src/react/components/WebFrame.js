@@ -10,6 +10,16 @@ export function WebFrame(props) {
   const frameIntv = 1 / WEBFRAME_UPDATE_FPS; // seconds
   const frameIdx = 1 + Math.floor(t / frameIntv);
 
+  const keyPressActionIsValid =
+    props.keyPressAction &&
+    props.keyPressAction.name &&
+    props.keyPressAction.key;
+  const keyPressAction = {
+    name: keyPressActionIsValid ? props.keyPressAction.name : '',
+    key: keyPressActionIsValid ? '' + props.keyPressAction.key : '',
+    modifiers: keyPressActionIsValid ? props.keyPressAction.modifiers : '',
+  };
+
   // can't use JSX in VCS core because it needs to run on Node without transpiling
   return React.createElement('webframe', {
     id: props.id,
@@ -22,5 +32,7 @@ export function WebFrame(props) {
     src: props.src || '',
     viewportSize: props.viewportSize,
     liveAssetUpdateKey: frameIdx,
+
+    keyPressAction,
   });
 }

@@ -109,10 +109,27 @@ export const compositionParams = [
     defaultValue: 'rgb(0, 50, 80)',
   },
   {
+    id: 'videoSettings.highlight.color',
+    type: 'text',
+    defaultValue: 'rgb(255, 255, 255)',
+  },
+  {
+    id: 'videoSettings.highlight.stroke_gu',
+    type: 'number',
+    defaultValue: 0.2,
+    step: 0.05,
+  },
+  {
     id: 'videoSettings.split.margin_gu',
     type: 'number',
     defaultValue: 0,
     step: 0.1,
+  },
+  {
+    id: 'videoSettings.split.direction',
+    type: 'enum',
+    defaultValue: 'auto-by-viewport',
+    values: ['auto-by-viewport', 'vertical', 'horizontal'],
   },
   {
     id: 'videoSettings.grid.useDominantForSharing',
@@ -462,6 +479,22 @@ export const compositionParams = [
     type: 'boolean',
     defaultValue: true,
     status: 'experimental',
+  },
+  {
+    id: 'webFrame.keyPress.keyName',
+    type: 'text',
+    defaultValue: 'ArrowRight',
+  },
+  {
+    id: 'webFrame.keyPress.modifiers',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
+    id: 'webFrame.keyPress.key',
+    type: 'number',
+    defaultValue: 0,
+    shortHelpText: "To send a keyboard press, increment the value of 'key'",
   },
 
   // -- toast params --

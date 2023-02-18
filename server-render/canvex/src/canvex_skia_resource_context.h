@@ -1,5 +1,6 @@
 #pragma once
 #include "skia_includes.h"
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -41,6 +42,17 @@ class FontVariantMatcher {
 using TypefaceCache = std::unordered_map<std::string, sk_sp<SkTypeface>>;
 using ImageCache = std::unordered_map<std::string, sk_sp<SkImage>>;
 
+struct LiveImageTimestamp {
+  double lastPollT; // last time we checked
+  std::filesystem::file_time_type lastReadFst; // last time the file was actually updated
+
+  LiveImageTimestamp(double t, std::filesystem::file_time_type fst)
+    : lastPollT(t), lastReadFst(fst) {}
+
+  LiveImageTimestamp()
+    : lastPollT(), lastReadFst() {}
+};
+
 struct CanvexSkiaResourceContext {
   CanvexSkiaResourceContext();
 
@@ -52,7 +64,7 @@ struct CanvexSkiaResourceContext {
    ImageCache imageCache_compositionNamespace;
    ImageCache imageCache_liveNamespace;
 
-   std::unordered_map<std::string, double> liveImageTimestampsByName;
+   std::unordered_map<std::string, LiveImageTimestamp> liveImageTimestampsByName;
 };
 
 } // namespace canvex

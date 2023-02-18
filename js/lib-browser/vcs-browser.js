@@ -348,8 +348,8 @@ class VCSBrowserOutput {
     }
     if (sceneDesc) this.updateCb(sceneDesc);
 
-    if (opts && opts.webFramePropsUpdate) {
-      console.log('got webframe props update: ', opts.webFramePropsUpdate);
+    if (opts && opts.newWebFrameProps) {
+      console.log('got webframe props update: ', opts.newWebFrameProps);
     }
   }
 

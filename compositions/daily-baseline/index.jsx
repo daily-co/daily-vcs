@@ -57,6 +57,10 @@ export default function DailyBaselineVCS() {
     cornerRadius_px: params['videoSettings.roundedCorners']
       ? params['videoSettings.cornerRadius_gu'] * pxPerGu
       : 0,
+    highlightColor: params['videoSettings.highlight.color'] || '#fff',
+    highlightStrokeWidth_px: params['videoSettings.highlight.stroke_gu']
+      ? params['videoSettings.highlight.stroke_gu'] * pxPerGu
+      : 4,
   };
   const placeholderStyle = {
     fillColor: params['videoSettings.placeholder.bgColor'] || '#008',
@@ -86,20 +90,10 @@ export default function DailyBaselineVCS() {
     });
 
   const { preferredVideoIds, includeOtherVideoIds } =
-    usePreferredParticipantIdsParam(params);
+    usePreferredParticipantIdsParam(params, dominantVideoId, hasScreenShare);
 
   if (preferredVideoIds.length > 0 || !includeOtherVideoIds) {
     const pref = [];
-    if (hasScreenShare && params['videoSettings.preferScreenshare']) {
-      // if 'preferScreenshare' is enabled, ensure those inputs are kept at the front
-      for (let i = 0; i < participantDescs.length; i++) {
-        const d = participantDescs[i];
-        if (d.isScreenshare) {
-          pref.push(d);
-          participantDescs.splice(i, 1);
-        }
-      }
-    }
     for (const videoId of preferredVideoIds) {
       const idx = participantDescs.findIndex((d) => d.videoId === videoId);
       if (idx >= 0) {
@@ -178,6 +172,7 @@ export default function DailyBaselineVCS() {
       video = (
         <VideoSplit
           margin_gu={params['videoSettings.split.margin_gu']}
+          splitDirection={params['videoSettings.split.direction']}
           {...videoProps}
         />
       );
@@ -332,6 +327,9 @@ export default function DailyBaselineVCS() {
       opacity={params['webFrame.opacity']}
       enableFade={params['webFrame.enableFade']}
       show={params.showWebFrameOverlay}
+      keyPressActionKey={params['webFrame.keyPress.key']}
+      keyPressActionName={params['webFrame.keyPress.keyName']}
+      keyPressModifiers={params['webFrame.keyPress.modifiers']}
     />
   );
 
