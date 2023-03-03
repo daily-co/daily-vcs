@@ -46,6 +46,19 @@ const moduleReplacementPlugin = new webpack.NormalModuleReplacementPlugin(
   }
 );
 
+// pass env variable so we can customize for production build (e.g. hide experimental settings)
+function getDefineEnvPlugin(isDev) {
+  return new webpack.DefinePlugin({
+    VCS_BUILD_IS_PROD: isDev ? 'false' : 'true',
+  });
+}
+
+// following buffer plugin is needed by textkit (from react-pdf)
+const provideTextkitDepsPlugin = new webpack.ProvidePlugin({
+  Buffer: ['buffer', 'Buffer'],
+  process: 'process/browser',
+});
+
 function getBaseConfig() {
   return {
     module: {
@@ -96,13 +109,13 @@ function getBaseConfig() {
 }
 
 function getConfig_moduleWeb(env) {
-  let isDev = true;
+  let isDev = false;
 
   const compFilenameBase = g_compId.replace(/:/g, '_');
 
   return {
     ...getBaseConfig(),
-    mode: 'development',
+    mode: isDev ? 'development' : 'production',
     entry: './lib-browser/vcs-browser.js',
     output: {
       filename: `${compFilenameBase}.bundle.js`,
@@ -111,30 +124,16 @@ function getConfig_moduleWeb(env) {
         type: 'commonjs2', //'module',
       },
     },
-    /*experiments: {
-      outputModule: true,
-    },
-    externalsType: 'module',
-    externals: {
-      react: {
-        commonjs: 'react',
-        commonjs2: 'react',
-        amd: 'react',
-        root: 'React',
-        module: 'react',
-      },
-    },*/
     plugins: [
       breakOnWarningPlugin,
       moduleReplacementPlugin,
-
-      // following buffer plugin is needed by textkit (from react-pdf)
-      new webpack.ProvidePlugin({
-        Buffer: ['buffer', 'Buffer'],
-        process: 'process/browser',
-      }),
+      provideTextkitDepsPlugin,
+      getDefineEnvPlugin(isDev),
     ],
     devtool: isDev ? 'cheap-source-map' : false,
+    optimization: {
+      minimize: !isDev,
+    },
   };
 }
 
@@ -146,7 +145,8 @@ function getConfig_devRig(env) {
   const dirsToCopy = [
     { from: './devrig/example-assets', to: 'example-assets' },
     { from: './devrig/ui-assets', to: 'ui-assets' },
-    { from: '../res', to: 'res' },
+    { from: '../res/fonts', to: 'res/fonts' },
+    { from: '../res/test-assets', to: 'res/test-assets' },
   ];
   if (isCompBundleDir) {
     // if this is a directory, copy its assets to devrig too.
@@ -173,7 +173,7 @@ function getConfig_devRig(env) {
     ...getBaseConfig(),
     mode: isDev ? 'development' : 'production',
     entry: {
-      devrig: './lib-browser/vcs-browser.js', //path.resolve(__dirname, '', 'vcs-browser.js'),
+      devrig: './lib-browser/vcs-browser.js',
     },
     target: 'web',
     output: {
@@ -187,27 +187,11 @@ function getConfig_devRig(env) {
       path: path.resolve('build'),
       clean: true,
     },
-    devServer: {
-      port: 8083,
-      static: {
-        directory: './build',
-      },
-    },
-    devtool: isDev ? 'cheap-source-map' : false,
     plugins: [
       breakOnWarningPlugin,
       moduleReplacementPlugin,
-
-      // pass env variable so we can customize for production build (e.g. hide experimental settings)
-      new webpack.DefinePlugin({
-        VCS_BUILD_IS_PROD: isDev ? 'false' : 'true',
-      }),
-
-      // following buffer plugin is needed by textkit (from react-pdf)
-      new webpack.ProvidePlugin({
-        Buffer: ['buffer', 'Buffer'],
-        process: 'process/browser',
-      }),
+      provideTextkitDepsPlugin,
+      getDefineEnvPlugin(isDev),
 
       // dev server
       new HtmlWebpackPlugin({
@@ -220,6 +204,13 @@ function getConfig_devRig(env) {
       }),
     ],
     externals: [],
+    devServer: {
+      port: 8083,
+      static: {
+        directory: './build',
+      },
+    },
+    devtool: isDev ? 'cheap-source-map' : false,
     optimization: {
       minimize: !isDev,
     },
@@ -236,7 +227,13 @@ export default function wwwClientConfig(env) {
   }
   g_compId = compId;
 
-  if (!(g_compositionImportPath = getCompPathFromId(compId, 'browser'))) {
+  if (
+    !(g_compositionImportPath = getCompPathFromId(
+      compId,
+      'browser',
+      env.vcsroot
+    ))
+  ) {
     process.exit(3);
   }
 
