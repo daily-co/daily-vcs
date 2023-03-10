@@ -735,6 +735,8 @@ function participantToggled(ev) {
     }
   }
 
+  updateRoomPeers();
+
   sendActiveVideoInputSlots();
 }
 
@@ -743,6 +745,8 @@ function dominantToggled(ev) {
   const idx = parseInt(btn.dataset.index, 10);
 
   g_dominantIdx = (idx === g_dominantIdx) ? -1 : idx;
+
+  updateRoomPeers();
 
   sendActiveVideoInputSlots();
   
@@ -754,6 +758,8 @@ function pauseToggled(ev) {
   const idx = parseInt(btn.dataset.index, 10);
 
   g_activeVideoInputSlots[idx].paused = !g_activeVideoInputSlots[idx].paused;
+
+  updateRoomPeers();
 
   sendActiveVideoInputSlots();
 
@@ -1667,12 +1673,14 @@ function updateRoomPeers() {
       screenshareIndexes.push(i);
     }
   }
-  
+
+  const kPeerPrefix = 'p';
+
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     let obj = g_activeVideoInputSlots[i];
     if (obj.active && obj.type !== 'screenshare') {
       const d = {
-        id: 'peer' + (i + 1),
+        id: kPeerPrefix + (i + 1),
         displayName: obj.displayName,
         video: {
           id: obj.id,
@@ -1698,7 +1706,7 @@ function updateRoomPeers() {
   for (const ssidx of screenshareIndexes) {
     const ssobj = g_activeVideoInputSlots[ssidx];
     arr.push({
-      id: 'peer' + (ssidx + 1),
+      id: kPeerPrefix + (ssidx + 1),
       displayName: 'ScreenshareOnly '+(ssidx + 1),
       video: {},
       audio: {},
@@ -1714,12 +1722,16 @@ function updateRoomPeers() {
   // update our screenshare inputs' displayNames to match the room metadata
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     const obj = g_activeVideoInputSlots[i];
-    if (obj.type === 'screenshare') {
-      const peer = g_currentRoomPeers.find((p) => p.screenshareVideo.id === obj.id);
-      if (!peer) {
-        console.warn("Couldn't find room peer for screenshare " + obj.id);
-      } else {
-        obj.displayName = peer.displayName + " screenshare";
+    if (obj.active && obj.type === 'screenshare') {
+      try {
+        const peer = g_currentRoomPeers.find((p) => p.screenshareVideo.id === obj.id);
+        if (!peer) {
+          console.warn("Couldn't find room peer for screenshare " + obj.id);
+        } else {
+          obj.displayName = peer.displayName + " screenshare";
+        }
+      } catch (e) {
+        console.warn("Couldn't find room peer for screenshare input %d (%s), peers: ", i, obj.id, g_currentRoomPeers);
       }
     }
   }
