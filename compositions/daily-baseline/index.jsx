@@ -271,6 +271,10 @@ export default function DailyBaselineVCS() {
       overlayProps.fontSize_gu = parseFloat(overlayProps.fontSize_gu);
     }
 
+    overlayProps.scale_x = isFinite(overlayProps.scale_x)
+      ? parseFloat(overlayProps.scale_x)
+      : 1;
+
     overlayProps.color = overlayProps.color ? overlayProps.color.trim() : null;
 
     overlayProps.strokeColor = overlayProps.strokeColor
