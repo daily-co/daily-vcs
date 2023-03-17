@@ -183,8 +183,15 @@ export class Composition {
           node,
         });
       }
-      node.layoutFrame = frame;
-      //console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
+
+      node.setLayoutFrame(frame);
+
+      /*console.log(
+        "frame for node '%s' (%s): ",
+        node.userGivenId,
+        node.constructor.nodeType,
+        JSON.stringify(node.layoutFrame)
+      );*/
 
       for (const c of node.children) {
         recurseLayout(c, frame);
@@ -342,6 +349,22 @@ function isEqualViewportSize(oldSize, newSize) {
   return true;
 }
 
+function isEqualLayoutFrame(oldFrame, newFrame) {
+  if (!oldFrame && !newFrame) return true;
+  if (newFrame && !oldFrame) return false;
+  if (oldFrame && !newFrame) return false;
+
+  if (
+    oldFrame.x !== newFrame.x ||
+    oldFrame.y !== newFrame.y ||
+    oldFrame.w !== newFrame.w ||
+    oldFrame.h !== newFrame.h
+  )
+    return false;
+
+  return true;
+}
+
 function isEqualWebFrameAction(oldAction, newAction) {
   if (!oldAction && !newAction) return true;
   if (newAction && !oldAction) return false;
@@ -462,6 +485,10 @@ class NodeBase {
     }
     return obj;
   }
+
+  setLayoutFrame(frame) {
+    this.layoutFrame = frame;
+  }
 }
 
 class RootNode extends NodeBase {
@@ -524,14 +551,29 @@ class TextNode extends StyledNodeBase {
       );
 
       try {
-        this.measureTextSize();
+        // measure text's intrinsic size now
+        this.computeTextSize();
+
+        /*console.log(
+          "commit measured text size '%s': ",
+          this.text,
+          this.intrinsicSize
+        );*/
       } catch (e) {
         console.error('** exception when measuring text size: ', e);
       }
     }
   }
 
-  measureTextSize() {
+  setLayoutFrame(frame) {
+    if (isEqualLayoutFrame(frame, this.layoutFrame)) return;
+
+    this.layoutFrame = frame;
+
+    this.computeTextSize(this.layoutFrame);
+  }
+
+  computeTextSize(overrideFrame) {
     if (!this.attrStringDesc || !this.attrStringDesc.fragments) {
       console.error(
         "** can't measure label size, attrStringDesc missing or invalid: " +
@@ -539,8 +581,7 @@ class TextNode extends StyledNodeBase {
       );
       return;
     }
-    // constrain layout within viewport for now
-    let frame = this.container.viewportSize;
+    let frame = overrideFrame || this.container.viewportSize;
 
     const textContainerFrame = {
       x: 0,
@@ -562,15 +603,20 @@ class TextNode extends StyledNodeBase {
 
     this.textLayoutBlocks = blocks;
     this.textNumLines = numLines > 0 ? numLines : 0;
-    this.intrinsicSize = { w: Math.ceil(totalBox.w), h: Math.ceil(totalBox.h) };
+
+    if (!overrideFrame) {
+      this.intrinsicSize = {
+        w: Math.ceil(totalBox.w),
+        h: Math.ceil(totalBox.h),
+      };
+    }
 
     /*console.log(
-      'numlines %d, totalBox: ',
+      'numlines %d, intrinsicSize: ',
       this.textNumLines,
       this.intrinsicSize,
       this.textLayoutBlocks
     );*/
-    //console.log("measured text size '%s': ", this.text, this.intrinsicSize)
   }
 }
 
