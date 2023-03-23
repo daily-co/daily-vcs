@@ -65,7 +65,7 @@ void CanvexContext::setLineJoin(JoinType t) {
 
 void CanvexContext::setGlobalAlpha(double a) {
   auto& sf = stateStack_.back();
-  sf.globalAlpha = isfinite(a) ? a : 0.0;
+  sf.globalAlpha = std::isfinite(a) ? a : 0.0;
 }
 
 void CanvexContext::setFont(const std::string& weight, const std::string& style, double pxSize, const std::string& name) {
