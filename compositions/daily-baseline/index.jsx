@@ -53,31 +53,36 @@ export default function DailyBaselineVCS() {
 
   // style applied to video elements.
   // placeholder is used if no video is available.
-  const videoStyle = {
-    cornerRadius_px: params['videoSettings.roundedCorners']
+  const styles = React.useMemo(() => {
+    const cornerRadius_px = params['videoSettings.roundedCorners']
       ? params['videoSettings.cornerRadius_gu'] * pxPerGu
-      : 0,
-    highlightColor: params['videoSettings.highlight.color'] || '#fff',
-    highlightStrokeWidth_px: params['videoSettings.highlight.stroke_gu']
-      ? params['videoSettings.highlight.stroke_gu'] * pxPerGu
-      : 4,
-  };
-  const placeholderStyle = {
-    fillColor: params['videoSettings.placeholder.bgColor'] || '#008',
-    cornerRadius_px: videoStyle.cornerRadius_px,
-  };
-  const videoLabelStyle = {
-    textColor: params['videoSettings.labels.color'] || 'white',
-    fontFamily: params['videoSettings.labels.fontFamily'] || DEFAULT_FONT,
-    fontWeight: params['videoSettings.labels.fontWeight'] || '600',
-    fontSize_px: params['videoSettings.labels.fontSize_pct']
-      ? (params['videoSettings.labels.fontSize_pct'] / 100) *
-        DEFAULT_LABEL_FONT_SIZE_PX
-      : DEFAULT_LABEL_FONT_SIZE_PX,
-    strokeColor:
-      params['videoSettings.labels.strokeColor'] || 'rgba(0, 0, 0, 0.9)',
-    strokeWidth_px: 4,
-  };
+      : 0;
+    return {
+      video: {
+        cornerRadius_px,
+        highlightColor: params['videoSettings.highlight.color'] || '#fff',
+        highlightStrokeWidth_px: params['videoSettings.highlight.stroke_gu']
+          ? params['videoSettings.highlight.stroke_gu'] * pxPerGu
+          : 4,
+      },
+      placeholder: {
+        fillColor: params['videoSettings.placeholder.bgColor'] || '#008',
+        cornerRadius_px,
+      },
+      videoLabel: {
+        textColor: params['videoSettings.labels.color'] || 'white',
+        fontFamily: params['videoSettings.labels.fontFamily'] || DEFAULT_FONT,
+        fontWeight: params['videoSettings.labels.fontWeight'] || '600',
+        fontSize_px: params['videoSettings.labels.fontSize_pct']
+          ? (params['videoSettings.labels.fontSize_pct'] / 100) *
+            DEFAULT_LABEL_FONT_SIZE_PX
+          : DEFAULT_LABEL_FONT_SIZE_PX,
+        strokeColor:
+          params['videoSettings.labels.strokeColor'] || 'rgba(0, 0, 0, 0.9)',
+        strokeWidth_px: 4,
+      },
+    };
+  }, [params]);
 
   // props passed to the video layout component
   let { participantDescs, dominantVideoId, hasScreenShare } =
@@ -107,136 +112,142 @@ export default function DailyBaselineVCS() {
       : pref;
   }
 
-  const videoProps = {
-    videoStyle,
-    placeholderStyle,
-    videoLabelStyle,
-    participantDescs,
-    dominantVideoId,
-    preferScreenshare: params['videoSettings.preferScreenshare'],
-    showLabels: params['videoSettings.showParticipantLabels'],
-    scaleMode: params['videoSettings.scaleMode'],
-    scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
-    labelsOffset_px: {
-      x: params['videoSettings.labels.offset_x_gu']
-        ? parseFloat(params['videoSettings.labels.offset_x_gu']) * pxPerGu
-        : 0,
-      y: params['videoSettings.labels.offset_y_gu']
-        ? parseFloat(params['videoSettings.labels.offset_y_gu']) * pxPerGu
-        : 0,
-    },
-  };
-  // bw compatibility - check for deprecated param names using absolute px units instead of gu
-  if (isFinite(params['videoSettings.labels.offset_x'])) {
-    videoProps.labelsOffset_px.x = parseInt(
-      params['videoSettings.labels.offset_x'],
-      10
-    );
-  }
-  if (isFinite(params['videoSettings.labels.offset_y'])) {
-    videoProps.labelsOffset_px.y = parseInt(
-      params['videoSettings.labels.offset_y'],
-      10
-    );
-  }
-
-  let mode = params.mode;
-  if (
-    mode === 'grid' &&
-    params['videoSettings.grid.useDominantForSharing'] &&
-    hasScreenShare
-  ) {
-    mode = 'dominant';
-  }
-
-  let video;
-  switch (mode) {
-    default:
-    case 'single':
-      video = <VideoSingle {...videoProps} />;
-      break;
-    case 'grid':
-      video = (
-        <VideoGrid
-          {...videoProps}
-          highlightDominant={params['videoSettings.grid.highlightDominant']}
-          itemInterval_gu={params['videoSettings.grid.itemInterval_gu']}
-          outerPadding_gu={params['videoSettings.grid.outerPadding_gu']}
-          preserveItemAspectRatio={
-            params['videoSettings.grid.preserveAspectRatio']
-          }
-        />
+  // we can memoize the video layout root component because it doesn't call useVideoTime()
+  // (i.e. doesn't render animations by explicitly modifying component props)
+  const video = React.useMemo(() => {
+    console.log('rendering video layout: ', participantDescs);
+    const videoProps = {
+      videoStyle: styles.video,
+      placeholderStyle: styles.placeholder,
+      videoLabelStyle: styles.videoLabel,
+      participantDescs,
+      dominantVideoId,
+      preferScreenshare: params['videoSettings.preferScreenshare'],
+      showLabels: params['videoSettings.showParticipantLabels'],
+      scaleMode: params['videoSettings.scaleMode'],
+      scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
+      labelsOffset_px: {
+        x: params['videoSettings.labels.offset_x_gu']
+          ? parseFloat(params['videoSettings.labels.offset_x_gu']) * pxPerGu
+          : 0,
+        y: params['videoSettings.labels.offset_y_gu']
+          ? parseFloat(params['videoSettings.labels.offset_y_gu']) * pxPerGu
+          : 0,
+      },
+    };
+    // bw compatibility - check for deprecated param names using absolute px units instead of gu
+    if (isFinite(params['videoSettings.labels.offset_x'])) {
+      videoProps.labelsOffset_px.x = parseInt(
+        params['videoSettings.labels.offset_x'],
+        10
       );
-      break;
-    case 'split':
-      video = (
-        <VideoSplit
-          margin_gu={params['videoSettings.split.margin_gu']}
-          splitDirection={params['videoSettings.split.direction']}
-          {...videoProps}
-        />
-      );
-      break;
-    case 'pip': {
-      let h_gu;
-      let margin_gu;
-      // bw compatibility - deprecated params that used viewport height instead of gu
-      if (isFinite(params['videoSettings.pip.height_vh'])) {
-        h_gu = params['videoSettings.pip.height_vh'] * guPerVh;
-      } else {
-        h_gu = params['videoSettings.pip.height_gu'];
-      }
-      if (isFinite(params['videoSettings.pip.margin_vh'])) {
-        margin_gu = params['videoSettings.pip.margin_vh'] * guPerVh;
-      } else {
-        margin_gu = params['videoSettings.pip.margin_gu'];
-      }
-
-      video = (
-        <VideoPip
-          {...videoProps}
-          positionCorner={params['videoSettings.pip.position']}
-          aspectRatio={params['videoSettings.pip.aspectRatio']}
-          height_gu={h_gu}
-          margin_gu={margin_gu}
-          followDominantFlag={params['videoSettings.pip.followDomFlag']}
-          disableRoundedCornersOnMain={
-            params['videoSettings.pip.sharpCornersOnMain']
-          }
-        />
-      );
-      break;
     }
-    case 'dominant': {
-      // If we prefer screenshare but are following dominant, ignore the
-      // dominant and use the first video (which will be a screenshare because
-      // preferScreenshare is true)
-      if (
-        params['videoSettings.dominant.followDomFlag'] &&
-        params['videoSettings.preferScreenshare'] &&
-        hasScreenShare
-      ) {
-        videoProps.dominantVideoId = participantDescs[0].videoId;
-      }
-
-      video = (
-        <VideoDominant
-          {...videoProps}
-          positionEdge={params['videoSettings.dominant.position']}
-          splitPos={params['videoSettings.dominant.splitPos']}
-          maxItems={params['videoSettings.dominant.numChiclets']}
-          followDominantFlag={params['videoSettings.dominant.followDomFlag']}
-          itemInterval_gu={params['videoSettings.dominant.itemInterval_gu']}
-          outerPadding_gu={params['videoSettings.dominant.outerPadding_gu']}
-          splitMargin_gu={params['videoSettings.dominant.splitMargin_gu']}
-          disableRoundedCornersOnMain={
-            params['videoSettings.dominant.sharpCornersOnMain']
-          }
-        />
+    if (isFinite(params['videoSettings.labels.offset_y'])) {
+      videoProps.labelsOffset_px.y = parseInt(
+        params['videoSettings.labels.offset_y'],
+        10
       );
-      break;
     }
-  }
+
+    let mode = params.mode;
+    if (
+      mode === 'grid' &&
+      params['videoSettings.grid.useDominantForSharing'] &&
+      hasScreenShare
+    ) {
+      mode = 'dominant';
+    }
+
+    let video;
+    switch (mode) {
+      default:
+      case 'single':
+        video = <VideoSingle {...videoProps} />;
+        break;
+      case 'grid':
+        video = (
+          <VideoGrid
+            {...videoProps}
+            highlightDominant={params['videoSettings.grid.highlightDominant']}
+            itemInterval_gu={params['videoSettings.grid.itemInterval_gu']}
+            outerPadding_gu={params['videoSettings.grid.outerPadding_gu']}
+            preserveItemAspectRatio={
+              params['videoSettings.grid.preserveAspectRatio']
+            }
+          />
+        );
+        break;
+      case 'split':
+        video = (
+          <VideoSplit
+            margin_gu={params['videoSettings.split.margin_gu']}
+            splitDirection={params['videoSettings.split.direction']}
+            {...videoProps}
+          />
+        );
+        break;
+      case 'pip': {
+        let h_gu;
+        let margin_gu;
+        // bw compatibility - deprecated params that used viewport height instead of gu
+        if (isFinite(params['videoSettings.pip.height_vh'])) {
+          h_gu = params['videoSettings.pip.height_vh'] * guPerVh;
+        } else {
+          h_gu = params['videoSettings.pip.height_gu'];
+        }
+        if (isFinite(params['videoSettings.pip.margin_vh'])) {
+          margin_gu = params['videoSettings.pip.margin_vh'] * guPerVh;
+        } else {
+          margin_gu = params['videoSettings.pip.margin_gu'];
+        }
+
+        video = (
+          <VideoPip
+            {...videoProps}
+            positionCorner={params['videoSettings.pip.position']}
+            aspectRatio={params['videoSettings.pip.aspectRatio']}
+            height_gu={h_gu}
+            margin_gu={margin_gu}
+            followDominantFlag={params['videoSettings.pip.followDomFlag']}
+            disableRoundedCornersOnMain={
+              params['videoSettings.pip.sharpCornersOnMain']
+            }
+          />
+        );
+        break;
+      }
+      case 'dominant': {
+        // If we prefer screenshare but are following dominant, ignore the
+        // dominant and use the first video (which will be a screenshare because
+        // preferScreenshare is true)
+        if (
+          params['videoSettings.dominant.followDomFlag'] &&
+          params['videoSettings.preferScreenshare'] &&
+          hasScreenShare
+        ) {
+          videoProps.dominantVideoId = participantDescs[0].videoId;
+        }
+
+        video = (
+          <VideoDominant
+            {...videoProps}
+            positionEdge={params['videoSettings.dominant.position']}
+            splitPos={params['videoSettings.dominant.splitPos']}
+            maxItems={params['videoSettings.dominant.numChiclets']}
+            followDominantFlag={params['videoSettings.dominant.followDomFlag']}
+            itemInterval_gu={params['videoSettings.dominant.itemInterval_gu']}
+            outerPadding_gu={params['videoSettings.dominant.outerPadding_gu']}
+            splitMargin_gu={params['videoSettings.dominant.splitMargin_gu']}
+            disableRoundedCornersOnMain={
+              params['videoSettings.dominant.sharpCornersOnMain']
+            }
+          />
+        );
+        break;
+      }
+    }
+    return video;
+  }, [params, styles, participantDescs, dominantVideoId, hasScreenShare]);
 
   let graphics = [];
   let gi = 0;

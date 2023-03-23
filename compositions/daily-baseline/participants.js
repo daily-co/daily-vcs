@@ -16,13 +16,7 @@ export function useActiveVideoAndAudio({
   omitAudioOnly = false,
   omitExtraScreenshares = false,
 }) {
-  const {
-    activeIds,
-    activeScreenshareIds,
-    dominantId,
-    displayNamesById,
-    pausedById,
-  } = useActiveVideo({
+  const activeVideoObj = useActiveVideo({
     maxCamStreams,
     preferScreenshare,
     omitPaused,
@@ -31,39 +25,49 @@ export function useActiveVideoAndAudio({
 
   const audioOnlyPeers = useAudioOnlyPeers();
 
-  let items = activeIds.map((videoId, i) => {
+  return React.useMemo(() => {
+    const {
+      activeIds,
+      activeScreenshareIds,
+      dominantId,
+      displayNamesById,
+      pausedById,
+    } = activeVideoObj;
+
+    let items = activeIds.map((videoId, i) => {
+      return {
+        index: i,
+        key: 'video_' + i,
+        isAudioOnly: false,
+        isScreenshare: activeScreenshareIds.includes(videoId),
+        videoId,
+        displayName: displayNamesById[videoId] || '',
+        highlighted: videoId === dominantId,
+        paused: pausedById[videoId],
+      };
+    });
+
+    if (!omitAudioOnly && audioOnlyPeers.length > 0) {
+      items = items.concat(
+        audioOnlyPeers.map((peer, i) => {
+          return {
+            index: items.length + i,
+            key: 'audioOnly_' + i,
+            isAudioOnly: true,
+            isScreenshare: false,
+            videoId: null,
+            displayName: peer.displayName || 'Audio participant',
+            highlighted: false,
+            paused: peer.audio.paused,
+          };
+        })
+      );
+    }
+
     return {
-      index: i,
-      key: 'video_' + i,
-      isAudioOnly: false,
-      isScreenshare: activeScreenshareIds.includes(videoId),
-      videoId,
-      displayName: displayNamesById[videoId] || '',
-      highlighted: videoId === dominantId,
-      paused: pausedById[videoId],
+      participantDescs: items,
+      dominantVideoId: dominantId,
+      hasScreenShare: activeScreenshareIds.length > 0,
     };
-  });
-
-  if (!omitAudioOnly && audioOnlyPeers.length > 0) {
-    items = items.concat(
-      audioOnlyPeers.map((peer, i) => {
-        return {
-          index: items.length + i,
-          key: 'audioOnly_' + i,
-          isAudioOnly: true,
-          isScreenshare: false,
-          videoId: null,
-          displayName: peer.displayName || 'Audio participant',
-          highlighted: false,
-          paused: peer.audio.paused,
-        };
-      })
-    );
-  }
-
-  return {
-    participantDescs: items,
-    dominantVideoId: dominantId,
-    hasScreenShare: activeScreenshareIds.length > 0,
-  };
+  }, [activeVideoObj, audioOnlyPeers, omitAudioOnly]);
 }
