@@ -326,18 +326,19 @@ function compareFlatObj(a, b) {
     const vA = a[key];
     const vB = b[key];
 
-    // ignoring array and object values is the right thing to do
-    // because these property values are supposed to be primitive types.
-    // if they weren't ignored, they would trip up the comparison every time
-    // because objects/arrays created in a React component's render function
-    // won't be the same reference between iterations.
+    // allow arrays of primitive values (e.g. RGBA colors defined as arrays)
     if (Array.isArray(vA)) {
-      console.error(
-        "warning: VCS Node internal compareFlatObj can't compare arrays, will ignore (key '%s')",
-        key
-      );
+      if (!Array.isArray(vB)) return false;
+      if (vA.length !== vB.length) return false;
+      for (let i = 0; i < vA.length; i++) {
+        if (vA[i] !== vB[i]) return false;
+      }
       continue;
     }
+    // ignore object values, we don't support them for these props at all.
+    // if they weren't ignored, they would trip up the comparison every time
+    // because objects created in a React component's render function
+    // won't be the same reference between iterations.
     if (typeof vA === 'object') {
       console.error(
         "warning: VCS Node internal compareFlatObj can't compare objects, will ignore (key '%s')",
