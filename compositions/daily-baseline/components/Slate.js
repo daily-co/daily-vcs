@@ -91,7 +91,7 @@ export default function Slate({
       <Text
         key={++ci}
         style={{ ...titleStyle, textAlign: 'center' }}
-        layout={[layoutFuncs.placeText, { vAlign: 'center' }]}
+        layout={[layoutFuncs.placeText, { vAlign: 'center', hAlign: 'center' }]}
       >
         {title}
       </Text>
@@ -105,7 +105,10 @@ export default function Slate({
       >
         <Text
           style={{ ...subtitleStyle, textAlign: 'center' }}
-          layout={[layoutFuncs.placeText, { vAlign: 'center' }]}
+          layout={[
+            layoutFuncs.placeText,
+            { vAlign: 'center', hAlign: 'center' },
+          ]}
         >
           {subtitle}
         </Text>
