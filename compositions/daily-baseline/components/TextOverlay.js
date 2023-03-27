@@ -9,6 +9,7 @@ export default function TextOverlay({
   align_horizontal,
   offset_x_gu,
   offset_y_gu,
+  scale_x,
   rotation_deg,
   color,
   fontFamily,
@@ -30,9 +31,12 @@ export default function TextOverlay({
   };
   let textTrs;
   if (Number.isFinite(rotation_deg)) {
-    textTrs = {
-      rotate_deg: rotation_deg,
-    };
+    if (!textTrs) textTrs = {};
+    textTrs.rotate_deg = rotation_deg;
+  }
+  if (Number.isFinite(scale_x)) {
+    if (!textTrs) textTrs = {};
+    textTrs.scaleX = scale_x;
   }
 
   const layoutFn = layoutFuncs.placeText;

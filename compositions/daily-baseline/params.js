@@ -333,6 +333,12 @@ export const compositionParams = [
     step: 0.1,
   },
   {
+    id: 'text.scale_x',
+    type: 'number',
+    defaultValue: 1,
+    step: 0.1,
+  },
+  {
     id: 'text.rotation_deg',
     type: 'number',
     defaultValue: 0,

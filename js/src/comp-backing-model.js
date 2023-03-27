@@ -183,8 +183,15 @@ export class Composition {
           node,
         });
       }
-      node.layoutFrame = frame;
-      //console.log("frame for node '%s' (%s): ", node.userGivenId, node.constructor.nodeType, JSON.stringify(node.layoutFrame));
+
+      node.setLayoutFrame(frame);
+
+      /*console.log(
+        "frame for node '%s' (%s): ",
+        node.userGivenId,
+        node.constructor.nodeType,
+        JSON.stringify(node.layoutFrame)
+      );*/
 
       for (const c of node.children) {
         recurseLayout(c, frame);
@@ -308,6 +315,42 @@ function cleanLayoutParams(obj) {
   return obj2 || obj;
 }
 
+function compareFlatObj(a, b) {
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  const keyCount = keysA.length;
+  if (keyCount !== keysB.length) return false;
+  if (keyCount === 0) return true;
+
+  for (const key of keysA) {
+    const vA = a[key];
+    const vB = b[key];
+
+    // ignoring array and object values is the right thing to do
+    // because these property values are supposed to be primitive types.
+    // if they weren't ignored, they would trip up the comparison every time
+    // because objects/arrays created in a React component's render function
+    // won't be the same reference between iterations.
+    if (Array.isArray(vA)) {
+      console.error(
+        "warning: VCS Node internal compareFlatObj can't compare arrays, will ignore (key '%s')",
+        key
+      );
+      continue;
+    }
+    if (typeof vA === 'object') {
+      console.error(
+        "warning: VCS Node internal compareFlatObj can't compare objects, will ignore (key '%s')",
+        key
+      );
+      continue;
+    }
+
+    if (vA !== vB) return false;
+  }
+  return true;
+}
+
 function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
   if (!oldFn && !newFn) return true;
 
@@ -317,17 +360,40 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
     if (newParams && !oldParams) return false;
     if (oldParams && !newParams) return false;
 
-    if (!deepEqual(newParams, oldParams)) return false;
+    if (!compareFlatObj(newParams, oldParams)) return false;
   }
   return true;
 }
 
-function isEqualStyleOrTransform(oldStyle, newStyle) {
+function isEqualStyle(oldStyle, newStyle) {
   if (!oldStyle && !newStyle) return true;
   if (newStyle && !oldStyle) return false;
   if (oldStyle && !newStyle) return false;
 
-  if (!deepEqual(newStyle, oldStyle)) return false;
+  if (!compareFlatObj(newStyle, oldStyle)) return false;
+
+  return true;
+}
+
+function isEqualTransform(oldObj, newObj) {
+  if (!oldObj && !newObj) return true;
+  if (newObj && !oldObj) return false;
+  if (oldObj && !newObj) return false;
+
+  if (oldObj.scale !== newObj.scale) return false;
+  if (oldObj.scaleX !== newObj.scaleX) return false;
+  if (oldObj.scaleY !== newObj.scaleY) return false;
+  if (oldObj.rotate_deg !== newObj.rotate_deg) return false;
+
+  return true;
+}
+
+function isEqualBlend(oldObj, newObj) {
+  if (!oldObj && !newObj) return true;
+  if (newObj && !oldObj) return false;
+  if (oldObj && !newObj) return false;
+
+  if (oldObj.opacity !== newObj.opacity) return false;
 
   return true;
 }
@@ -338,6 +404,22 @@ function isEqualViewportSize(oldSize, newSize) {
   if (oldSize && !newSize) return false;
 
   if (oldSize.w !== newSize.w || oldSize.h !== newSize.h) return false;
+
+  return true;
+}
+
+function isEqualLayoutFrame(oldFrame, newFrame) {
+  if (!oldFrame && !newFrame) return true;
+  if (newFrame && !oldFrame) return false;
+  if (oldFrame && !newFrame) return false;
+
+  if (
+    oldFrame.x !== newFrame.x ||
+    oldFrame.y !== newFrame.y ||
+    oldFrame.w !== newFrame.w ||
+    oldFrame.h !== newFrame.h
+  )
+    return false;
 
   return true;
 }
@@ -399,10 +481,9 @@ class NodeBase {
 
     if (oldProps.clip !== newProps.clip) return true;
 
-    if (!isEqualStyleOrTransform(oldProps.transform, newProps.transform))
-      return true;
+    if (!isEqualTransform(oldProps.transform, newProps.transform)) return true;
 
-    if (!isEqualStyleOrTransform(oldProps.blend, newProps.blend)) return true;
+    if (!isEqualBlend(oldProps.blend, newProps.blend)) return true;
 
     return false;
   }
@@ -462,6 +543,10 @@ class NodeBase {
     }
     return obj;
   }
+
+  setLayoutFrame(frame) {
+    this.layoutFrame = frame;
+  }
 }
 
 class RootNode extends NodeBase {
@@ -477,7 +562,7 @@ class StyledNodeBase extends NodeBase {
   shouldUpdate(container, oldProps, newProps) {
     if (super.shouldUpdate(container, oldProps, newProps)) return true;
 
-    if (!isEqualStyleOrTransform(oldProps.style, newProps.style)) return true;
+    if (!isEqualStyle(oldProps.style, newProps.style)) return true;
 
     return false;
   }
@@ -524,14 +609,29 @@ class TextNode extends StyledNodeBase {
       );
 
       try {
-        this.measureTextSize();
+        // measure text's intrinsic size now
+        this.computeTextSize();
+
+        /*console.log(
+          "commit measured text size '%s': ",
+          this.text,
+          this.intrinsicSize
+        );*/
       } catch (e) {
         console.error('** exception when measuring text size: ', e);
       }
     }
   }
 
-  measureTextSize() {
+  setLayoutFrame(frame) {
+    if (isEqualLayoutFrame(frame, this.layoutFrame)) return;
+
+    this.layoutFrame = frame;
+
+    this.computeTextSize(this.layoutFrame);
+  }
+
+  computeTextSize(overrideFrame) {
     if (!this.attrStringDesc || !this.attrStringDesc.fragments) {
       console.error(
         "** can't measure label size, attrStringDesc missing or invalid: " +
@@ -539,8 +639,7 @@ class TextNode extends StyledNodeBase {
       );
       return;
     }
-    // constrain layout within viewport for now
-    let frame = this.container.viewportSize;
+    let frame = overrideFrame || this.container.viewportSize;
 
     const textContainerFrame = {
       x: 0,
@@ -562,15 +661,20 @@ class TextNode extends StyledNodeBase {
 
     this.textLayoutBlocks = blocks;
     this.textNumLines = numLines > 0 ? numLines : 0;
-    this.intrinsicSize = { w: Math.ceil(totalBox.w), h: Math.ceil(totalBox.h) };
+
+    if (!overrideFrame) {
+      this.intrinsicSize = {
+        w: Math.ceil(totalBox.w),
+        h: Math.ceil(totalBox.h),
+      };
+    }
 
     /*console.log(
-      'numlines %d, totalBox: ',
+      'numlines %d, intrinsicSize: ',
       this.textNumLines,
       this.intrinsicSize,
       this.textLayoutBlocks
     );*/
-    //console.log("measured text size '%s': ", this.text, this.intrinsicSize)
   }
 }
 

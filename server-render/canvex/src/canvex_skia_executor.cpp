@@ -422,7 +422,7 @@ static bool writeBitmapToPNG(SkBitmap& bitmap, const std::string& file) {
   sk_sp<SkData> pngData;
   try {
     auto image = SkImage::MakeFromBitmap(bitmap);
-    pngData = image->encodeToData();
+    pngData = image->encodeToData(SkEncodedImageFormat::kPNG, 100);
   } catch (std::exception& e) {
     std::cerr << "Unable to encode PNG: "<< e.what() << std::endl;
     return false;

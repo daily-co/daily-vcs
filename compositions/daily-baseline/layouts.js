@@ -104,6 +104,13 @@ export function placeText(parentFrame, params, layoutCtx) {
       break;
   }
 
+  switch (params.hAlign) {
+    case 'center':
+    case 'right':
+      w = parentFrame.w; // the text overlay is parent-sized if not default alignment
+      break;
+  }
+
   x += xOff;
   y += yOff;
   return { x, y, w, h };

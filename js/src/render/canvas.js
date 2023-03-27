@@ -86,14 +86,23 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     ctx.save();
 
     if (node.transform) {
-      const { rotate_deg } = node.transform;
+      let { rotate_deg = 0, scaleX = 1, scaleY = 1 } = node.transform;
 
-      if (Math.abs(rotate_deg) > 0.001) {
-        // set rotate anchor point to center of layer
+      if (Number.isFinite(node.transform.scale)) {
+        scaleX *= node.transform.scale;
+        scaleY *= node.transform.scale;
+      }
+
+      const hasRot = Math.abs(rotate_deg) > 0.001;
+      const hasScale = scaleX !== 1 || scaleY !== 1;
+
+      if (hasRot || hasScale) {
+        // set anchor point to center of layer
         const cx = frame.x + frame.w / 2;
         const cy = frame.y + frame.h / 2;
         ctx.translate(cx, cy);
         ctx.rotate(rotate_deg * (Math.PI / 180));
+        ctx.scale(scaleX, scaleY);
         ctx.translate(-cx, -cy);
       }
     }

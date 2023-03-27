@@ -17,7 +17,6 @@ build_cpu = build_machine.cpu()
 
 
 if system_mac
-  # currently only ARM Mac build available of the Skia libs
   if build_cpu == 'x86_64'
     message('Building for macOS X86')
     skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-x64'
@@ -25,11 +24,16 @@ if system_mac
     message('Building for macOS ARM')
     skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/mac-arm64'
   endif
-  message('Using Skia libdir: {}', skia_libdir)
 else
-  message('Building for Linux x86_64')
-  skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
+  if build_cpu == 'x86_64'
+    message('Building for Linux x86_64')
+    skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-x64'
+  else
+    message('Building for Linux ARM')
+    skia_libdir = meson.current_source_dir() + '/canvex-skia/lib-static/linux-arm64'
+  endif
 endif
+message('Using Skia libdir: {}', skia_libdir)
 
 
 skia_lib = cpp.find_library('skia', static : true, dirs : skia_libdir)
