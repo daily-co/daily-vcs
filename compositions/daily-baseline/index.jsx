@@ -115,7 +115,6 @@ export default function DailyBaselineVCS() {
   // we can memoize the video layout root component because it doesn't call useVideoTime()
   // (i.e. doesn't render animations by explicitly modifying component props)
   const video = React.useMemo(() => {
-    console.log('rendering video layout: ', participantDescs);
     const videoProps = {
       videoStyle: styles.video,
       placeholderStyle: styles.placeholder,

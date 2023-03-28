@@ -93,6 +93,7 @@ function getBaseConfig() {
       alias: {
         '#vcs': path.resolve('./src'),
         '#vcs-react': path.resolve('./src/react'),
+        '#vcs-stdlib': path.resolve('./src/stdlib'),
         react: path.resolve('./node_modules/react'),
       },
       fallback: {
