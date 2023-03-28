@@ -84,12 +84,18 @@ export default function DailyBaselineVCS() {
     };
   }, [params]);
 
-  // props passed to the video layout component
+  // this param's name was changed; also check the old name for backwards compatibility.
+  const omitPausedVideo =
+    params['videoSettings.omitPausedVideo'] != null
+      ? params['videoSettings.omitPausedVideo']
+      : params['videoSettings.omitPaused'];
+
+  // props passed to the video layout component.
   let { participantDescs, dominantVideoId, hasScreenShare } =
     useActiveVideoAndAudio({
       maxCamStreams: params['videoSettings.maxCamStreams'],
       preferScreenshare: params['videoSettings.preferScreenshare'],
-      omitPaused: params['videoSettings.omitPaused'],
+      omitPausedVideo,
       omitAudioOnly: params['videoSettings.omitAudioOnly'],
       omitExtraScreenshares: params['videoSettings.omitExtraScreenshares'],
     });
