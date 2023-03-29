@@ -1,6 +1,6 @@
 {
   "name": "@daily-co/vcs-core",
-  "version": "0.1.2",
+  "version": "0.1.7",
   "author": "Daily (https://daily.co)",
   "homepage": "https://docs.daily.co/reference/vcs",
   "repository": "github:daily-co/daily-vcs",
@@ -54,9 +54,11 @@
     "#vcs-react/hooks": "./src/react/hooks/index.js"
   },
   "scripts": {
+    "devrig": "wrap () { yarn webpack serve --env target=devrig --env compid=\"$*\" | cat; }; wrap",
     "open-browser-hello": "yarn webpack serve --open --env compid=example:hello",
-    "open-browser": "wrap () { yarn webpack serve --open --env compid=\"$*\" | cat; }; wrap",
-    "build-browser": "wrap () { yarn webpack --env use_comp_filename --env compid=\"$*\" | cat; }; wrap",
+    "open-browser": "wrap () { yarn webpack serve --open --env target=devrig --env compid=\"$*\" | cat; }; wrap",
+    "build-browser": "wrap () { yarn webpack --env target=devrig --env use_comp_filename --env compid=\"$*\" | cat; }; wrap",
+    "build-composition-module-for-web": "wrap () { yarn webpack --env target=module_web --env compid=\"$1\" --env vcsroot=\"$2\" | cat; }; wrap",
     "benchmark-graphics-test": "node vcs-benchmark.js --comp example/graphics-test.jsx",
     "test-scenario": "node vcs-test-runner.js --scenario",
     "line-protocol": "node vcs-line-protocol-main.js --compid"

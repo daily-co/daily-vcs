@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
   
   The id format is {namespace}:{name}, e.g. "example:hello".
 */
-export function getCompPathFromId(compId, targetId) {
+export function getCompPathFromId(compId, targetId, vcsBaseDir) {
   if (!compId) {
     console.error('** VCS composition id must be a string, got: ' + compId);
     return null;
@@ -19,24 +19,25 @@ export function getCompPathFromId(compId, targetId) {
     return null;
   }
 
-  let vcsBaseDir;
-  switch (targetId) {
-    case 'browser':
-      vcsBaseDir = '..';
-      break;
+  if (!vcsBaseDir || vcsBaseDir.length < 1) {
+    switch (targetId) {
+      case 'browser':
+        vcsBaseDir = '..';
+        break;
 
-    case 'node': {
-      const __dirname = Path.dirname(fileURLToPath(import.meta.url));
-      vcsBaseDir = Path.resolve(__dirname, '..');
-      break;
+      case 'node': {
+        const __dirname = Path.dirname(fileURLToPath(import.meta.url));
+        vcsBaseDir = Path.resolve(__dirname, '..');
+        break;
+      }
+
+      default:
+        console.error(
+          "** Unknown target specified for getCompPathForId: '%s'",
+          targetId
+        );
+        return null;
     }
-
-    default:
-      console.error(
-        "** Unknown target specified for getCompPathForId: '%s'",
-        targetId
-      );
-      return null;
   }
 
   const compNamespace = compId.substr(0, idx);
@@ -58,22 +59,6 @@ export function getCompPathFromId(compId, targetId) {
         vcsBaseDir,
         `compositions/${compNamespace}-${compFilename}`
       );
-
-      /*
-      // moved this into jsx-builder.js
-      if (targetId === 'node') {
-        // we want to load code from outside the current package root,
-        // but that's not possible in Node with dynamic require while using
-        // the subpath imports like "#vcs-react".
-        // so, let's just copy the files under our build dir.
-        // it works...
-        const fs = require('fs-extra');
-        const tmpDir = Path.resolve(vcsBaseDir, 'js/build/temp-comp');
-        fs.ensureDirSync(tmpDir);
-        fs.copySync(compDir, tmpDir);
-        compDir = tmpDir;
-      }*/
-
       jsxPath = `${compDir}/index.jsx`;
       break;
     }
