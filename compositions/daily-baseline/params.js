@@ -60,7 +60,7 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
-    id: 'videoSettings.omitPaused',
+    id: 'videoSettings.omitPausedVideo',
     type: 'boolean',
     defaultValue: false,
   },
