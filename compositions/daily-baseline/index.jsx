@@ -103,25 +103,23 @@ export default function DailyBaselineVCS() {
   const { preferredVideoIds, includeOtherVideoIds } =
     usePreferredParticipantIdsParam(params, dominantVideoId, hasScreenShare);
 
-  if (preferredVideoIds.length > 0 || !includeOtherVideoIds) {
+  participantDescs = React.useMemo(() => {
+    let arr = participantDescs.slice();
     const pref = [];
     for (const videoId of preferredVideoIds) {
-      const idx = participantDescs.findIndex((d) => d.videoId === videoId);
+      const idx = arr.findIndex((d) => d.videoId === videoId);
       if (idx >= 0) {
-        const d = participantDescs[idx];
+        const d = arr[idx];
         pref.push(d);
-        participantDescs.splice(idx, 1);
+        arr.splice(idx, 1);
       }
     }
-    participantDescs = includeOtherVideoIds
-      ? pref.concat(participantDescs)
-      : pref;
-  }
+    return includeOtherVideoIds ? pref.concat(arr) : pref;
+  }, [participantDescs, preferredVideoIds, includeOtherVideoIds]);
 
   // we can memoize the video layout root component because it doesn't call useVideoTime()
   // (i.e. doesn't render animations by explicitly modifying component props)
   const video = React.useMemo(() => {
-    console.log('rendering video layout: ', participantDescs);
     const videoProps = {
       videoStyle: styles.video,
       placeholderStyle: styles.placeholder,
