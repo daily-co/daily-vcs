@@ -12,14 +12,14 @@ import { useActiveVideo, useAudioOnlyPeers } from '#vcs-react/hooks';
 export function useActiveVideoAndAudio({
   maxCamStreams = 25,
   preferScreenshare = false,
-  omitPaused = false,
+  omitPausedVideo = false,
   omitAudioOnly = false,
   omitExtraScreenshares = false,
 }) {
   const activeVideoObj = useActiveVideo({
     maxCamStreams,
     preferScreenshare,
-    omitPaused,
+    omitPaused: omitPausedVideo,
     omitExtraScreenshares,
   });
 

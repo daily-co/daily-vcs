@@ -612,6 +612,15 @@ class TextNode extends StyledNodeBase {
         // measure text's intrinsic size now
         this.computeTextSize();
 
+        // if we have a known layout frame, we also want to update the cached text blocks now
+        if (
+          this.layoutFrame &&
+          this.layoutFrame.w > 0 &&
+          this.layoutFrame.h > 0
+        ) {
+          this.computeTextSize(this.layoutFrame);
+        }
+
         /*console.log(
           "commit measured text size '%s': ",
           this.text,
