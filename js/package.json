@@ -51,7 +51,8 @@
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
     "#vcs-react/contexts": "./src/react/contexts/index.js",
-    "#vcs-react/hooks": "./src/react/hooks/index.js"
+    "#vcs-react/hooks": "./src/react/hooks/index.js",
+    "#vcs-stdlib/layouts": "./src/stdlib/layouts/index.js"
   },
   "scripts": {
     "devrig": "wrap () { yarn webpack serve --env target=devrig --env compid=\"$*\" | cat; }; wrap",
