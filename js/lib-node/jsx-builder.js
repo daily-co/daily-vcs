@@ -11,7 +11,7 @@ const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
 const swcConfigBase = {
   transform: null,
-  target: 'es2016',
+  target: 'es2018',
   loose: false,
   externalHelpers: false,
   keepClassNames: true,

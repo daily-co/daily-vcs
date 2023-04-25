@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import deepEqual from 'deep-equal';
+import deepEqual from 'fast-deep-equal';
 
 import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list.js';
 
@@ -360,7 +360,7 @@ function isEqualLayoutProps(oldFn, oldParams, newFn, newParams) {
     if (newParams && !oldParams) return false;
     if (oldParams && !newParams) return false;
 
-    if (!compareFlatObj(newParams, oldParams)) return false;
+    if (!deepEqual(newParams, oldParams)) return false;
   }
   return true;
 }
