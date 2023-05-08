@@ -270,15 +270,22 @@ class VCSBrowserOutput {
       rootEl.removeChild(child);
     }
 
-    rootEl.style = `position: relative;`;
+    // create an inner container that will hold the styles
+    const innerRoot = document.createElement('div');
+    rootEl.appendChild(innerRoot);
+
+    innerRoot.className = 'vcs-render-inner';
+    innerRoot.setAttribute('id', 'vcsrender_' + this.uuid);
+
+    innerRoot.style = `position: relative; aspect-ratio: ${this.viewportSize.w} / ${this.viewportSize.h};`;
 
     // create elements to contain rendering
     this.videoBox = document.createElement('div');
     this.fgCanvas = document.createElement('canvas');
     this.fgCanvas.width = this.viewportSize.w;
     this.fgCanvas.height = this.viewportSize.h;
-    rootEl.appendChild(this.videoBox);
-    rootEl.appendChild(this.fgCanvas);
+    innerRoot.appendChild(this.videoBox);
+    innerRoot.appendChild(this.fgCanvas);
 
     this.resetOutputScalingCSS();
 
