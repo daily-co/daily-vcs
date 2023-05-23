@@ -117,6 +117,11 @@ canvex_lib = static_library(
   cpp_args: canvex_cpp_args,
 )
 
+canvexlib_dep = declare_dependency(
+  include_directories : include_directories('./include'),
+  link_with : canvex_lib,
+)
+
 executable(
   'canvex_demo',
   canvex_standalone_demo_sources,
