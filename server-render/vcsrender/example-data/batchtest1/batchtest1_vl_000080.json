@@ -1,0 +1,14 @@
+[
+  {
+    "type": "video",
+    "id": 0,
+    "frame": { "x": 0, "y": 185, "w": 622, "h": 350 },
+    "attrs": { "scaleMode": "fill" }
+  },
+  {
+    "type": "video",
+    "id": 1,
+    "frame": { "x": 658, "y": 185, "w": 622, "h": 350 },
+    "attrs": { "scaleMode": "fill" }
+  }
+]

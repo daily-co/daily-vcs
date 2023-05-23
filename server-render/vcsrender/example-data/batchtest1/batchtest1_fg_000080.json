@@ -1,0 +1,34 @@
+{
+  "width": 1280,
+  "height": 720,
+  "commands": [
+    ["save"],
+    ["save"],
+    ["save"],
+    ["save"],
+    ["fillStyle", "rgba(255, 250, 200, 0.95)"],
+    ["font", ["400", "", 50, "Roboto"]],
+    ["strokeStyle", "rgba(0, 0, 0, 0.8)"],
+    ["lineWidth", 12],
+    ["lineJoin", "round"],
+    [
+      "strokeText",
+      ["Lorem ipsum dolor sit amet, consectetur adipiscing elit. ", 24, 341]
+    ],
+    [
+      "fillText",
+      ["Lorem ipsum dolor sit amet, consectetur adipiscing elit. ", 24, 341]
+    ],
+    ["fillStyle", "rgba(255, 250, 200, 0.95)"],
+    ["font", ["400", "", 50, "Roboto"]],
+    ["strokeStyle", "rgba(0, 0, 0, 0.8)"],
+    ["lineWidth", 12],
+    ["lineJoin", "round"],
+    ["strokeText", ["Nam a tellus vitae quam feugiat ullam.", 213, 400]],
+    ["fillText", ["Nam a tellus vitae quam feugiat ullam.", 213, 400]],
+    ["restore"],
+    ["restore"],
+    ["restore"],
+    ["restore"]
+  ]
+}
