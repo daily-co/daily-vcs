@@ -2,29 +2,37 @@ import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import decorateVideoGridItem from './overrides/decorateVideoGridItem.js';
 
-export default function VideoGrid({
-  showLabels,
-  scaleMode,
-  scaleModeForScreenshare,
-  videoStyle,
-  videoLabelStyle,
-  placeholderStyle,
-  labelsOffset_px = 0,
-  participantDescs,
-  highlightDominant = true,
-  itemInterval_gu = -1,
-  outerPadding_gu = -1,
-  preserveItemAspectRatio = true,
-}) {
+export default function VideoGrid(gridProps) {
+  let {
+    showLabels,
+    scaleMode,
+    scaleModeForScreenshare,
+    videoStyle,
+    videoLabelStyle,
+    placeholderStyle,
+    labelsOffset_px = 0,
+    participantDescs,
+    highlightDominant = true,
+    itemInterval_gu = -1,
+    outerPadding_gu = -1,
+    preserveItemAspectRatio = true,
+  } = gridProps;
+
   const totalNumItems = participantDescs.length;
   itemInterval_gu = Math.max(-1, itemInterval_gu);
   outerPadding_gu = Math.max(-1, outerPadding_gu);
 
-  function makeItem(
-    index,
-    { isAudioOnly, isScreenshare, videoId, displayName, highlighted, paused }
-  ) {
+  function makeItem(index, itemProps) {
+    const {
+      isAudioOnly,
+      isScreenshare,
+      videoId,
+      displayName,
+      highlighted,
+      paused,
+    } = itemProps;
     let key = 'videogriditem_' + index;
 
     const itemLayout = [
@@ -38,8 +46,16 @@ export default function VideoGrid({
       },
     ];
 
+    // override point for custom decorations on grid items
+    const {
+      enableDefaultLabels = true,
+      enableDefaultHighlight = true,
+      customComponent: customDecoratorComponent,
+      clipItem = false,
+    } = decorateVideoGridItem(index, itemProps, gridProps);
+
     let participantLabel;
-    if (showLabels) {
+    if (enableDefaultLabels && showLabels) {
       participantLabel = (
         <Text
           style={videoLabelStyle}
@@ -55,20 +71,14 @@ export default function VideoGrid({
     }
 
     let highlight;
-    if (highlighted) {
+    if (enableDefaultHighlight && highlightDominant && highlighted) {
       const highlightStyle = {
         strokeColor: videoStyle.highlightColor,
         strokeWidth_px: videoStyle.highlightStrokeWidth_px,
         cornerRadius_px: videoStyle.cornerRadius_px,
       };
 
-      highlight = (
-        <Box
-          style={highlightStyle}
-          layout={itemLayout}
-          key={key + '_highlight'}
-        />
-      );
+      highlight = <Box style={highlightStyle} key={key + '_highlight'} />;
     }
 
     let video;
@@ -84,18 +94,26 @@ export default function VideoGrid({
       );
     }
 
-    const item = (
-      <Box key={key} id={key} layout={itemLayout}>
+    const containerStyle = clipItem
+      ? {
+          cornerRadius_px: videoStyle.cornerRadius_px,
+        }
+      : null;
+
+    return (
+      <Box
+        key={key}
+        id={key}
+        layout={itemLayout}
+        style={containerStyle}
+        clip={clipItem}
+      >
         {video}
         {participantLabel}
+        {highlight}
+        {customDecoratorComponent}
       </Box>
     );
-
-    // the highlight needs to be separate from the video box
-    // to prevent the stroke from getting clipped.
-    // always return an array so the item component keeps in place
-    // in React's diffing.
-    return highlightDominant && highlight ? [item, highlight] : [item];
   }
 
   return (
