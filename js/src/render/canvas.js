@@ -122,6 +122,7 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
         node.style.cornerRadius_px
       );
     } else {
+      ctx.beginPath();
       ctx.rect(frame.x, frame.y, frame.w, frame.h);
     }
     ctx.clip();
