@@ -17,6 +17,7 @@
   * `customComponent`: a custom VCS component to be rendered.
   * `clipItem`: if true, the custom component graphics are clipped inside
                 the video item's frame.
+  * `customLayoutForVideo`: a layout applied to the item's video element.
   
   If you return a custom component, it gets rendered last,
   on top of the default labels + highlight.
@@ -28,5 +29,6 @@ export default function decorateVideoGridItem(itemIndex, itemProps, gridProps) {
     enableDefaultHighlight: true,
     customComponent: null,
     clipItem: false,
+    customLayoutForVideo: null,
   };
 }
