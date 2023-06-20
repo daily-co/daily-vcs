@@ -886,6 +886,11 @@ export const compositionParams = [
 
   // -- title slate params --
   {
+    id: 'titleSlate.enableTransition',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'titleSlate.title',
     type: 'text',
     defaultValue: 'Title slate',

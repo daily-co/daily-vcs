@@ -602,6 +602,7 @@ export default function DailyBaselineVCS() {
         subtitle={params['titleSlate.subtitle']}
         titleStyle={titleStyle}
         subtitleStyle={subtitleStyle}
+        enableFade={params['titleSlate.enableTransition']}
       />
     );
   }
