@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import VideoSingle from './VideoSingle.js';
+import decorateVideoSplitItem from './overrides/decorateVideoSplitItem.js';
 
 export default function VideoSplit(props) {
   const { participantDescs = [], margin_gu = 0, splitDirection } = props;
@@ -23,6 +24,17 @@ export default function VideoSplit(props) {
 
   function makeItem(itemIdx) {
     const key = 'videosplit_item' + itemIdx;
+    const participant = participantDescs[itemIdx];
+
+    // override point for custom decorations on split videos.
+    // we use a VideoSingle component to actually render these,
+    // so get the decoration here and pass it as an override to VideoSingle.
+    const overrideDecoration = decorateVideoSplitItem(
+      itemIdx,
+      participant,
+      props
+    );
+
     return (
       <Box
         key={key}
@@ -31,7 +43,8 @@ export default function VideoSplit(props) {
       >
         <VideoSingle
           enableParticipantOverride={true}
-          overrideParticipant={participantDescs[itemIdx]}
+          overrideParticipant={participant}
+          overrideDecoration={overrideDecoration}
           {...props}
         />
       </Box>

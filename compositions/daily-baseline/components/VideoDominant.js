@@ -5,6 +5,7 @@ import { PositionEdge } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
 import VideoSingle from './VideoSingle.js';
+import decorateVideoDominantItem from './overrides/decorateVideoDominantItem.js';
 
 const DOMINANT_SPLIT_DEFAULT = 0.8;
 const DOMINANT_MAXITEMS_DEFAULT = 5;
@@ -67,6 +68,16 @@ export default function VideoDominant(props) {
       (d) => d.videoId != null && d.videoId == dominantVideoId
     );
 
+    // override point #1 for custom decorations on the dominant item.
+    // we use a VideoSingle component to actually render these,
+    // so get the decoration here and pass it as an override to VideoSingle.
+    const overrideDecoration = decorateVideoDominantItem(
+      true,
+      0,
+      participant,
+      props
+    );
+
     return (
       <Box
         key={key}
@@ -80,6 +91,7 @@ export default function VideoDominant(props) {
           enableParticipantOverride={true}
           overrideParticipant={participant}
           disableRoundedCorners={disableRoundedCornersOnMain}
+          overrideDecoration={overrideDecoration}
           {...props}
         />
       </Box>
@@ -98,8 +110,9 @@ export default function VideoDominant(props) {
 
     const items = [];
     for (let i = 0; i < pArr.length; i++) {
-      const { videoId, paused, displayName } = pArr[i];
-      const key = 'videochiclet_' + pArr[i].key;
+      const participant = pArr[i];
+      const { videoId, paused, displayName } = participant;
+      const key = 'videochiclet_' + participant.key;
 
       const layout = [
         layoutFuncs.column,
@@ -111,35 +124,58 @@ export default function VideoDominant(props) {
           outerMargin_gu: outerPadding_gu,
         },
       ];
-      items.push(
+
+      // override point #2 for custom decorations on chiclet items
+      const {
+        enableDefaultLabels = true,
+        customComponent: customDecoratorComponent,
+        clipItem = false,
+        customLayoutForVideo,
+      } = decorateVideoDominantItem(false, i, participant, props);
+
+      const childItems = [];
+
+      childItems.push(
         paused || videoId == null ? (
           <PausedPlaceholder
-            key={key}
-            layout={layout}
+            key={key + '_video'}
+            layout={customLayoutForVideo}
             {...{ placeholderStyle }}
           />
         ) : (
           <Video
-            key={key}
+            key={key + '_video'}
             src={videoId}
             style={videoStyle}
-            layout={layout}
             scaleMode={scaleMode}
+            layout={customLayoutForVideo}
           />
         )
       );
-      if (showLabels) {
-        items.push(
+      if (enableDefaultLabels && showLabels) {
+        childItems.push(
           <ParticipantLabelPipStyle
             key={key + '_label'}
             label={displayName}
             labelStyle={videoLabelStyle}
             labelsOffset_px={labelsOffset_px}
-            layout={layout}
           />
         );
       }
-    }
+      if (customDecoratorComponent) childItems.push(customDecoratorComponent);
+
+      const containerStyle = clipItem
+        ? {
+            cornerRadius_px: videoStyle.cornerRadius_px,
+          }
+        : null;
+
+      items.push(
+        <Box key={key} clip={clipItem} layout={layout} style={containerStyle}>
+          {childItems}
+        </Box>
+      );
+    } // end of participants loop
 
     return (
       <Box

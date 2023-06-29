@@ -5,6 +5,7 @@ import { PositionCorner } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
 import VideoSingle from './VideoSingle.js';
+import decorateVideoPipItem from './overrides/decorateVideoPipItem.js';
 
 export default function VideoPip(props) {
   const {
@@ -51,21 +52,37 @@ export default function VideoPip(props) {
     );
   }
 
-  const items = [];
+  const mainVideoSingleProps = {
+    ...props,
+    enableParticipantOverride: true,
+    overrideParticipant: firstParticipant,
+    disableRoundedCorners: disableRoundedCornersOnMain,
+  };
+
+  // override point #1 for custom decorations on pip videos.
+  // we use a VideoSingle component to actually render the main video.
+  // the shape of the object here is compatible with the override point
+  // in VideoSingle, so we just pass this object to the component from the outside.
+  const mainDecoration = decorateVideoPipItem(
+    0,
+    firstParticipant,
+    mainVideoSingleProps
+  );
+
+  let items = [];
 
   items.push(
     <VideoSingle
       key="pipbase"
-      enableParticipantOverride={true}
-      overrideParticipant={firstParticipant}
-      disableRoundedCorners={disableRoundedCornersOnMain}
-      {...props}
+      overrideDecoration={mainDecoration}
+      {...mainVideoSingleProps}
     />
   );
 
   if (otherParticipants.length > 0) {
     // render second video inside PiP window
-    const { videoId, displayName = '', paused } = otherParticipants[0];
+    const pipParticipant = otherParticipants[0];
+    const { videoId, displayName = '', paused } = pipParticipant;
     const key = 'pipwindow_' + videoId;
 
     const layoutProps = {
@@ -76,11 +93,22 @@ export default function VideoPip(props) {
     };
     const layout = [layoutFuncs.pip, layoutProps];
 
-    items.push(
+    // override point #2 for custom decorations on pip videos
+    const {
+      enableDefaultLabels = true,
+      customComponent: customDecoratorComponent,
+      clipItem = false,
+      customLayoutForVideo,
+    } = decorateVideoPipItem(1, pipParticipant, props);
+
+    const pipItems = [];
+
+    pipItems.push(
       paused || videoId == null ? (
         <PausedPlaceholder
           key={key + '_video_paused'}
-          {...{ layout, placeholderStyle }}
+          layout={customLayoutForVideo}
+          {...{ placeholderStyle }}
         />
       ) : (
         <Video
@@ -88,22 +116,44 @@ export default function VideoPip(props) {
           src={videoId}
           style={videoStyle}
           scaleMode="fill"
-          layout={layout}
+          layout={customLayoutForVideo}
         />
       )
     );
 
-    if (showLabels) {
-      items.push(
+    if (enableDefaultLabels && showLabels) {
+      pipItems.push(
         <ParticipantLabelPipStyle
           key={key + '_label_' + displayName}
           label={displayName}
           labelStyle={videoLabelStyle}
           labelsOffset_px={labelsOffset_px}
-          layout={layout}
         />
       );
     }
+
+    if (customDecoratorComponent) {
+      pipItems.push(
+        <Box key={key + '_pipcustomdeco'}>{customDecoratorComponent}</Box>
+      );
+    }
+
+    const containerStyle = clipItem
+      ? {
+          cornerRadius_px: videoStyle.cornerRadius_px,
+        }
+      : null;
+
+    items.push(
+      <Box
+        key={key + '_pipcontainer'}
+        clip={clipItem}
+        style={containerStyle}
+        layout={layout}
+      >
+        {pipItems}
+      </Box>
+    );
   }
 
   return <Box id="videopip">{items}</Box>;

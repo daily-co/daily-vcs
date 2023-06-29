@@ -2,20 +2,24 @@ import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import decorateVideoSingleItem from './overrides/decorateVideoSingleItem.js';
 
-export default function VideoSingle({
-  showLabels,
-  scaleMode,
-  scaleModeForScreenshare,
-  videoStyle,
-  videoLabelStyle,
-  placeholderStyle,
-  labelsOffset_px,
-  participantDescs,
-  enableParticipantOverride,
-  overrideParticipant,
-  disableRoundedCorners = false,
-}) {
+export default function VideoSingle(props) {
+  let {
+    showLabels,
+    scaleMode,
+    scaleModeForScreenshare,
+    videoStyle,
+    videoLabelStyle,
+    placeholderStyle,
+    labelsOffset_px,
+    participantDescs,
+    enableParticipantOverride,
+    overrideParticipant,
+    disableRoundedCorners = false,
+    overrideDecoration,
+  } = props;
+
   if (
     !labelsOffset_px ||
     !Number.isFinite(labelsOffset_px.x) ||
@@ -52,13 +56,24 @@ export default function VideoSingle({
     }
   }
 
-  if (videoId == null && displayName.length < 1) {
+  // override point for custom decorations on grid items.
+  // the decoration can also be passed from the outside in `overrideDecoration`;
+  // this is used by components like VideoPip that do part of their rendering
+  // using VideoSingle.
+  const {
+    enableDefaultLabels = true,
+    customComponent: customDecoratorComponent,
+    clipItem = false,
+    customLayoutForVideo,
+  } = overrideDecoration || decorateVideoSingleItem(d, props);
+
+  if (!customDecoratorComponent && videoId == null && displayName.length < 1) {
     // nothing to render even for a placeholder, so just render background color
     return <Box key="emptyPlaceholder" style={placeholderStyle} />;
   }
 
   let participantLabel;
-  if (showLabels && displayName.length > 0) {
+  if (enableDefaultLabels && showLabels && displayName.length > 0) {
     participantLabel = (
       <Text
         key={'label_' + displayName}
@@ -74,7 +89,11 @@ export default function VideoSingle({
   if (paused || videoId == null) {
     // no video available, show a placeholder with the icon
     content = (
-      <PausedPlaceholder key="pausedPlaceholder" {...{ placeholderStyle }} />
+      <PausedPlaceholder
+        key="pausedPlaceholder"
+        layout={customLayoutForVideo}
+        {...{ placeholderStyle }}
+      />
     );
   } else {
     content = (
@@ -83,9 +102,25 @@ export default function VideoSingle({
         src={videoId}
         style={videoStyle}
         scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
+        layout={customLayoutForVideo}
       />
     );
   }
 
-  return [content, participantLabel];
+  const arr = [content];
+  if (participantLabel) arr.push(participantLabel);
+  if (customDecoratorComponent) arr.push(customDecoratorComponent);
+
+  return clipItem ? (
+    <Box
+      clip
+      style={{
+        cornerRadius_px: videoStyle.cornerRadius_px,
+      }}
+    >
+      {arr}
+    </Box>
+  ) : (
+    arr
+  );
 }
