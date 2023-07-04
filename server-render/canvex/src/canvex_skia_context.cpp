@@ -330,6 +330,13 @@ void CanvexContext::quadraticCurveTo(double cp_x, double cp_y, double x, double 
   path_->quadTo(cp_x, cp_y, x, y);
 }
 
+void CanvexContext::arcTo(double cp_x, double cp_y, double x, double y, double radius) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+  path_->arcTo(cp_x, cp_y, x, y, radius);
+}
+
 void CanvexContext::clip() {
   if (path_) {
     const bool antialias = true;

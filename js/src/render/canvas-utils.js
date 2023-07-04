@@ -31,21 +31,33 @@ export function roundRect(ctx, x, y, width, height, radius) {
     radius = { tl: radius, tr: radius, br: radius, bl: radius };
   } else {
     const defaultRadius = { tl: 0, tr: 0, br: 0, bl: 0 };
+    const maxDim = 0.5 * Math.min(width, height); // clamp so radius doesn't exceed 50% in either dimension
     for (const side in defaultRadius) {
-      radius[side] = radius[side] || defaultRadius[side];
+      radius[side] = radius[side]
+        ? Math.min(radius[side], maxDim)
+        : defaultRadius[side];
     }
   }
   const maxX = x + width;
   const maxY = y + height;
   ctx.beginPath();
+
   ctx.moveTo(x + radius.tl, y);
   ctx.lineTo(maxX - radius.tr, y);
-  ctx.quadraticCurveTo(maxX, y, maxX, y + radius.tr);
+
+  ctx.arcTo(maxX, y, maxX, y + radius.tr, radius.tr);
+
   ctx.lineTo(maxX, maxY - radius.br);
-  ctx.quadraticCurveTo(maxX, maxY, maxX - radius.br, maxY);
+
+  ctx.arcTo(maxX, maxY, maxX - radius.br, maxY, radius.br);
+
   ctx.lineTo(x + radius.bl, maxY);
-  ctx.quadraticCurveTo(x, maxY, x, maxY - radius.bl);
+
+  ctx.arcTo(x, maxY, x, maxY - radius.bl, radius.bl);
+
   ctx.lineTo(x, y + radius.tl);
-  ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+
+  ctx.arcTo(x, y, x + radius.tl, y, radius.tl);
+
   ctx.closePath();
 }

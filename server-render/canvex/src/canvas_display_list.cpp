@@ -292,6 +292,7 @@ class DisplayListJSONHandler {
     {"moveTo", OpType::moveTo},
     {"lineTo", OpType::lineTo},
     {"quadraticCurveTo", OpType::quadraticCurveTo},
+    {"arcTo", OpType::arcTo},
   };
 
   bool setOpInCurrentCmd(std::string& s) {
