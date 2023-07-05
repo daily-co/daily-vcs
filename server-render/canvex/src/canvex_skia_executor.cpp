@@ -178,8 +178,10 @@ static void renderDisplayListInSkCanvas(
       }
       case font: {
         PRINTCMD_ARGS("font")
-        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::string
-           || cmd.args[1].type != ArgType::string || cmd.args[2].type != ArgType::number
+        if (cmd.args.size() != 4
+           || (cmd.args[0].type != ArgType::string && cmd.args[0].type != ArgType::number)
+           || cmd.args[1].type != ArgType::string
+           || cmd.args[2].type != ArgType::number
            || cmd.args[3].type != ArgType::string) {
           std::cout << "Invalid args for font: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
