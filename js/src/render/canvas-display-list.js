@@ -331,4 +331,8 @@ class CanvasEncodingContext {
   quadraticCurveTo(...args) {
     this.encodeCmd('quadraticCurveTo', args);
   }
+
+  arcTo(...args) {
+    this.encodeCmd('arcTo', args);
+  }
 }

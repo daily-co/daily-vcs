@@ -85,6 +85,7 @@ class CanvexContext {
   void moveTo(double x, double y);
   void lineTo(double x, double y);
   void quadraticCurveTo(double cp_x, double cp_y, double x, double y);
+  void arcTo(double cp_x, double cp_y, double x, double y, double radius);
   void clip();
   void fill();
   void stroke();
