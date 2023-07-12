@@ -355,11 +355,6 @@ export default function DailyBaselineVCS() {
   graphics.push(
     <Toast
       key={gi++}
-      numberOfLines={
-        params['toast.numTextLines']
-          ? parseInt(params['toast.numTextLines'], 10)
-          : 2
-      }
       currentItem={{
         key: params['toast.key'] ? parseInt(params['toast.key'], 10) : 0,
         text: params['toast.text'],
@@ -368,6 +363,11 @@ export default function DailyBaselineVCS() {
         durationInSeconds: params['toast.duration_secs']
           ? parseFloat(params['toast.duration_secs'])
           : 4,
+      }}
+      iconSize_gu={parseFloat(params['toast.icon.size_gu'])}
+      maxWidth_pct={{
+        default: parseFloat(params['toast.maxW_pct_default']),
+        portrait: parseFloat(params['toast.maxW_pct_portrait']),
       }}
       style={{
         fillColor: params['toast.color'],
