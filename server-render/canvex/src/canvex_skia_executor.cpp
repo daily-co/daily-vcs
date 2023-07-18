@@ -178,8 +178,10 @@ static void renderDisplayListInSkCanvas(
       }
       case font: {
         PRINTCMD_ARGS("font")
-        if (cmd.args.size() != 4 || cmd.args[0].type != ArgType::string
-           || cmd.args[1].type != ArgType::string || cmd.args[2].type != ArgType::number
+        if (cmd.args.size() != 4
+           || (cmd.args[0].type != ArgType::string && cmd.args[0].type != ArgType::number)
+           || cmd.args[1].type != ArgType::string
+           || cmd.args[2].type != ArgType::number
            || cmd.args[3].type != ArgType::string) {
           std::cout << "Invalid args for font: "; debugPrintArgs(cmd, std::cout);
           numInvalidArgErrors++;
@@ -234,6 +236,20 @@ static void renderDisplayListInSkCanvas(
           numInvalidArgErrors++;
         } else {
           ctx.quadraticCurveTo(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue);
+          numCmds++;
+        }
+        break;
+      }
+      case arcTo: {
+        PRINTCMD_ARGS("arcTo")
+        if (cmd.args.size() != 5 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number || cmd.args[4].type != ArgType::number) {
+          std::cout << "Invalid args for arcTo: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.arcTo(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue,
+                    cmd.args[3].numberValue, cmd.args[4].numberValue);
           numCmds++;
         }
         break;

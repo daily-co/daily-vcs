@@ -41,6 +41,7 @@ enum OpType {
   moveTo,
   lineTo,
   quadraticCurveTo,
+  arcTo,
 };
 
 enum ArgType {

@@ -144,19 +144,21 @@ export class Composition {
     }
   }
 
-  _makeLayoutCtxHooks(node) {
+  _makeLayoutCtxHooks(node, deps, passIndex) {
     // record use of these hooks by a layout function.
     // this data could be used for caching of layout results
     // (but we're not currently doing it because it's fast enough to just recompute...)
-    const deps = node.layoutFuncDeps;
-    function addDep(dep) {
-      if (!deps.includes(dep)) deps.push(dep);
-    }
-
     return {
       useIntrinsicSize: function () {
-        addDep('intrinsicSize');
+        deps.add('intrinsicSize');
         return node.intrinsicSize ? node.intrinsicSize : { w: -1, h: -1 };
+      },
+      useContentSize: function () {
+        deps.add('contentSize');
+        if (passIndex > 0 && node.flowFrame && node.flowFrame.w > 0) {
+          return { w: node.flowFrame.w, h: node.flowFrame.h };
+        }
+        return { w: 0, h: 0 };
       },
     };
   }
@@ -164,24 +166,36 @@ export class Composition {
   _performLayout() {
     if (!this.rootNode) return;
 
+    let passIndex = 0;
+    let usedDeps = new Set();
+    const makeLayoutCtxHooks = this._makeLayoutCtxHooks;
     const layoutCtxBase = {
       viewport: { x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h },
       pixelsPerGridUnit: this.pixelsPerGridUnit,
     };
 
-    const makeLayoutCtxHooks = this._makeLayoutCtxHooks;
-
-    function recurseLayout(node, parentFrame) {
+    function recurseLayout(node, parentFrame, childFrames) {
       let frame = { ...parentFrame };
 
-      node.layoutFuncDeps = [];
+      let thisNodeChildFrames;
 
       if (node.layoutFunc) {
+        const thisNodeDeps = new Set();
+
         frame = node.layoutFunc(frame, node.layoutParams, {
           ...layoutCtxBase,
-          ...makeLayoutCtxHooks(node),
+          ...makeLayoutCtxHooks(node, thisNodeDeps, passIndex),
           node,
         });
+
+        for (const dep of thisNodeDeps) usedDeps.add(dep);
+
+        if (thisNodeDeps.has('contentSize') || frame.containerTransform) {
+          // capture child frames (including nested container offsets) if
+          // 1) this layout node wants the content size after the first pass, or
+          // 2) this node applies a container transform.
+          thisNodeChildFrames = [];
+        }
       }
 
       node.setLayoutFrame(frame);
@@ -194,11 +208,58 @@ export class Composition {
       );*/
 
       for (const c of node.children) {
-        recurseLayout(c, frame);
+        recurseLayout(c, frame, thisNodeChildFrames || childFrames);
+      }
+
+      if (thisNodeChildFrames) {
+        /*console.log(
+          'child frames for node %s, frame = %s: ',
+          node.userGivenId,
+          JSON.stringify(frame),
+          thisNodeChildFrames
+        );*/
+        // union of child frames
+        let minX = Infinity,
+          minY = Infinity,
+          maxX = -Infinity,
+          maxY = -Infinity;
+        for (const cf of thisNodeChildFrames) {
+          minX = Math.min(cf.x, minX);
+          minY = Math.min(cf.y, minY);
+          maxX = Math.max(cf.x + cf.w, maxX);
+          maxY = Math.max(cf.y + cf.h, maxY);
+        }
+        let flowFrame = { x: 0, y: 0, w: 0, h: 0 };
+        if (minX < Infinity) {
+          flowFrame.x = minX;
+          flowFrame.y = minY;
+          flowFrame.w = maxX - minX;
+          flowFrame.h = maxY - minY;
+        }
+        if (frame.containerTransform) {
+          flowFrame.x -= frame.containerTransform.x;
+          flowFrame.y -= frame.containerTransform.y;
+          flowFrame.w -= frame.containerTransform.w;
+          flowFrame.h -= frame.containerTransform.h;
+        }
+        node.flowFrame = flowFrame;
+      }
+
+      if (childFrames) {
+        // a parent wants our frame for content size calculation
+        const frameInfo = node.captureFlowFrameForContainer();
+        if (frameInfo) childFrames.push(frameInfo);
       }
     }
 
-    recurseLayout(this.rootNode, layoutCtxBase.viewport);
+    // first pass
+    recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+
+    // do second pass only if any node uses the content size hook
+    if (usedDeps.has('contentSize')) {
+      passIndex = 1;
+      recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+    }
   }
 
   // if optional 'prev' is provided, this call returns
@@ -548,6 +609,13 @@ class NodeBase {
   setLayoutFrame(frame) {
     this.layoutFrame = frame;
   }
+
+  captureFlowFrameForContainer() {
+    const frame = this.flowFrame || this.layoutFrame;
+    if (!frame || !Number.isFinite(frame.w)) return null;
+
+    return { ...frame, id: this.userGivenId }; // id for debugging only
+  }
 }
 
 class RootNode extends NodeBase {
@@ -642,14 +710,16 @@ class TextNode extends StyledNodeBase {
   }
 
   computeTextSize(overrideFrame) {
+    let frame = overrideFrame || this.container.viewportSize;
     if (!this.attrStringDesc || !this.attrStringDesc.fragments) {
-      console.error(
-        "** can't measure label size, attrStringDesc missing or invalid: " +
-          this.attrStringDesc
-      );
+      frame.w = 0;
+      frame.h = 0;
+      this.flowFrame = frame;
+      if (!overrideFrame) {
+        this.intrinsicSize = { w: 0, h: 0 };
+      }
       return;
     }
-    let frame = overrideFrame || this.container.viewportSize;
 
     const textContainerFrame = {
       x: 0,
@@ -672,10 +742,19 @@ class TextNode extends StyledNodeBase {
     this.textLayoutBlocks = blocks;
     this.textNumLines = numLines > 0 ? numLines : 0;
 
+    // the frame adapted by the final text flow size.
+    // this is accessed by the layout engine during container sizing.
+    this.flowFrame = {
+      x: frame.x,
+      y: frame.y,
+      w: Math.ceil(totalBox.w),
+      h: Math.ceil(totalBox.h),
+    };
+
     if (!overrideFrame) {
       this.intrinsicSize = {
-        w: Math.ceil(totalBox.w),
-        h: Math.ceil(totalBox.h),
+        w: this.flowFrame.w,
+        h: this.flowFrame.h,
       };
     }
 

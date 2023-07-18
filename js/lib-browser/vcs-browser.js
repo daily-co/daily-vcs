@@ -441,8 +441,10 @@ class VCSBrowserOutput {
   }
 
   stop() {
-    this.preloadContainerEl.remove();
-    this.preloadContainerEl = null;
+    if (this.preloadContainerEl) {
+      this.preloadContainerEl.remove();
+      this.preloadContainerEl = null;
+    }
 
     // having a postroll gives the composition time to react to an "end stream" event,
     // e.g. to display a closing slate (end titles).

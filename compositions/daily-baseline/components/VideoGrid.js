@@ -52,6 +52,7 @@ export default function VideoGrid(gridProps) {
       enableDefaultHighlight = true,
       customComponent: customDecoratorComponent,
       clipItem = false,
+      customLayoutForVideo,
     } = decorateVideoGridItem(index, itemProps, gridProps);
 
     let participantLabel;
@@ -83,13 +84,19 @@ export default function VideoGrid(gridProps) {
 
     let video;
     if (isAudioOnly || paused) {
-      video = <PausedPlaceholder {...{ placeholderStyle }} />;
+      video = (
+        <PausedPlaceholder
+          layout={customLayoutForVideo}
+          {...{ placeholderStyle }}
+        />
+      );
     } else {
       video = (
         <Video
           src={videoId}
           style={videoStyle}
           scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
+          layout={customLayoutForVideo}
         />
       );
     }

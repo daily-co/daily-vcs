@@ -30,21 +30,49 @@ export function pad(parentFrame, params, layoutCtx) {
     if (Number.isFinite(b)) padB = b * viewport.h;
   }
 
-  x += padL;
-  y += padT;
-  w -= padL + padR;
-  h -= padT + padB;
+  const containerTransform = {
+    x: padL,
+    y: padT,
+    w: -(padL + padR),
+    h: -(padT + padB),
+  };
 
-  return { x, y, w, h };
+  x += containerTransform.x;
+  y += containerTransform.y;
+  w += containerTransform.w;
+  h += containerTransform.h;
+
+  return {
+    x,
+    y,
+    w,
+    h,
+    containerTransform,
+  };
 }
 
 export function offset(parentFrame, params) {
   let { x, y, w, h } = parentFrame;
+  let offsetX = params.x || 0;
+  let offsetY = params.y || 0;
 
-  x += params.x || 0;
-  y += params.y || 0;
+  const containerTransform = {
+    x: offsetX,
+    y: offsetY,
+    w: 0,
+    h: 0,
+  };
 
-  return { x, y, w, h };
+  x += offsetX;
+  y += offsetY;
+
+  return {
+    x,
+    y,
+    w,
+    h,
+    containerTransform,
+  };
 }
 
 export function fit(parentFrame, params) {
