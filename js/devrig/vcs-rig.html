@@ -610,7 +610,7 @@ const g_activeVideoInputSlots = [];
 let g_dominantIdx = -1;
 
 let g_audioOnlyDemoPeers = [];
-let g_currentRoomPeers = [];
+let g_currentRoomPeers = new Map();
 
 let g_paramValues = {};
 
@@ -1698,7 +1698,10 @@ function sendActiveVideoInputSlots() {
 function updateRoomPeers() {
   // the list of simulated participants in the room is a combination of
   // our video inputs and any audio-only demo participants.
-  const arr = g_audioOnlyDemoPeers.slice();
+  const map = new Map();
+  for (const p of g_audioOnlyDemoPeers) {
+    map.set(p.id, p);
+  }
   
   // for screenshares, we want to combine them with regular camera inputs;
   // this better simulates the real world situation of a video call where
@@ -1735,15 +1738,16 @@ function updateRoomPeers() {
           paused: ssobj.paused
         };
       }
-      arr.push(d);
+      map.set(d.id, d);
     }
   }
 
   // any remaining screenshares get their own screenshare-only participant
   for (const ssidx of screenshareIndexes) {
     const ssobj = g_activeVideoInputSlots[ssidx];
-    arr.push({
-      id: kPeerPrefix + (ssidx + 1),
+    const id = kPeerPrefix + (ssidx + 1);
+    map.set(id, {
+      id,
       displayName: 'ScreenshareOnly '+(ssidx + 1),
       video: {},
       audio: {},
@@ -1751,24 +1755,25 @@ function updateRoomPeers() {
         id: ssobj.id,
         paused: ssobj.paused
       }
-    })
+    });
   }
 
-  g_currentRoomPeers = arr;
+  g_currentRoomPeers = map;
 
   // update our screenshare inputs' displayNames to match the room metadata
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     const obj = g_activeVideoInputSlots[i];
     if (obj.active && obj.type === 'screenshare') {
       try {
-        const peer = g_currentRoomPeers.find((p) => p.screenshareVideo.id === obj.id);
+        const arr = Array.from(g_currentRoomPeers.values());
+        const peer = arr.find((p) => p.screenshareVideo.id === obj.id);
         if (!peer) {
           console.warn("Couldn't find room peer for screenshare " + obj.id);
         } else {
           obj.displayName = peer.displayName + " screenshare";
         }
       } catch (e) {
-        console.warn("Couldn't find room peer for screenshare input %d (%s), peers: ", i, obj.id, g_currentRoomPeers);
+        console.warn("Couldn't find room peer for screenshare input %d (%s), peers: ", i, obj.id, g_currentRoomPeers, e);
       }
     }
   }
@@ -1777,7 +1782,7 @@ function updateRoomPeers() {
 function sendRoomPeers() {
   if (!g_vcsApi) return;
 
-  g_vcsApi.setRoomPeers(g_currentRoomPeers);
+  g_vcsApi.setRoomPeerDescriptionsById(g_currentRoomPeers);
 }
 
 function sendParam(paramId, value) {

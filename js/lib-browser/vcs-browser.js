@@ -429,15 +429,8 @@ class VCSBrowserOutput {
     this.rootContainerRef.current.setParamValue(id, value);
   }
 
-  setRoomPeers(arr) {
-    if (!Array.isArray(arr)) {
-      console.error(
-        '** setRoomPeers: invalid object, expected array: ' + typeof arr
-      );
-      return;
-    }
-    //console.log('setRoomPeers: ', JSON.stringify(arr));
-    this.rootContainerRef.current.setRoomPeers(arr);
+  setRoomPeerDescriptionsById(map) {
+    this.rootContainerRef.current.setRoomPeerDescriptionsById(map);
   }
 
   stop() {
