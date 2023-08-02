@@ -120,66 +120,58 @@ export function pausedPlaceholderIcon(parentFrame) {
 }
 
 export function toast(parentFrame, params, layoutCtx) {
-  const lineH = getLineH(params, layoutCtx);
+  const { viewport, pixelsPerGridUnit: pxPerGu } = layoutCtx;
+  const asp = viewport.w / viewport.h;
   let { x, y, w, h } = parentFrame;
 
-  const { textLength = 20, maxLinesOfText = 2 } = params;
-  const { viewport } = layoutCtx;
-  const asp = viewport.w / viewport.h;
-
-  let relW;
-  if (asp > 1) {
-    // very basic adaptation to text length.
-    // this will be replaced with real text measurement when two-pass layout is available.
-    relW = textLength > 32 ? 0.7 : textLength > 16 ? 0.45 : 0.33;
-  } else {
-    relW = asp < 0.8 ? 0.9 : 0.8;
+  let defaultW_prop = 0.65;
+  if (params.maxWidth_pct) {
+    if (asp >= 1 && params.maxWidth_pct.default) {
+      defaultW_prop = params.maxWidth_pct.default / 100;
+    } else if (asp < 1 && params.maxWidth_pct.portrait) {
+      defaultW_prop = params.maxWidth_pct.portrait / 100;
+    }
   }
 
-  w = Math.round(parentFrame.w * relW);
-  h = lineH * (2 + Math.max(maxLinesOfText, 1));
+  const margin = pxPerGu; // always leave this much margin around the box
+  const defaultW = Math.round(parentFrame.w * defaultW_prop);
+  const defaultH = viewport.h - parentFrame.y - margin * 2;
 
-  const margin = lineH * 1;
+  const contentSize = layoutCtx.useContentSize();
+
+  w = contentSize.w > 0 ? contentSize.w : defaultW;
+  h = contentSize.h > 0 ? contentSize.h : defaultH;
 
   x += parentFrame.w - w - margin;
   y += margin;
 
-  const pad = lineH * 0.5;
-
-  return { x, y, w, h, pad };
+  return { x, y, w, h };
 }
 
-export function toastIcon(parentFrame, params) {
+export function toastIcon(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { size_gu = 5 } = params;
   let { x, y, w, h } = parentFrame;
 
-  const iconSize = h;
-  w = iconSize;
-
-  const lMargin = 8;
-  x += lMargin;
+  const dim = size_gu * pxPerGu;
+  w = h = dim;
 
   return { x, y, w, h };
 }
 
-export function toastText(parentFrame, params, layoutCtx) {
-  const lineH = getLineH(params, layoutCtx);
-  const { actualLinesOfText = 1, showIcon = true } = params;
+export function centerYIfNeeded(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { minH_gu = 1 } = params;
   let { x, y, w, h } = parentFrame;
 
-  if (showIcon) {
-    const iconSize = h;
-    const iconMargin = 20;
-    x += iconSize + iconMargin;
-    w -= iconSize + iconMargin;
+  const minH = minH_gu * pxPerGu;
+
+  const contentSize = layoutCtx.useContentSize();
+  if (contentSize.h > 0 && contentSize.h < minH) {
+    // center vertically
+    h = contentSize.h;
+    y += (parentFrame.h - h) / 2;
   }
-
-  // add default margin
-  const lMargin = 8;
-  x += lMargin;
-  w -= lMargin;
-
-  const textH = Math.max(actualLinesOfText, 1) * lineH;
-  y += (parentFrame.h - textH) / 2;
 
   return { x, y, w, h };
 }

@@ -97,7 +97,12 @@ class ToastQueue {
   }
 }
 
-export default function Toast({ currentItem, style, numberOfLines }) {
+export default function Toast({
+  currentItem,
+  style,
+  maxWidth_pct,
+  iconSize_gu,
+}) {
   const t = useVideoTime();
 
   const queueRef = React.useRef();
@@ -117,8 +122,9 @@ export default function Toast({ currentItem, style, numberOfLines }) {
         opacity={item.opacity}
         showIcon={item.showIcon}
         iconOverrideAssetName={item.iconOverrideAssetName}
+        iconSize_gu={iconSize_gu}
         style={style}
-        numberOfLines={numberOfLines}
+        maxWidth_pct={maxWidth_pct}
       />
     );
   }
@@ -131,8 +137,9 @@ function ToastContent({
   opacity = 1,
   showIcon = true,
   iconOverrideAssetName,
+  iconSize_gu = 3,
   style = {},
-  numberOfLines = 2,
+  maxWidth_pct = {},
 }) {
   const {
     strokeColor = [0, 0, 30, 0.44],
@@ -159,6 +166,7 @@ function ToastContent({
     strokeWidth_px: 4,
   };
 
+  /*
   let maxLineLen = 0;
   const lines = text.split('\n').reduce((acc, line) => {
     line = line.trimEnd();
@@ -168,19 +176,22 @@ function ToastContent({
     }
     return acc;
   }, []);
-
+*/
   const layoutParams = {
     fontSize_px,
-    maxLinesOfText: numberOfLines,
-    actualLinesOfText: lines.length,
-    textLength: maxLineLen,
     showIcon,
+    maxWidth_pct,
   };
 
   const iconSrc =
     iconOverrideAssetName && iconOverrideAssetName.length > 0
       ? iconOverrideAssetName
       : 'party-popper_1f389.png';
+
+  const textPadL = 1 + (showIcon ? iconSize_gu : 0);
+  const textPadR = showIcon ? 1.5 : 1;
+  const textPadT = showIcon ? 0 : 0.5;
+  const textMinH = showIcon ? iconSize_gu : 3.5;
 
   return (
     <Box
@@ -189,13 +200,25 @@ function ToastContent({
       blend={{ opacity }}
       layout={[layoutFuncs.toast, layoutParams]}
     >
-      <Box layout={[layoutFuncs.pad, { pad: 12 }]}>
+      <Box layout={[layoutFuncs.pad, { pad_gu: 1 }]}>
         {showIcon ? (
-          <Image src={iconSrc} layout={[layoutFuncs.toastIcon]} />
+          <Image
+            src={iconSrc}
+            layout={[layoutFuncs.toastIcon, { size_gu: iconSize_gu }]}
+          />
         ) : null}
-        <Text style={textStyle} layout={[layoutFuncs.toastText, layoutParams]}>
-          {text}
-        </Text>
+        <Box
+          layout={[
+            layoutFuncs.pad,
+            { pad_gu: { l: textPadL, r: textPadR, t: textPadT } },
+          ]}
+        >
+          <Box layout={[layoutFuncs.centerYIfNeeded, { minH_gu: textMinH }]}>
+            <Text id="text" style={textStyle}>
+              {text}
+            </Text>
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
