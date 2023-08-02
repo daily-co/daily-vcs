@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, WebFrame } from '#vcs-react/components';
+import { Box } from '#vcs-react/components';
 import {
   useParams,
   useGrid,
@@ -31,6 +31,7 @@ import VideoSingle from './components/VideoSingle.js';
 import VideoSplit from './components/VideoSplit.js';
 import Slate from './components/Slate.js';
 import WebFrameOverlay from './components/WebFrameOverlay.js';
+import RoomDebug from './components/RoomDebug.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -461,6 +462,12 @@ export default function DailyBaselineVCS() {
   graphics.push(
     <Slate key={'closingslate_' + gi++} id="closingSlate" show={inPostRoll} />
   );
+
+  // debug printout overlay
+  if (params['debug.showRoomState']) {
+    const opacity = parseFloat(params['debug.overlayOpacity']) / 100;
+    graphics.push(<RoomDebug bgOpacity={opacity} />);
+  }
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;

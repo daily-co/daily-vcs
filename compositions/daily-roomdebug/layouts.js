@@ -20,23 +20,3 @@ export function body(parentFrame, params, layoutCtx) {
 
   return { x, y, w, h };
 }
-
-export function simpleLineGrid(parentFrame, params, layoutCtx) {
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-  const { index, total, numCols = 4, numTextLines = 1 } = params;
-
-  const col = index % numCols;
-  const row = Math.floor(index / numCols);
-
-  const itemW = parentFrame.w / numCols;
-  const itemH = textSize_gu * pxPerGu * 1.2 * numTextLines;
-
-  let { x, y, w, h } = parentFrame;
-
-  x += col * itemW;
-  y += row * itemH;
-  w = itemW;
-  h = itemH;
-
-  return { x, y, w, h };
-}

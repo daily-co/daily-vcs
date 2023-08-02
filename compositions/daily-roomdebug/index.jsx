@@ -1,10 +1,10 @@
 import * as React from 'react';
 import { Box } from '#vcs-react/components';
 import { RoomContext } from '#vcs-react/contexts';
+import { debug } from '#vcs-stdlib/components';
 
-import { MediaInputPrintout } from './MediaInputPrintout.js';
-import { RoomPrintout } from './RoomPrintout.js';
 import { header, body } from './layouts.js';
+import { headerTextColor, textSize_gu } from './constants.js';
 
 export const compositionInterface = {
   displayMeta: {
@@ -17,13 +17,19 @@ export const compositionInterface = {
 export default function RoomDebugComposition() {
   const room = React.useContext(RoomContext);
 
+  const baseProps = {
+    headerTextColor,
+    textSize_gu,
+  };
+
   return (
     <Box id="main">
-      <MediaInputPrintout
+      <debug.MediaInputPrintout
         layout={[header]}
         renderEnv={room.renderingEnvironment}
+        {...baseProps}
       />
-      <RoomPrintout layout={[body]} room={room} />
+      <debug.RoomPrintout layout={[body]} room={room} {...baseProps} />
     </Box>
   );
 }

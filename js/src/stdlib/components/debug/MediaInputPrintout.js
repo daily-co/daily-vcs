@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { Box, Text } from '#vcs-react/components';
 import { MediaInputContext } from '#vcs-react/contexts';
-import { pad } from '#vcs-stdlib/layouts';
+import { pad, simpleLineGrid } from '#vcs-stdlib/layouts';
 
-import { textSize_gu, headerTextColor } from './constants.js';
-import { simpleLineGrid } from './layouts.js';
-
-export function MediaInputPrintout({ layout: baseLayout, renderEnv }) {
+export function MediaInputPrintout({
+  layout: baseLayout,
+  renderEnv,
+  textSize_gu = 1,
+  headerTextColor = 'rgba(255, 255, 255, 0.68)',
+  bgOpacity = 1,
+}) {
   const mediaInput = React.useContext(MediaInputContext);
 
   const printout = React.useMemo(() => {
@@ -55,7 +58,10 @@ export function MediaInputPrintout({ layout: baseLayout, renderEnv }) {
           <Text
             key={i}
             style={style}
-            layout={[simpleLineGrid, { total, index: i, numCols: 4 }]}
+            layout={[
+              simpleLineGrid,
+              { total, index: i, numCols: 4, textSize_gu },
+            ]}
           >
             {itemLine}
           </Text>
@@ -79,7 +85,7 @@ export function MediaInputPrintout({ layout: baseLayout, renderEnv }) {
   }, [mediaInput]);
 
   const bgStyle = {
-    fillColor: 'rgb(100, 0, 0)',
+    fillColor: `rgba(100, 0, 0, ${bgOpacity})`,
   };
 
   return (

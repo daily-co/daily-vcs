@@ -690,4 +690,16 @@ export const compositionParams = [
     defaultValue: '400',
     values: fontWeights,
   },
+  // -- debug params --
+  {
+    id: 'debug.showRoomState',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'debug.overlayOpacity',
+    type: 'number',
+    defaultValue: 90,
+    step: 1,
+  },
 ];
