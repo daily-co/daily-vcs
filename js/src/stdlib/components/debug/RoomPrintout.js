@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { Box, Text } from '#vcs-react/components';
-import { pad } from '#vcs-stdlib/layouts';
+import { pad, simpleLineGrid } from '#vcs-stdlib/layouts';
 
-import { textSize_gu, headerTextColor } from './constants.js';
-import { simpleLineGrid } from './layouts.js';
-
-export function RoomPrintout({ layout: baseLayout, room }) {
+export function RoomPrintout({
+  layout: baseLayout,
+  room,
+  textSize_gu = 1,
+  headerTextColor = 'rgba(255, 255, 255, 0.68)',
+  bgOpacity = 1,
+}) {
   const printout = React.useMemo(() => {
     const { availablePeers: peers } = room;
 
@@ -48,7 +51,7 @@ export function RoomPrintout({ layout: baseLayout, room }) {
           style={style}
           layout={[
             simpleLineGrid,
-            { total, index: i, numCols: 3, numTextLines: 5 },
+            { total, index: i, numCols: 3, numTextLines: 5, textSize_gu },
           ]}
         >
           {lines.join('\n')}
@@ -67,7 +70,7 @@ export function RoomPrintout({ layout: baseLayout, room }) {
   }, [room]);
 
   const bgStyle = {
-    fillColor: 'rgb(20, 10, 80)',
+    fillColor: `rgba(20, 10, 80, ${bgOpacity})`,
   };
 
   return (

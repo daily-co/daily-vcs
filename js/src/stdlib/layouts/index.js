@@ -6,7 +6,7 @@ import {
   splitAcrossLongerDimension,
 } from './split.js';
 
-import { column, grid } from './grid.js';
+import { column, grid, simpleLineGrid } from './grid.js';
 
 export {
   pad,
@@ -17,4 +17,5 @@ export {
   splitAcrossLongerDimension,
   column,
   grid,
+  simpleLineGrid,
 };
