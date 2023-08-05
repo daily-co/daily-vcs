@@ -46,26 +46,30 @@ export function RoomPrintout({
       }
 
       items.push(
-        <Text
-          key={i}
-          style={style}
-          layout={[
-            simpleLineGrid,
-            { total, index: i, numCols: 3, numTextLines: 5, textSize_gu },
-          ]}
-        >
-          {lines.join('\n')}
-        </Text>
+        React.createElement(
+          Text,
+          {
+            key: i,
+            style,
+            layout: [
+              simpleLineGrid,
+              { total, index: i, numCols: 3, numTextLines: 5, textSize_gu },
+            ],
+          },
+          lines.join('\n')
+        )
       );
     }
 
-    return (
-      <Box>
-        <Text style={{ fontSize_gu: textSize_gu, textColor: headerTextColor }}>
-          Room peers
-        </Text>
-        <Box layout={[pad, { pad_gu: { t: 2 } }]}>{items}</Box>
-      </Box>
+    return React.createElement(
+      Box,
+      {},
+      React.createElement(
+        Text,
+        { style: { fontSize_gu: textSize_gu, textColor: headerTextColor } },
+        'Room peers'
+      ),
+      React.createElement(Box, { layout: [pad, { pad_gu: { t: 2 } }] }, items)
     );
   }, [room]);
 
@@ -73,9 +77,19 @@ export function RoomPrintout({
     fillColor: `rgba(20, 10, 80, ${bgOpacity})`,
   };
 
-  return (
-    <Box id="room" style={bgStyle} layout={baseLayout}>
-      <Box layout={[pad, { pad_gu: { t: 1, l: 1 } }]}>{printout}</Box>
-    </Box>
+  return React.createElement(
+    Box,
+    {
+      id: 'room',
+      style: bgStyle,
+      layout: baseLayout,
+    },
+    React.createElement(
+      Box,
+      {
+        layout: [pad, { pad_gu: { t: 1, l: 1 } }],
+      },
+      printout
+    )
   );
 }

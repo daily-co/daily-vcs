@@ -55,32 +55,36 @@ export function MediaInputPrintout({
         }
 
         items.push(
-          <Text
-            key={i}
-            style={style}
-            layout={[
-              simpleLineGrid,
-              { total, index: i, numCols: 4, textSize_gu },
-            ]}
-          >
-            {itemLine}
-          </Text>
+          React.createElement(
+            Text,
+            {
+              key: i,
+              style,
+              layout: [
+                simpleLineGrid,
+                { total, index: i, numCols: 4, textSize_gu },
+              ],
+            },
+            itemLine
+          )
         );
       }
     }
 
-    return (
-      <Box>
-        <Text
-          style={{
+    return React.createElement(
+      Box,
+      {},
+      React.createElement(
+        Text,
+        {
+          style: {
             fontSize_gu: textSize_gu,
             textColor: headerTextColor,
-          }}
-        >
-          {info}
-        </Text>
-        <Box layout={[pad, { pad_gu: { t: 2 } }]}>{items}</Box>
-      </Box>
+          },
+        },
+        info
+      ),
+      React.createElement(Box, { layout: [pad, { pad_gu: { t: 2 } }] }, items)
     );
   }, [mediaInput]);
 
@@ -88,9 +92,19 @@ export function MediaInputPrintout({
     fillColor: `rgba(100, 0, 0, ${bgOpacity})`,
   };
 
-  return (
-    <Box id="mediaInput" style={bgStyle} layout={baseLayout}>
-      <Box layout={[pad, { pad_gu: { t: 1, l: 1 } }]}>{printout}</Box>
-    </Box>
+  return React.createElement(
+    Box,
+    {
+      id: 'mediaInput',
+      style: bgStyle,
+      layout: baseLayout,
+    },
+    React.createElement(
+      Box,
+      {
+        layout: [pad, { pad_gu: { t: 1, l: 1 } }],
+      },
+      printout
+    )
   );
 }
