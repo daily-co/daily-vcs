@@ -466,7 +466,7 @@ export default function DailyBaselineVCS() {
   // debug printout overlay
   if (params['debug.showRoomState']) {
     const opacity = parseFloat(params['debug.overlayOpacity']) / 100;
-    graphics.push(<RoomDebug bgOpacity={opacity} />);
+    graphics.push(<RoomDebug key="roomDebug" bgOpacity={opacity} />);
   }
 
   // apply a layout function to the video container if non-zero margins specified
