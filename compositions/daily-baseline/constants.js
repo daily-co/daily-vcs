@@ -2,6 +2,8 @@ export const DEFAULT_FONT = 'Roboto';
 export const DEFAULT_LABEL_FONT_SIZE_PX = 20;
 export const DEFAULT_TOAST_FONT_SIZE_PX = 22;
 
+export const DEFAULT_OFFSET_VIDEO_SINGLE_PX = 10;
+
 export const PositionEdge = {
   LEFT: 'left',
   RIGHT: 'right',

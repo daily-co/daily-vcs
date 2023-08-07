@@ -53,8 +53,15 @@ export function pad(parentFrame, params, layoutCtx) {
 
 export function offset(parentFrame, params) {
   let { x, y, w, h } = parentFrame;
-  let offsetX = params.x || 0;
-  let offsetY = params.y || 0;
+  let offsetX, offsetY;
+  // offset can be specified as an offsets object or with x/y params
+  if (typeof params.offsets === 'object') {
+    offsetX = params.offsets.x || 0;
+    offsetY = params.offsets.y || 0;
+  } else {
+    offsetX = params.x || 0;
+    offsetY = params.y || 0;
+  }
 
   const containerTransform = {
     x: offsetX,
