@@ -355,7 +355,7 @@ export default function DailyBaselineVCS() {
 
   graphics.push(
     <Toast
-      key={gi++}
+      key="toast"
       currentItem={{
         key: params['toast.key'] ? parseInt(params['toast.key'], 10) : 0,
         text: params['toast.text'],
