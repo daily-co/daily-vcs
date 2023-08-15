@@ -1,4 +1,4 @@
-export { useParams } from './compositionData.js';
+export { useParams, useStandardSources } from './compositionData.js';
 export {
   useVideoTime,
   useVideoPlaybackState,

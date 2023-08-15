@@ -249,6 +249,23 @@ table {
 #controls .testImage {
   margin-top: 1.5em;
 }
+#controls .standardSource {
+  margin-top: 1.5em;
+}
+#controls .standardSource .unavailableInfo {
+  color: var(--grey-text-color);
+}
+#controls .standardSource button {
+  background: var(--bg-color-lighter2);
+  color: white;
+  border: none;
+  padding: 5px;
+  padding-right: 10px;
+  padding-left: 10px;
+  border-radius: 5px;
+  margin-left: 5px;
+  display: none;
+}
 #controls .compInterface {
   margin-top: 1.5em;
 }
@@ -266,8 +283,12 @@ table {
   border-radius: 5px;
   color: white;
   padding: 2px;
-
 }
+
+#controls .compInterface #paramGroup_ {
+  margin-top: -2.5em;
+}
+
 #controls .compInterface .paramsContainer {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -526,6 +547,14 @@ table {
               </div>
             </div>  
           </div>
+          <div class="standardSource">
+            <h3>Standard sources</h3>
+            <div class="standardSourceControls">
+              <div class="unavailableInfo">This composition doesn't support any standard sources.</div>
+              <button data-sourceid="chatMessages">Send random chat message</button>
+              <button data-sourceid="transcript">Send random transcript line</button>
+            </div>  
+          </div>
           <div class="compInterface">
             <h3>Composition interface</h3>
             <div class="paramsJumpMenu">
@@ -685,6 +714,16 @@ tabBarEl.addEventListener('click', function(ev) {
   ev.preventDefault();
 });
 
+function basicRandomId() {
+  // a human-readable random number for display strings
+  return Math.floor(999 + Math.random() * 1000000);
+}
+
+function basicRandomKey() {
+  // a reasonably unique key combining current time + a smallish random number
+  return `${Math.floor(Date.now())}/${basicRandomId()}`;
+}
+
 function setAudioDemoParticipants(ev) {
   const field = ev.target;
   let newCount = field.value;
@@ -699,7 +738,7 @@ function setAudioDemoParticipants(ev) {
     g_audioOnlyDemoPeers = g_audioOnlyDemoPeers.slice(0, newCount);
   } else {
     for (let i = oldCount; i < newCount; i++) {
-      const randomId = Math.floor(999 + Math.random() * 1000000);
+      const randomId = basicRandomId();
       g_audioOnlyDemoPeers.push({
         id: 'demoAudioOnly_'+randomId,
         displayName: 'Audio-Only Person ' + randomId,
@@ -720,7 +759,7 @@ function randomizeParticipantName(ev) {
   const btn = ev.target;
   const idx = parseInt(btn.dataset.index, 10);
 
-  let s = 'Random ' + Math.floor(Math.random() * 100000);
+  let s = 'Random ' + basicRandomId();
   if (Math.random() > 0.7) {
     s += " longer user name";
   }
@@ -826,6 +865,65 @@ function screenshareToggled(ev) {
   createVideoInputsUI();
 }
 
+function sendRandomChatMessage() {
+  const key = basicRandomKey();
+  const data = {
+    key,
+    senderDisplayName: 'Person' + basicRandomId(),
+    text: `Chat ipsum ${basicRandomId()} dolor sit amet ${basicRandomId()}`
+  };
+  sendStandardSource('chatMessages', data);
+}
+
+function sendRandomTranscriptLine() {
+  const key = basicRandomKey();
+  let text = `Transcript ipsum ${basicRandomId()}`;
+  if (Math.random() > 0.6) {
+    text += `, dolor sit ${basicRandomId()} amet`;
+  }
+  const data = {
+    key,
+    senderDisplayName: 'Person' + basicRandomId(),
+    text
+  };
+  sendStandardSource('transcript', data);
+}
+
+function createStandardSourcesUI(compInterface) {
+  // these are the sources we support in the simulator
+  const knownSources = ['chatMessages', 'transcript'];
+
+  const enabledSources = [];
+  if (Array.isArray(compInterface.standardSources)) {
+    for (const sourceId of knownSources) {
+      const btn = document.querySelector(`#controls .standardSource button[data-sourceid='${sourceId}']`);
+      let enabled = false;
+      if (compInterface.standardSources.includes(sourceId)) {
+        enabledSources.push(sourceId);
+        enabled = true;
+      }
+      btn.setAttribute('style', 'display: ' + (enabled ? 'inline' : 'none'));
+
+      if (enabled) {
+        btn.addEventListener('click', (ev) => {
+          const sourceId = ev.target.dataset.sourceid;
+          switch (sourceId) {
+            case 'chatMessages':
+              sendRandomChatMessage();
+              break;
+            case 'transcript':
+              sendRandomTranscriptLine();
+              break;
+          }
+        });
+      }
+    }
+  }
+  const unav = document.querySelector("#controls .standardSource .unavailableInfo");
+  unav.setAttribute('style', 'display: ' + (enabledSources.length > 0 ? 'none' : 'block'));
+
+  return enabledSources;
+}
 
 function paramCheckboxToggled(ev) {
   const btn = ev.target;
@@ -1288,6 +1386,11 @@ async function start() {
   const groups = createParamsUI(compInterface, document.querySelector("#controls .compInterface .paramsContainer"));
 
   createParamGroupJumpMenuUI(groups, document.querySelector("#controls .compInterface .paramsJumpMenu select"));
+
+  // create source UI
+  const enabledSources = createStandardSourcesUI(compInterface);
+
+  g_vcsApi.setEnabledStandardSources(enabledSources);
 }
 
 window.addEventListener('load', function(ev) {
@@ -1801,6 +1904,14 @@ function sendParam(paramId, value) {
     g_apiRecObj.params = params;
     printApicallRec();
   }
+}
+
+function sendStandardSource(sourceId, data) {
+  if (!g_vcsApi) return;
+
+  g_vcsApi.addStandardSourceMessage(sourceId, data);
+
+  // TODO: retain copy of source values so we can reset renderer
 }
 
 function sendUpdateImageSources(srcs) {

@@ -1,7 +1,8 @@
 import * as React from 'react';
-import { Text } from '#vcs-react/components';
+import { Box, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { DEFAULT_FONT } from '../constants.js';
+import HighlightRowText from './HighlightRowText.js';
 
 export default function TextOverlay({
   content,
@@ -17,7 +18,11 @@ export default function TextOverlay({
   fontWeight,
   fontStyle,
   strokeColor,
+  strokeWidth_px,
   useStroke,
+  highlightColor,
+  highlightFontWeight,
+  highlightRows,
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
@@ -26,7 +31,7 @@ export default function TextOverlay({
     fontStyle: fontStyle || '',
     fontSize_gu: fontSize_gu || 2.5,
     strokeColor,
-    strokeWidth_px: useStroke ? 12 : 0,
+    strokeWidth_px: useStroke ? strokeWidth_px : 0,
     textAlign: align_horizontal,
   };
   let textTrs;
@@ -39,7 +44,6 @@ export default function TextOverlay({
     textTrs.scaleX = scale_x;
   }
 
-  const layoutFn = layoutFuncs.placeText;
   const layoutParams = {
     vAlign: align_vertical,
     hAlign: align_horizontal,
@@ -47,13 +51,36 @@ export default function TextOverlay({
     yOffset_gu: offset_y_gu,
   };
 
-  return (
-    <Text
-      style={textStyle}
-      transform={textTrs}
-      layout={[layoutFn, layoutParams]}
-    >
-      {content || ''}
-    </Text>
-  );
+  if (highlightRows) {
+    const { textRows, highlightIndex } = highlightRows;
+
+    const highlightStyle = {
+      ...textStyle,
+      textColor: highlightColor || 'yellow',
+      fontWeight: highlightFontWeight || 700,
+    };
+
+    return (
+      <Box
+        layout={[
+          layoutFuncs.placeHighlightRowText,
+          { ...layoutParams, numRows: textRows.length, fontSize_gu },
+        ]}
+      >
+        <HighlightRowText
+          {...{ textRows, highlightIndex, textStyle, highlightStyle }}
+        />
+      </Box>
+    );
+  } else {
+    return (
+      <Text
+        style={textStyle}
+        transform={textTrs}
+        layout={[layoutFuncs.placeText, layoutParams]}
+      >
+        {content || ''}
+      </Text>
+    );
+  }
 }
