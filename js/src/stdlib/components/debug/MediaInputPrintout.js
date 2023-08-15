@@ -1,12 +1,15 @@
 import * as React from 'react';
 import { Box, Text } from '#vcs-react/components';
 import { MediaInputContext } from '#vcs-react/contexts';
-import { pad } from '#vcs-stdlib/layouts';
+import { pad, simpleLineGrid } from '#vcs-stdlib/layouts';
 
-import { textSize_gu, headerTextColor } from './constants.js';
-import { simpleLineGrid } from './layouts.js';
-
-export function MediaInputPrintout({ layout: baseLayout, renderEnv }) {
+export function MediaInputPrintout({
+  layout: baseLayout,
+  renderEnv,
+  textSize_gu = 1,
+  headerTextColor = 'rgba(255, 255, 255, 0.68)',
+  bgOpacity = 1,
+}) {
   const mediaInput = React.useContext(MediaInputContext);
 
   const printout = React.useMemo(() => {
@@ -52,39 +55,56 @@ export function MediaInputPrintout({ layout: baseLayout, renderEnv }) {
         }
 
         items.push(
-          <Text
-            key={i}
-            style={style}
-            layout={[simpleLineGrid, { total, index: i, numCols: 4 }]}
-          >
-            {itemLine}
-          </Text>
+          React.createElement(
+            Text,
+            {
+              key: i,
+              style,
+              layout: [
+                simpleLineGrid,
+                { total, index: i, numCols: 4, textSize_gu },
+              ],
+            },
+            itemLine
+          )
         );
       }
     }
 
-    return (
-      <Box>
-        <Text
-          style={{
+    return React.createElement(
+      Box,
+      {},
+      React.createElement(
+        Text,
+        {
+          style: {
             fontSize_gu: textSize_gu,
             textColor: headerTextColor,
-          }}
-        >
-          {info}
-        </Text>
-        <Box layout={[pad, { pad_gu: { t: 2 } }]}>{items}</Box>
-      </Box>
+          },
+        },
+        info
+      ),
+      React.createElement(Box, { layout: [pad, { pad_gu: { t: 2 } }] }, items)
     );
   }, [mediaInput]);
 
   const bgStyle = {
-    fillColor: 'rgb(100, 0, 0)',
+    fillColor: `rgba(100, 0, 0, ${bgOpacity})`,
   };
 
-  return (
-    <Box id="mediaInput" style={bgStyle} layout={baseLayout}>
-      <Box layout={[pad, { pad_gu: { t: 1, l: 1 } }]}>{printout}</Box>
-    </Box>
+  return React.createElement(
+    Box,
+    {
+      id: 'mediaInput',
+      style: bgStyle,
+      layout: baseLayout,
+    },
+    React.createElement(
+      Box,
+      {
+        layout: [pad, { pad_gu: { t: 1, l: 1 } }],
+      },
+      printout
+    )
   );
 }

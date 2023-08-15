@@ -1,6 +1,6 @@
 {
   "name": "@daily-co/vcs-core",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "Daily (https://daily.co)",
   "homepage": "https://docs.daily.co/reference/vcs",
   "repository": "github:daily-co/daily-vcs",
@@ -52,6 +52,7 @@
     "#vcs-react/components": "./src/react/components/index.js",
     "#vcs-react/contexts": "./src/react/contexts/index.js",
     "#vcs-react/hooks": "./src/react/hooks/index.js",
+    "#vcs-stdlib/components": "./src/stdlib/components/index.js",
     "#vcs-stdlib/layouts": "./src/stdlib/layouts/index.js"
   },
   "scripts": {

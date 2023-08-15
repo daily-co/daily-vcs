@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, WebFrame } from '#vcs-react/components';
+import { Box } from '#vcs-react/components';
 import {
   useParams,
   useGrid,
@@ -31,6 +31,7 @@ import VideoSingle from './components/VideoSingle.js';
 import VideoSplit from './components/VideoSplit.js';
 import Slate from './components/Slate.js';
 import WebFrameOverlay from './components/WebFrameOverlay.js';
+import RoomDebug from './components/RoomDebug.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -354,12 +355,7 @@ export default function DailyBaselineVCS() {
 
   graphics.push(
     <Toast
-      key={gi++}
-      numberOfLines={
-        params['toast.numTextLines']
-          ? parseInt(params['toast.numTextLines'], 10)
-          : 2
-      }
+      key="toast"
       currentItem={{
         key: params['toast.key'] ? parseInt(params['toast.key'], 10) : 0,
         text: params['toast.text'],
@@ -368,6 +364,11 @@ export default function DailyBaselineVCS() {
         durationInSeconds: params['toast.duration_secs']
           ? parseFloat(params['toast.duration_secs'])
           : 4,
+      }}
+      iconSize_gu={parseFloat(params['toast.icon.size_gu'])}
+      maxWidth_pct={{
+        default: parseFloat(params['toast.maxW_pct_default']),
+        portrait: parseFloat(params['toast.maxW_pct_portrait']),
       }}
       style={{
         fillColor: params['toast.color'],
@@ -461,6 +462,12 @@ export default function DailyBaselineVCS() {
   graphics.push(
     <Slate key={'closingslate_' + gi++} id="closingSlate" show={inPostRoll} />
   );
+
+  // debug printout overlay
+  if (params['debug.showRoomState']) {
+    const opacity = parseFloat(params['debug.overlayOpacity']) / 100;
+    graphics.push(<RoomDebug key="roomDebug" bgOpacity={opacity} />);
+  }
 
   // apply a layout function to the video container if non-zero margins specified
   let videoBoxLayout;

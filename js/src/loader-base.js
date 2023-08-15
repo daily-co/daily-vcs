@@ -90,7 +90,19 @@ export function makeVCSRootContainer(
       this.pendingState.mediaInput = mediaInput;
     }
 
-    setRoomPeers(arr) {
+    setRoomPeerDescriptionsById(map) {
+      // the internal context state is an array, so convert
+      const arr = [];
+      for (const [key, value] of map) {
+        arr.push({
+          ...value,
+          id: key,
+        });
+      }
+      this.setRoomPeerDescriptionsArray(arr);
+    }
+
+    setRoomPeerDescriptionsArray(arr) {
       if (!this.pendingState) this.pendingState = {};
 
       const room = {

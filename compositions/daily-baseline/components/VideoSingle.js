@@ -3,6 +3,7 @@ import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
 import decorateVideoSingleItem from './overrides/decorateVideoSingleItem.js';
+import { DEFAULT_OFFSET_VIDEO_SINGLE_PX } from '../constants.js';
 
 export default function VideoSingle(props) {
   let {
@@ -30,8 +31,8 @@ export default function VideoSingle(props) {
   // apply a default offset in this mode so the offset comp param
   // behaves more predictably when the mode param is switched
   const offsets = {
-    x: 10 + labelsOffset_px.x,
-    y: 10 + labelsOffset_px.y,
+    x: DEFAULT_OFFSET_VIDEO_SINGLE_PX + labelsOffset_px.x,
+    y: DEFAULT_OFFSET_VIDEO_SINGLE_PX + labelsOffset_px.y,
   };
 
   const d = enableParticipantOverride

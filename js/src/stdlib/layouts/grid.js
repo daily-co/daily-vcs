@@ -122,6 +122,28 @@ export function grid(parentFrame, params, layoutCtx) {
   });
 }
 
+// a basic grid for displaying text.
+// used by the debug printout components in stdlib/components/debug.
+export function simpleLineGrid(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { index, numCols = 4, numTextLines = 1, textSize_gu = 1 } = params;
+
+  const col = index % numCols;
+  const row = Math.floor(index / numCols);
+
+  const itemW = parentFrame.w / numCols;
+  const itemH = textSize_gu * pxPerGu * 1.2 * numTextLines;
+
+  let { x, y, w, h } = parentFrame;
+
+  x += col * itemW;
+  y += row * itemH;
+  w = itemW;
+  h = itemH;
+
+  return { x, y, w, h };
+}
+
 // --- utils ---
 
 function computeGridItem({

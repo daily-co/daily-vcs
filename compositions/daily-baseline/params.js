@@ -511,9 +511,14 @@ export const compositionParams = [
     defaultValue: 4,
   },
   {
-    id: 'toast.numTextLines',
+    id: 'toast.maxW_pct_default',
     type: 'number',
-    defaultValue: 2,
+    defaultValue: 50,
+  },
+  {
+    id: 'toast.maxW_pct_portrait',
+    type: 'number',
+    defaultValue: 80,
   },
   {
     id: 'toast.showIcon',
@@ -524,6 +529,11 @@ export const compositionParams = [
     id: 'toast.icon.assetName',
     type: 'text',
     defaultValue: '',
+  },
+  {
+    id: 'toast.icon.size_gu',
+    type: 'number',
+    defaultValue: 3,
   },
   {
     id: 'toast.color',
@@ -689,5 +699,17 @@ export const compositionParams = [
     type: 'enum',
     defaultValue: '400',
     values: fontWeights,
+  },
+  // -- debug params --
+  {
+    id: 'debug.showRoomState',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'debug.overlayOpacity',
+    type: 'number',
+    defaultValue: 90,
+    step: 1,
   },
 ];
