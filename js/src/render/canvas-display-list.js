@@ -261,8 +261,8 @@ class CanvasEncodingContext {
     this.encodeCmd('translate', args);
   }
 
-  clip() {
-    this.encodeCmd('clip');
+  clip(...args) {
+    this.encodeCmd('clip', args);
   }
 
   fill() {

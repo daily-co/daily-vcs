@@ -5,6 +5,7 @@ import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list.js';
 
 import {
   encodeCanvasDisplayList_fg,
+  encodeCanvasDisplayList_fg_vlClip,
   encodeCanvasDisplayList_videoLayersPreview,
 } from '../src/render/canvas.js';
 
@@ -275,18 +276,18 @@ export class Composition {
       throw new Error('Composition setup is invalid for scene description');
     }
 
+    // get video elements
+    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
+
     // get foreground graphics as a display list
     const encoder = new CanvasDisplayListEncoder(
       this.viewportSize.w,
       this.viewportSize.h
     );
 
-    encodeCanvasDisplayList_fg(this, encoder, imageSources);
+    encodeCanvasDisplayList_fg_vlClip(this, encoder, imageSources, videoLayers);
 
     const fgDisplayList = encoder.finalize();
-
-    // get video elements
-    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
 
     if (
       videoLayers &&

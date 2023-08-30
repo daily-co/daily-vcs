@@ -146,6 +146,12 @@ table {
   margin: 0;
   margin-top: 1em;
 }
+#sceneDescCopy {
+  margin-top: 1em;
+}
+#sceneDescCopy button {
+  font-size: 0.88em;
+}
 
 #outputWrapper {
   flex: none;
@@ -609,6 +615,10 @@ table {
         </div>
         <div class="tabContent" data-id="debug">
           <div id="sceneDescPrintOut"></div>
+          <div id="sceneDescCopy">
+            <button id="btn-copy-scene-desc">Copy JSON</button>
+            <button id="btn-copy-scene-desc-fg">Copy JSON (fgdisplaylist only)</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1483,12 +1493,11 @@ apicallScreenshotBtn.addEventListener('click', function(ev) {
     const info = document.createElement('div');
     box.appendChild(info);
 
-    btn.addEventListener('click', function(ev) {
+    btn.addEventListener('click', async function(ev) {
       try {
         const item = new ClipboardItem({ "image/png": blob });
-        navigator.clipboard.write([item]).then(() => {
-          info.innerText = "Copied PNG to clipboard";
-        });
+        await navigator.clipboard.write([item]);
+        info.innerText = "Copied PNG to clipboard";
       } catch (e) {
         console.error("Exception copying PNG to clipboard: ", e);
         alert("Copy failed:\n"+e);
@@ -1496,7 +1505,6 @@ apicallScreenshotBtn.addEventListener('click', function(ev) {
     });
   });
 });
-
 
 apicallRecBtn.addEventListener('click', function(ev) {
   apicallRecBtn.className = 'disabled';
@@ -1748,8 +1756,12 @@ function stopVCS() {
 
 // --- callback received from composition ---
 
+let g_lastSceneDesc;
+
 function compUpdatedCb(sceneDesc) {
   if ( !sceneDesc) return;
+
+  g_lastSceneDesc = sceneDesc;
 
   //console.log("scene desc JSON: ", JSON.stringify(sceneDesc));
 
@@ -1770,6 +1782,33 @@ function compUpdatedCb(sceneDesc) {
   }
 
   printoutEl.innerHTML = html;
+}
+
+document.getElementById("btn-copy-scene-desc")
+  .addEventListener('click', function() {
+    copySceneDescToClipboard(false)
+  });
+
+  document.getElementById("btn-copy-scene-desc-fg")
+  .addEventListener('click', function() {
+    copySceneDescToClipboard(true)
+  });
+
+async function copySceneDescToClipboard(fgOnly) {
+  if (!g_lastSceneDesc) return;
+  try {
+    const obj = fgOnly ? g_lastSceneDesc?.fgDisplayList : g_lastSceneDesc;
+    if (!obj) {
+      alert("Not available");
+      return;
+    }
+
+    await navigator.clipboard.writeText(JSON.stringify(obj));
+    alert("Copied JSON");
+  } catch (e) {
+    console.error("Exception copying JSON to clipboard: ", e);
+    alert("Copy failed:\n" + e);
+  }
 }
 
 

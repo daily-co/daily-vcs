@@ -257,6 +257,7 @@ export default function DailyBaselineVCS() {
     return video;
   }, [params, styles, participantDescs, dominantVideoId, hasScreenShare]);
 
+  let bgGraphics = [];
   let graphics = [];
 
   if (params.showTextOverlay) {
@@ -363,12 +364,16 @@ export default function DailyBaselineVCS() {
       margin_gu = params['image.margin_gu'];
     }
 
-    graphics.push(
+    const arr =
+      params['image.zPosition'] === 'foreground' ? graphics : bgGraphics;
+
+    arr.push(
       <ImageOverlay
         key="imageOverlay"
         src={params['image.assetName']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
+        fullScreenScaleMode={params['image.fullScreenScaleMode']}
         aspectRatio={params['image.aspectRatio']}
         height_gu={h_gu}
         margin_gu={margin_gu}
@@ -569,6 +574,7 @@ export default function DailyBaselineVCS() {
 
   return (
     <Box id="main">
+      <Box id="bgBox">{bgGraphics}</Box>
       <Box id="videoBox" layout={videoBoxLayout}>
         {video}
       </Box>

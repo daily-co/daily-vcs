@@ -1,9 +1,11 @@
 import { IntrinsicNodeType } from '../comp-backing-model.js';
 import { roundRect } from './canvas-utils.js';
+import { encodeCompVideoSceneDesc } from './video-scenedesc.js';
 
 const CanvasRenderMode = {
   ALL: 'all',
   GRAPHICS_SUBTREE_ONLY: 'graphics-subtree-only',
+  BG_GRAPHICS_SUBTREE_ONLY: 'bg-graphics-subtree-only',
   VIDEO_PREVIEW: 'video-preview',
 };
 
@@ -26,11 +28,32 @@ export function renderCompInCanvas(comp, canvas, imageSources, renderAll) {
 
   ctx.clearRect(0, 0, viewportW, viewportH);
 
-  const mode = renderAll
-    ? CanvasRenderMode.ALL
-    : CanvasRenderMode.GRAPHICS_SUBTREE_ONLY;
+  if (renderAll) {
+    recurseRenderNode(
+      ctx,
+      CanvasRenderMode.ALL,
+      comp.rootNode,
+      comp,
+      imageSources
+    );
+  } else {
+    // background clipped by video layers
+    let videoLayers = encodeCompVideoSceneDesc(comp, imageSources);
+    let continueAtNode = null;
+    if (videoLayers.length > 0) {
+      continueAtNode = recurseBackground(ctx, comp, imageSources, videoLayers);
+    }
 
-  recurseRenderNode(ctx, mode, comp.rootNode, comp, imageSources);
+    // foreground
+    recurseRenderNode(
+      ctx,
+      CanvasRenderMode.GRAPHICS_SUBTREE_ONLY,
+      comp.rootNode,
+      comp,
+      imageSources,
+      { continueAtNode }
+    );
+  }
 
   ctx.restore();
 }
@@ -38,14 +61,91 @@ export function renderCompInCanvas(comp, canvas, imageSources, renderAll) {
 export function encodeCanvasDisplayList_fg(comp, canvasDL, imageSources) {
   const ctx = canvasDL.getContext();
 
-  const mode = CanvasRenderMode.GRAPHICS_SUBTREE_ONLY;
+  recurseRenderNode(
+    ctx,
+    CanvasRenderMode.GRAPHICS_SUBTREE_ONLY,
+    comp.rootNode,
+    comp,
+    imageSources
+  );
+}
 
-  // TODO: what we really want is to get the foreground graphics only.
-  // should we find the fg root here, or within the recurse.. function?
-  // this function needs to be renamed too, to make it clearer which part of the tree you want.
+export function encodeCanvasDisplayList_fg_vlClip(
+  comp,
+  canvasDL,
+  imageSources,
+  videoLayers
+) {
+  const ctx = canvasDL.getContext();
+
+  // background clipped by video layers
+  let continueAtNode = null;
+  if (videoLayers.length > 0) {
+    continueAtNode = recurseBackground(ctx, comp, imageSources, videoLayers);
+  }
+
+  // foreground
+  recurseRenderNode(
+    ctx,
+    CanvasRenderMode.GRAPHICS_SUBTREE_ONLY,
+    comp.rootNode,
+    comp,
+    imageSources,
+    { continueAtNode }
+  );
+}
+
+function recurseBackground(ctx, comp, imageSources, videoLayers) {
+  // build clipping mask from video layers
+  ctx.save();
+  ctx.beginPath();
+
+  // start with a base rectangle into which we punch holes for videos
+  ctx.rect(0, 0, comp.viewportSize.w, comp.viewportSize.h);
+
+  for (const vl of videoLayers) {
+    const { frame, attrs } = vl;
+    const { cornerRadiusPx = 0 } = attrs;
+    if (cornerRadiusPx > 0.5) {
+      roundRect(ctx, frame.x, frame.y, frame.w, frame.h, cornerRadiusPx, false);
+    } else {
+      ctx.rect(frame.x, frame.y, frame.w, frame.h);
+    }
+  }
+  // use even-odd filling rule to render the holes
+  ctx.clip('evenodd');
+
+  function bgDoneCb(recState, node) {
+    function recurseToTopLevelParent(n) {
+      const p = n.parent;
+      if (!p) return n;
+      if (p.constructor.nodeType === IntrinsicNodeType.ROOT) return n;
+
+      // check for typical construction where root has a single child
+      if (
+        p.parent?.constructor.nodeType === IntrinsicNodeType.ROOT &&
+        p.parent.children.length === 1
+      )
+        return n;
+
+      return recurseToTopLevelParent(p);
+    }
+    recState.done = true;
+    recState.continueAtNode = recurseToTopLevelParent(node);
+  }
+
+  const mode = CanvasRenderMode.BG_GRAPHICS_SUBTREE_ONLY;
   const root = comp.rootNode;
+  const recState = { bgDoneCb };
 
-  recurseRenderNode(ctx, mode, root, comp, imageSources);
+  recurseRenderNode(ctx, mode, root, comp, imageSources, recState);
+
+  ctx.restore(); // end clip
+
+  // this is returned as a hint for rendering the foreground.
+  // we ended the background at this top-level node, so the render pass
+  // for foreground elements can continue here
+  return recState.continueAtNode;
 }
 
 export function encodeCanvasDisplayList_videoLayersPreview(comp, canvasDL) {
@@ -58,14 +158,29 @@ export function encodeCanvasDisplayList_videoLayersPreview(comp, canvasDL) {
 
 const s_missingAssetsNotified = new Set();
 
-function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
+function recurseRenderNode(
+  ctx,
+  renderMode,
+  node,
+  comp,
+  imageSources,
+  recState
+) {
   let writeContent = true;
   let recurseChildren = true;
 
   if (renderMode !== CanvasRenderMode.ALL) {
     const nodeType = node.constructor.nodeType;
     const isVideo = nodeType === IntrinsicNodeType.VIDEO;
-    if (isVideo && renderMode === CanvasRenderMode.GRAPHICS_SUBTREE_ONLY) {
+
+    if (isVideo && renderMode === CanvasRenderMode.BG_GRAPHICS_SUBTREE_ONLY) {
+      // when rendering the background, end bg clipping at first video layer
+      recState.bgDoneCb(recState, node);
+      return;
+    } else if (
+      isVideo &&
+      renderMode === CanvasRenderMode.GRAPHICS_SUBTREE_ONLY
+    ) {
       // don't encode video elements at all into canvas commands, they are handled separately
       writeContent = false;
       recurseChildren = false;
@@ -405,8 +520,22 @@ function recurseRenderNode(ctx, renderMode, node, comp, imageSources) {
     recurseChildren &&
     (renderMode === CanvasRenderMode.VIDEO_PREVIEW || writeContent)
   ) {
-    for (const c of node.children) {
-      recurseRenderNode(ctx, renderMode, c, comp, imageSources);
+    let children = node.children;
+
+    if (recState?.continueAtNode && node === recState.continueAtNode.parent) {
+      // filter children so we omit top-level nodes that were already rendered in bg
+      children = [];
+      let found = false;
+      for (const c of node.children) {
+        if (c === recState.continueAtNode) found = true;
+        if (found) children.push(c);
+      }
+    }
+
+    for (const c of children) {
+      recurseRenderNode(ctx, renderMode, c, comp, imageSources, recState);
+
+      if (recState?.done) break;
     }
   }
 
