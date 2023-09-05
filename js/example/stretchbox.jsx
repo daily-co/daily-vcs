@@ -12,7 +12,8 @@ export const compositionInterface = {
     {
       id: 'textContent',
       type: 'text',
-      defaultValue: 'Hello world. Lorem ipsum dolor sit amet.',
+      defaultValue:
+        'Hello world. Lorem ipsum dolor sit amet. Word 123, second 456, third 789.',
     },
     {
       id: 'maxBoxWidth_gu',
@@ -58,6 +59,7 @@ function AdaptiveTextAndIcon({ content, maxWidth_gu, iconSize_gu }) {
     fontSize_gu: 1.5,
     textColor: 'white',
   };
+  const subtitleStyle = { fontSize_gu: 0.9, fontStyle: 'italic' };
 
   return (
     <Box
@@ -74,9 +76,16 @@ function AdaptiveTextAndIcon({ content, maxWidth_gu, iconSize_gu }) {
           id="padLeftForIcon"
           layout={[pad, { pad_gu: { l: iconSize_gu + 2 } }]}
         >
-          <Text id="text" style={textStyle}>
-            {content}
-          </Text>
+          <Box id="textStack" layout={[layoutFuncs.textStack]}>
+            <Text id="text" style={textStyle}>
+              {content}
+            </Text>
+            <Box id="padForSubtitle" layout={[pad, { pad_gu: { l: 2 } }]}>
+              <Text id="subtitle" style={subtitleStyle}>
+                Subtitle offset by 2 gu
+              </Text>
+            </Box>
+          </Box>
         </Box>
       </Box>
     </Box>
@@ -113,5 +122,13 @@ const layoutFuncs = {
     h = dim;
 
     return { x, y, w, h };
+  },
+  textStack: (parentFrame, params, layoutCtx) => {
+    const pxPerGu = layoutCtx.pixelsPerGridUnit;
+    const interval_px = pxPerGu;
+
+    layoutCtx.useChildStacking({ direction: 'y', interval_px });
+
+    return parentFrame;
   },
 };
