@@ -2,6 +2,7 @@ const state = {
   activeVideoInputSlots: [true, true],
   params: {
     showGraphics: true,
+    useRoundedCornersStyle: true,
     demoText: 'Hello from test scenario',
   },
 };

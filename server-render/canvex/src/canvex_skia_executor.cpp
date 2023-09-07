@@ -527,6 +527,7 @@ bool RenderDisplayListToRawBuffer(
   SkImageInfo imageInfo;
 
   switch (format) {
+    default:
     case Rgba:
       skFormat = kRGBA_8888_SkColorType;
       break;
