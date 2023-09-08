@@ -732,7 +732,12 @@ class TextNode extends StyledNodeBase {
 
     const { totalBox, numLines } = measureTextLayoutBlocks(blocks);
 
-    // console.log('measure text: numLines %d, totalBox: ', numLines, totalBox);
+    /*console.log(
+      'measure text: numLines %d, frame, totalBox: ',
+      numLines,
+      frame,
+      totalBox
+    );*/
 
     if (numLines > 1 && frame && frame.w) {
       // for multiple lines, the width is the given max

@@ -428,6 +428,14 @@ class VCSBrowserOutput {
     this.rootContainerRef.current.setParamValue(id, value);
   }
 
+  setEnabledStandardSources(arr) {
+    this.rootContainerRef.current.setEnabledStandardSources(arr);
+  }
+
+  addStandardSourceMessage(id, data) {
+    this.rootContainerRef.current.addStandardSourceMessage(id, data);
+  }
+
   setRoomPeerDescriptionsById(map) {
     this.rootContainerRef.current.setRoomPeerDescriptionsById(map);
   }
