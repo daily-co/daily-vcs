@@ -5,7 +5,7 @@
   "license": "BSD-2-Clause",
   "type": "module",
   "devDependencies": {
-    "@babel/core": "^7.21.4",
-    "@babel/runtime": "^7.21.0"
+    "@babel/core": "^7.22.15",
+    "@babel/runtime": "^7.22.15"
   }
 }

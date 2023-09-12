@@ -24,14 +24,8 @@ export {
   grid,
 };
 
-export function placeText(parentFrame, params, layoutCtx) {
-  let { x, y, w, h } = parentFrame;
-  const textSize = layoutCtx.useIntrinsicSize();
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-
-  w = textSize.w;
-  h = textSize.h;
-
+function placeTextImpl(parentFrame, w, h, params, pxPerGu) {
+  let { x, y } = parentFrame;
   let xOff = params.xOffset_gu || 0;
   let yOff = params.yOffset_gu || 0;
   xOff *= pxPerGu;
@@ -62,6 +56,17 @@ export function placeText(parentFrame, params, layoutCtx) {
   x += xOff;
   y += yOff;
   return { x, y, w, h };
+}
+
+export function placeText(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+  const textSize = layoutCtx.useIntrinsicSize();
+  const { pixelsPerGridUnit: pxPerGu } = layoutCtx;
+
+  w = textSize.w;
+  h = textSize.h;
+
+  return placeTextImpl(parentFrame, w, h, params, pxPerGu);
 }
 
 export function gridLabel(parentFrame, params) {
@@ -176,16 +181,57 @@ export function centerYIfNeeded(parentFrame, params, layoutCtx) {
   return { x, y, w, h };
 }
 
-// -- utils --
+export function stackFixedRows(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  let { index, numItems, padding_gu = 0.5, offsetY_gu = 0 } = params;
+  let { x, y, w, h } = parentFrame;
+  const padding_px = padding_gu * pxPerGu;
 
-function getLineH(params, layoutCtx) {
-  if (isFinite(params.fontSize_px)) {
-    return params.fontSize_px;
+  x += padding_px;
+  y += padding_px;
+
+  const availableH = parentFrame.h - padding_px * (1 + numItems);
+
+  h = availableH / numItems;
+
+  y += index * (h + padding_px);
+  y += offsetY_gu * pxPerGu;
+
+  w -= padding_px * 2;
+
+  return { x, y, w, h };
+}
+
+export function itemText(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const viewport = layoutCtx.viewport;
+  const textSize = layoutCtx.useIntrinsicSize();
+  const { fontSize_gu = 1 } = params;
+  let { x, y, w, h } = parentFrame;
+
+  const fontSize_px = fontSize_gu * pxPerGu;
+
+  // if this is a single line of text, add some margin at top,
+  // but only if we have enough height available
+  if (textSize.w < w && h > fontSize_px * 2) {
+    y += fontSize_px;
   }
-  const { viewport, pixelsPerGridUnit } = layoutCtx;
-  if (isFinite(params.fontSize_gu)) {
-    return params.fontSize_gu * pixelsPerGridUnit;
+
+  return { x, y, w, h };
+}
+
+export function placeHighlightRowText(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { numRows = 0, fontSize_gu = 1 } = params;
+
+  let { x, y, w, h } = parentFrame;
+
+  const margin_px = Math.ceil(1 * fontSize_gu * pxPerGu);
+  const fontSize_px = Math.ceil(fontSize_gu * pxPerGu);
+
+  if (numRows > 0) {
+    h = fontSize_px * numRows + margin_px * (numRows - 1);
   }
-  const { fontSize_vh = 0.05 } = params;
-  return fontSize_vh * viewport.h;
+
+  return placeTextImpl(parentFrame, w, h, params, pxPerGu);
 }

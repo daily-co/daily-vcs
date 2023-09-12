@@ -340,23 +340,30 @@ class VCSBrowserOutput {
   }
 
   compUpdated(comp, opts) {
-    if (!this.updateCb || this.stopped) return;
+    if (this.stopped) return;
 
-    let sceneDesc;
-    if (this.enableSceneDescOutput) {
-      // the caller may not need the scene description if they just render
-      // directly from the model, so only write if requested.
-      try {
-        sceneDesc = comp.writeSceneDescription(this.imageSources);
-      } catch (e) {
-        console.error('unable to write scenedesc: ', e);
-        return;
+    renderCompVideoLayersInDOM(this.comp, this.videoBox, this.imageSources);
+
+    renderCompInCanvas(this.comp, this.fgCanvas, this.imageSources, false);
+
+    if (this.updateCb) {
+      let sceneDesc;
+      if (this.enableSceneDescOutput) {
+        // the caller may not need the scene description if they just render
+        // directly from the model, so only write if requested.
+        try {
+          sceneDesc = comp.writeSceneDescription(this.imageSources);
+        } catch (e) {
+          console.error('unable to write scenedesc: ', e);
+          return;
+        }
       }
+      if (sceneDesc) this.updateCb(sceneDesc);
     }
-    if (sceneDesc) this.updateCb(sceneDesc);
 
     if (opts && opts.newWebFrameProps) {
       console.log('got webframe props update: ', opts.newWebFrameProps);
+      // TODO: do something with these props -- currently not handled at all in web client
     }
   }
 
@@ -377,8 +384,6 @@ class VCSBrowserOutput {
 
     const t = Date.now() / 1000;
 
-    let renderNow = true;
-
     // limit frame rate to React updates
     if (t - this.lastT >= 1 / this.fps) {
       const videoT = t - this.startT;
@@ -389,14 +394,8 @@ class VCSBrowserOutput {
 
       this.lastT = t;
 
-      const t1 = Date.now() / 1000;
+      //const t1 = Date.now() / 1000;
       //console.log("updated react, time spent %f ms", Math.round((t1-t)*1000));
-    }
-
-    if (renderNow) {
-      renderCompVideoLayersInDOM(this.comp, this.videoBox, this.imageSources);
-
-      renderCompInCanvas(this.comp, this.fgCanvas, this.imageSources, false);
     }
 
     requestAnimationFrame(this.renderFrame.bind(this));
@@ -427,6 +426,14 @@ class VCSBrowserOutput {
   setParamValue(id, value) {
     //console.log('setParamValue: ', id, value);
     this.rootContainerRef.current.setParamValue(id, value);
+  }
+
+  setEnabledStandardSources(arr) {
+    this.rootContainerRef.current.setEnabledStandardSources(arr);
+  }
+
+  addStandardSourceMessage(id, data) {
+    this.rootContainerRef.current.addStandardSourceMessage(id, data);
   }
 
   setRoomPeerDescriptionsById(map) {

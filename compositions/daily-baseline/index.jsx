@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box } from '#vcs-react/components';
 import {
   useParams,
+  useStandardSources,
   useGrid,
   useViewportSize,
   useVideoPlaybackState,
@@ -39,6 +40,7 @@ export const compositionInterface = {
     name: 'Daily Baseline',
     description: "Composition with Daily's baseline features",
   },
+  standardSources: ['chatMessages', 'transcript'],
   fontFamilies,
   imagePreloads,
   params: compositionParams,
@@ -47,6 +49,7 @@ export const compositionInterface = {
 // -- the root component of this composition --
 export default function DailyBaselineVCS() {
   const params = useParams();
+  const standardSources = useStandardSources();
   const viewportSize = useViewportSize();
   const pxPerGu = useGrid().pixelsPerGridUnit;
   const guPerVh = viewportSize.h / pxPerGu;
@@ -255,10 +258,42 @@ export default function DailyBaselineVCS() {
   }, [params, styles, participantDescs, dominantVideoId, hasScreenShare]);
 
   let graphics = [];
-  let gi = 0;
+
   if (params.showTextOverlay) {
     // copy params to props and ensure types are what the component expects
     let overlayProps = params.text ? { ...params.text } : {};
+
+    if (params.text.source === 'param') {
+      // default
+    } else if (params.text.source === 'agenda') {
+      const agendaPos = params['agenda.position'] || 0;
+      const agendaItems = parseCommaSeparatedList(
+        params['agenda.items']
+      ).filter((s) => s.length > 0);
+
+      overlayProps.highlightRows = {
+        textRows: agendaItems,
+        highlightIndex: agendaPos,
+      };
+    } else {
+      const ssrc = standardSources[params.text.source];
+      if (!ssrc) {
+        console.error(
+          '** Invalid standard source requested by param text.source: ',
+          params.text.source
+        );
+      } else {
+        let text = '';
+        if (ssrc.latest.length > 0) {
+          const msg = ssrc.latest.at(ssrc.latest.length - 1);
+          if (msg.senderDisplayName?.length > 0) {
+            text += `[${msg.senderDisplayName}] `;
+          }
+          text += msg.text;
+        }
+        overlayProps.content = text;
+      }
+    }
 
     // bw compatibility: deprecated params that used absolute coords rather than gu
     if (isFinite(overlayProps.offset_x)) {
@@ -296,10 +331,20 @@ export default function DailyBaselineVCS() {
     overlayProps.strokeColor = overlayProps.strokeColor
       ? overlayProps.strokeColor.trim()
       : null;
-    overlayProps.useStroke =
-      overlayProps.strokeColor && overlayProps.strokeColor.length > 0;
 
-    graphics.push(<TextOverlay key={gi++} {...overlayProps} />);
+    overlayProps.strokeWidth_px = overlayProps.stroke_gu
+      ? overlayProps.stroke_gu * pxPerGu
+      : 12;
+
+    overlayProps.useStroke =
+      overlayProps.strokeColor &&
+      overlayProps.strokeColor.length > 0 &&
+      overlayProps.strokeWidth_px > 0;
+
+    overlayProps.highlightColor = params['text.highlight.color'];
+    overlayProps.highlightFontWeight = params['text.highlight.fontWeight'];
+
+    graphics.push(<TextOverlay key="textOverlay" {...overlayProps} />);
   }
 
   {
@@ -320,7 +365,7 @@ export default function DailyBaselineVCS() {
 
     graphics.push(
       <ImageOverlay
-        key={gi++}
+        key="imageOverlay"
         src={params['image.assetName']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
@@ -336,7 +381,7 @@ export default function DailyBaselineVCS() {
 
   graphics.push(
     <WebFrameOverlay
-      key={gi++}
+      key="webFrameOverlay"
       src={params['webFrame.url']}
       viewportWidth_px={params['webFrame.viewportWidth_px']}
       viewportHeight_px={params['webFrame.viewportHeight_px']}
@@ -353,12 +398,31 @@ export default function DailyBaselineVCS() {
     />
   );
 
+  // toast source
+  let toastKey = 0,
+    toastText = '';
+  if (params.toast.source === 'param') {
+    toastKey = params['toast.key'] ? parseInt(params['toast.key'], 10) : 0;
+    toastText = params['toast.text'];
+  } else {
+    const ssrc = standardSources[params.toast.source];
+    if (!ssrc) {
+      console.error(
+        '** Invalid standard source requested by param toast.source: ',
+        params.toast.source
+      );
+    } else if (ssrc.latest.length > 0) {
+      const msg = ssrc.latest.at(ssrc.latest.length - 1);
+      toastKey = msg.key;
+      toastText = msg.text;
+    }
+  }
   graphics.push(
     <Toast
       key="toast"
       currentItem={{
-        key: params['toast.key'] ? parseInt(params['toast.key'], 10) : 0,
-        text: params['toast.text'],
+        key: toastKey,
+        text: toastText,
         showIcon: !!params['toast.showIcon'],
         iconOverrideAssetName: params['toast.icon.assetName'],
         durationInSeconds: params['toast.duration_secs']
@@ -386,7 +450,7 @@ export default function DailyBaselineVCS() {
 
   // custom overlay is the topmost of non-fullscreen graphics.
   // it's empty by default (meant to be overridden in session assets).
-  graphics.push(<CustomOverlay key={gi++} />);
+  graphics.push(<CustomOverlay key="customOverlay" />);
 
   {
     // title slate (a fullscreen graphic)
@@ -407,7 +471,7 @@ export default function DailyBaselineVCS() {
 
     graphics.push(
       <Slate
-        key={'titleslate_' + gi++}
+        key="titleSlate"
         id="titleSlate"
         show={params['showTitleSlate']}
         src={params['titleSlate.bgImageAssetName']}
@@ -440,7 +504,7 @@ export default function DailyBaselineVCS() {
 
     graphics.push(
       <Slate
-        key={'openingslate_' + gi++}
+        key="openingSlate"
         id="openingSlate"
         show={true}
         isOpeningSlate={true}
@@ -460,7 +524,7 @@ export default function DailyBaselineVCS() {
   // send the postroll transition event.
   const inPostRoll = useVideoPlaybackState() === PlaybackStateType.POSTROLL;
   graphics.push(
-    <Slate key={'closingslate_' + gi++} id="closingSlate" show={inPostRoll} />
+    <Slate key="closingSlate" id="closingSlate" show={inPostRoll} />
   );
 
   // debug printout overlay
@@ -511,4 +575,10 @@ export default function DailyBaselineVCS() {
       <Box id="graphicsBox">{graphics}</Box>
     </Box>
   );
+}
+
+function parseCommaSeparatedList(str) {
+  if (!str || str.length < 1) return [];
+
+  return str.split(',').map((s) => s.trim());
 }

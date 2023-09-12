@@ -308,6 +308,14 @@ export const compositionParams = [
     //'An example text overlay\nwith line breaks\nThis third line is very long dolor sit amet lorem ipsum, and the line ends here.',
   },
   {
+    id: 'text.source',
+    type: 'enum',
+    defaultValue: 'param',
+    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    shortHelpText:
+      'Override the text content from a standard source like transcription.',
+  },
+  {
     id: 'text.align_horizontal',
     type: 'enum',
     defaultValue: 'center',
@@ -375,6 +383,23 @@ export const compositionParams = [
     id: 'text.strokeColor',
     type: 'text',
     defaultValue: 'rgba(0, 0, 0, 0.8)',
+  },
+  {
+    id: 'text.stroke_gu',
+    type: 'number',
+    defaultValue: 0.5,
+    step: 0.05,
+  },
+  {
+    id: 'text.highlight.color',
+    type: 'text',
+    defaultValue: 'rgba(255, 255, 0, 1)',
+  },
+  {
+    id: 'text.highlight.fontWeight',
+    type: 'enum',
+    defaultValue: '700',
+    values: fontWeights,
   },
 
   // -- image overlay params --
@@ -504,6 +529,14 @@ export const compositionParams = [
     id: 'toast.text',
     type: 'text',
     defaultValue: 'Hello world',
+  },
+  {
+    id: 'toast.source',
+    type: 'enum',
+    defaultValue: 'param',
+    values: ['param', 'chatMessages', 'transcript'],
+    shortHelpText:
+      'Override this content from a standard source like transcription.',
   },
   {
     id: 'toast.duration_secs',
@@ -700,6 +733,21 @@ export const compositionParams = [
     defaultValue: '400',
     values: fontWeights,
   },
+
+  // -- agenda params --
+  {
+    id: 'agenda.items',
+    type: 'text',
+    textSizeHint: 'long',
+    defaultValue:
+      'Introduction, Notes from the conference, Interview with Jane Doe, Q & A',
+  },
+  {
+    id: 'agenda.position',
+    type: 'number',
+    defaultValue: 0,
+  },
+
   // -- debug params --
   {
     id: 'debug.showRoomState',

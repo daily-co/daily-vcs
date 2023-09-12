@@ -1,5 +1,6 @@
 import * as React from 'react';
-import * as ViewContexts from '../src/react/contexts/index.js';
+import * as ViewContexts from './react/contexts/index.js';
+import { makeEmptyStandardSources } from './react/contexts/CompositionDataContext.js';
 
 export function makeVCSRootContainer(
   ContentRoot,
@@ -30,6 +31,7 @@ export function makeVCSRootContainer(
         hasError: false,
         compositionData: {
           params,
+          standardSources: makeEmptyStandardSources(),
         },
         time: {
           currentTime: 0,
@@ -74,6 +76,25 @@ export function makeVCSRootContainer(
       this.pendingState = null;
 
       newState.time = newT;
+
+      // trim the standard sources arrays of latest messages.
+      // we look at 'this.state' here instead of 'newState' because
+      // trimming should be after a delay when components have consumed the data.
+      // visual components can always internally retain more messages
+      // (similar to the Toast queue in baseline composition).
+      const maxItems = 3;
+      for (const key of Object.keys(
+        this.state.compositionData.standardSources
+      )) {
+        const arr = this.state.compositionData.standardSources[key].latest;
+        if (arr.length > maxItems) {
+          if (!newState.compositionData) {
+            newState.compositionData = { ...this.state.compositionData };
+          }
+          const newArr = arr.slice(arr.length - maxItems);
+          newState.compositionData.standardSources[key].latest = newArr;
+        }
+      }
 
       this.setState(newState);
     }
@@ -138,6 +159,43 @@ export function makeVCSRootContainer(
       compositionData.params = { ...compositionData.params };
 
       this.applyParamValueToObj(compositionData.params, id, value);
+
+      this.pendingState.compositionData = compositionData;
+    }
+
+    setEnabledStandardSources(arr) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const compositionData = {
+        ...(this.pendingState.compositionData
+          ? this.pendingState.compositionData
+          : this.state.compositionData),
+      };
+
+      for (const key in compositionData.standardSources) {
+        compositionData.standardSources[key].enabled = arr
+          ? arr.includes(key)
+          : false;
+      }
+
+      this.pendingState.compositionData = compositionData;
+    }
+
+    addStandardSourceMessage(id, data) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const compositionData = {
+        ...(this.pendingState.compositionData
+          ? this.pendingState.compositionData
+          : this.state.compositionData),
+      };
+
+      const srcObj = compositionData.standardSources[id];
+      if (!srcObj) {
+        console.error("** Unknown id '%s' for addStandardSourceMessage", id);
+        return;
+      }
+      srcObj.latest.push(data);
 
       this.pendingState.compositionData = compositionData;
     }
