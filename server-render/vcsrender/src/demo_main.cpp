@@ -5,7 +5,7 @@
 #include "libyuv.h"
 #include "canvex_c_api.h"
 
-#include "scenedesc.h"
+#include "parse/parse_scenedesc.h"
 #include "yuvbuf.h"
 #include "yuv_compositor.h"
 #include "file_util.h"

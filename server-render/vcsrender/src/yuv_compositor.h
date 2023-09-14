@@ -2,12 +2,10 @@
 #include <optional>
 #include <unordered_map>
 #include "canvex_c_api.h"
-#include "scenedesc.h"
 #include "yuvbuf.h"
+#include "parse/parse_scenedesc.h"
 
 namespace vcsrender {
-
-using VideoInputBufsById = std::unordered_map<uint32_t, std::shared_ptr<Yuv420PlanarBuf>>;
 
 /*
   A compositor instance should be retained between frames.

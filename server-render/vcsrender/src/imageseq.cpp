@@ -78,6 +78,7 @@ void ImageSequence::load_() {
 std::unique_ptr<vcsrender::Yuv420PlanarBuf> ImageSequence::readYuv420ForFrame(size_t frameIdx) {
   if (frameIdx >= numFrames_) {
     frameIdx %= numFrames_; // loop by default -- this should be a setting
+    // TODO: add setting for whether to loop / hold last frame / render black
   }
 
   if (startsAtOne_) frameIdx++;

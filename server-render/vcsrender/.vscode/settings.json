@@ -79,7 +79,8 @@
     "concepts": "cpp",
     "variant": "cpp",
     "csignal": "cpp",
-    "set": "cpp"
+    "set": "cpp",
+    "__verbose_abort": "cpp"
   },
   "cmake.configureOnOpen": false
 }

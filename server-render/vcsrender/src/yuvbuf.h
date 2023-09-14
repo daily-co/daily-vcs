@@ -66,4 +66,6 @@ struct Yuv420PlanarBuf {
   }
 };
 
+using VideoInputBufsById = std::unordered_map<uint32_t, std::shared_ptr<Yuv420PlanarBuf>>;
+
 } // namespace vcsrender

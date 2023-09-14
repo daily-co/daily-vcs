@@ -1,4 +1,4 @@
-#include "scenedesc.h"
+#include "parse_scenedesc.h"
 #include <iostream>
 #include <sstream>
 #include <unordered_map>
@@ -74,11 +74,6 @@ class VideoLayerListJSONHandler {
     switch (parseState_) {
       default: break;
       case layerObj:
-        /*cout << "finished arg obj: " << cmdArgObjAssetRef_.first << ", " << cmdArgObjAssetRef_.second << endl;
-        addArgToCurrentCmd(cmdArgObjAssetRef_);
-
-        cmdArgObjAssetRef_ = {};
-        */
         parseState_ = layersArray;
         return true;
       
@@ -286,7 +281,7 @@ std::unique_ptr<VCSVideoLayerList> ParseVCSVideoLayerListJSON(const char* jsonSt
   auto result = reader.Parse(ss, jsonHandler);
   if (!result) {
     std::stringstream ss;
-    ss << "Display list can't be parsed, probably not valid JSON (error code ";
+    ss << "Scene desc can't be parsed, probably not valid JSON (error code ";
     ss << result.Code();
     ss << " at offset " << result.Offset() << ")";
 

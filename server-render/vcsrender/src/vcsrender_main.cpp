@@ -7,9 +7,11 @@
 #include "sceneseq.h"
 #include "yuv_compositor.h"
 #include "yuvbuf.h"
-#include "scenedesc.h"
 #include "file_util.h"
 #include "time_util.h"
+#include "inputloader.h"
+#include "parse/parse_scenedesc.h"
+#include "parse/parse_inputtimings.h"
 
 /*
 
@@ -19,6 +21,7 @@ It expects its inputs as files, in specific formats:
 
   * YUV sequences for video inputs
   * Separate JSON files for video layer and foreground graphics scene descriptions
+  * Optionally a JSON file that defines input timings (i.e. the timeline of which clip to play when)
 
 The VCS composition must be pre-processed into the aforementioned "vl + fg" JSON outputs.
 The batch runner tool in VCS core can be used for this.
@@ -32,7 +35,7 @@ from a path which by default is assumed to be `../../res` (due to Daily's intern
 This can be overridden on the CLI.
 
 
-Usage example:
+Usage example, in simple mode where video inputs are provided inline:
 
 vcsrender --oseq [output_seq] \
           -w 1280 -h 720 \
@@ -40,6 +43,15 @@ vcsrender --oseq [output_seq] \
           --iw 1920 --ih 1080 --iseq [path_to_input_seq1] \
           --iw 1280 --ih 720  --iseq [path_to_input_seq2] \
           --jsonseq [path_to_scene_json_seq]
+
+Or, using the input timings JSON format instead of inline video inputs:
+
+vcsrender --oseq [output_seq] \
+          -w 1280 -h 720 \
+          --jsonseq [path_to_scene_json_seq] \
+          --input_timings [path_to_input_timings_json]
+
+    (in this mode duration isn't needed because the input_timings data is expected to include this value)
 */
 
 
@@ -55,25 +67,31 @@ class VcsRenderApp : public cxx_argp::application
   struct {
     // output settings
     std::string outputSeqPath;
-    int outputW = 1920;
-    int outputH = 1080;
+    uint32_t outputW = 1920;
+    uint32_t outputH = 1080;
     size_t durationInFrames = 100;
 
-    std::string inputJsonSeqPath;
+    std::string batchJsonSeqPath;
+    std::string inputTimingsJsonPath;
 
-    std::vector<std::shared_ptr<ImageSequence>> inputSeqs;    
+    // input sequences loaded from CLI args (not from input timings JSON)
+    ///std::vector<std::shared_ptr<ImageSequence>> inputSeqs;
+    std::vector<VideoInputPlaybackEvent> inputSeqEventsFromCli;
+    
     std::vector<SceneDescAtFrame> sceneDescs;
-    std::unique_ptr<SceneJsonSequence> inputJsonSeq;
+    std::unique_ptr<SceneJsonSequence> batchJsonSeq;
   } args_;
 
   // state during arg parsing
   struct {
     // tracks the --iw and --ih arguments
-    int inputW = 1920;
-    int inputH = 1080;
+    uint32_t inputW = 1920;
+    uint32_t inputH = 1080;
   } argsParseState_;
 
   // render state
+  std::unique_ptr<VCSVideoInputTimingsDesc> inputTimings_;
+  std::unique_ptr<VideoInputLoader> inputLoader_;
   std::unique_ptr<YuvCompositor> comp_;
   std::filesystem::path outputSeqDir_;
 
@@ -93,7 +111,7 @@ class VcsRenderApp : public cxx_argp::application
       return false;
     }
     /*
-    if (args_.inputJsonSeqPath.empty()) {
+    if (args_.batchJsonSeqPath.empty()) {
       std::cerr << "Must provide input JSON sequence path" << std::endl;
       return false;
     }*/
@@ -107,18 +125,45 @@ class VcsRenderApp : public cxx_argp::application
     const std::string canvexResDir = "";
     comp_ = std::make_unique<YuvCompositor>(args_.outputW, args_.outputH, canvexResDir);
 
-    if (args_.inputSeqs.empty()) {
+    // -- set up video inputs
+    /*if (0) {
       // DEBUG: add a bunch of Big Buck Bunnies as test inputs
       const auto bunnyDir = "example-data/temp/bunny_yuv_15s";
       const int numTestInputs = 16;
       for (int i = 0; i < numTestInputs; i++) {
-        args_.inputSeqs.push_back(
-          ImageSequence::createFromDir(bunnyDir, 1280, 720)
-        );
+        inputTimings_->playbackEvents.push_back(VideoInputPlaybackEvent{
+          0,
+          args_.durationInFrames,
+          (uint32_t)i,
+          bunnyDir,
+          1280,
+          720
+        });
       }
+    }*/
+
+    if (args_.inputTimingsJsonPath.empty()) {
+      inputTimings_ = std::make_unique<VCSVideoInputTimingsDesc>();
+      inputTimings_->durationInFrames = args_.durationInFrames;
+      inputTimings_->playbackEvents = args_.inputSeqEventsFromCli;
+    } else {
+      std::cout << "Loading input timings JSON from " << args_.inputTimingsJsonPath << std::endl;
+      auto json = readTextFile(args_.inputTimingsJsonPath);
+      inputTimings_ = ParseVCSVideoInputTimingsDescJSON(json);
     }
 
-    if (args_.inputJsonSeqPath.empty()) {
+    inputLoader_ = std::make_unique<VideoInputLoader>(*inputTimings_);
+
+    if (!inputLoader_->start()) {
+      std::cerr << "Unable to start video input loader." << std::endl;
+      return 1;
+    }
+
+    // -- set up JSON sequence input --
+
+    if (args_.batchJsonSeqPath.empty()) {
+      std::cout << "DEBUG: loading test JSONs" << std::endl;
+
       // DEBUG: load some test JSONs
       std::string videoLayersJson_test_2inputs = R"(
         [ {"type":"video","id":0,"frame":{"x":0,"y":0,"w":960,"h":1080},"attrs":{"scaleMode":"fill"}},
@@ -143,7 +188,8 @@ class VcsRenderApp : public cxx_argp::application
       );
     }
     else {
-      args_.inputJsonSeq = SceneJsonSequence::createFromDir(args_.inputJsonSeqPath);
+      std::cout << "Loading batch JSON sequence from " << args_.batchJsonSeqPath << std::endl;
+      args_.batchJsonSeq = SceneJsonSequence::createFromDir(args_.batchJsonSeqPath);
     }
 
     return renderLoop();
@@ -152,14 +198,14 @@ class VcsRenderApp : public cxx_argp::application
   int renderLoop() {
     double renderTimeAcc_s = 0.0;
 
-    for (size_t frameIdx = 0; frameIdx < args_.durationInFrames; frameIdx++) {
+    for (size_t frameIdx = 0; frameIdx < inputTimings_->durationInFrames; frameIdx++) {
       const auto dstPath = makeOutputFilePath(frameIdx);
 
       SceneDescAtFrame readSd;
       SceneDescAtFrame* sd = nullptr;
-      if (args_.inputJsonSeq) {
+      if (args_.batchJsonSeq) {
         // read given json sequence
-        readSd = args_.inputJsonSeq->readJsonForFrame(frameIdx);
+        readSd = args_.batchJsonSeq->readJsonForFrame(frameIdx);
         readSd.layerScale = 1920.0 / 1280.0;
         sd = &readSd;
       } else if (args_.sceneDescs.size() > 0) {
@@ -187,6 +233,7 @@ class VcsRenderApp : public cxx_argp::application
       }
 
       // load inputs
+      /*
       VideoInputBufsById inputBufs {};
       const int numInputs = args_.inputSeqs.size();
       for (int i = 0; i < numInputs; i++) {
@@ -194,7 +241,8 @@ class VcsRenderApp : public cxx_argp::application
         // they could be any integers, but this is the convention used by the scene desc JSONs
         // generated by the VCS batch runner.
         inputBufs[i] = args_.inputSeqs[i]->readYuv420ForFrame(frameIdx);
-      }
+      }*/
+      auto inputBufs = inputLoader_->readInputBufsAtFrame(frameIdx);
 
       std::cout << "-- rendering frame " << frameIdx << "..." << std::endl;
 
@@ -211,13 +259,18 @@ class VcsRenderApp : public cxx_argp::application
       std::cout << "  render time " << (timeSpent_render * 1000) << " ms, writing..." << std::endl;
 
       auto dstFile = fopen(dstPath.c_str(), "wb");
-      fwrite(renderResult->data, renderResult->dataSize, 1, dstFile);
+      auto writeResult = fwrite(renderResult->data, renderResult->dataSize, 1, dstFile);
       fclose(dstFile);
+
+      if (1 != writeResult) {
+        std::cerr << "Write failed to: " << dstPath << std::endl;
+        return 2;
+      }
 
       if (interrupted()) break;
     }
 
-    std::cout << "\nAvg render time: " << (renderTimeAcc_s / (args_.durationInFrames - 1) * 1000) << " ms" << std::endl;
+    std::cout << "\nAvg render time: " << (renderTimeAcc_s / (inputTimings_->durationInFrames - 1) * 1000) << " ms" << std::endl;
 
     if (interrupted()) {
       std::cerr << "Interrupted." << std::endl;
@@ -231,7 +284,7 @@ class VcsRenderApp : public cxx_argp::application
     const std::string fileExt = "yuv";
 
     std::stringstream fileNameSs;
-    fileNameSs << "bunnyout_";
+    fileNameSs << "vcsrenderout_";
     fileNameSs << std::setfill('0') << std::setw(numDigits) << frameIdx;
     fileNameSs << "." << fileExt;
 
@@ -246,9 +299,14 @@ public:
                           args_.outputSeqPath);
 
     arg_parser.add_option({"jsonseq",
-                           'j', "input-json-sequence-path", 0,
-                           "Input scene JSON sequence path", 0},
-                          args_.inputJsonSeqPath);
+                           'j', "batch-json-sequence-path", 0,
+                           "Batch scene JSON sequence path", 0},
+                          args_.batchJsonSeqPath);
+
+    arg_parser.add_option({"input_timings",
+                           't', "input-timings-json-path", 0,
+                           "Input timings JSON path", 0},
+                          args_.inputTimingsJsonPath);
 
     arg_parser.add_option({nullptr,
                            'w', "output-w", 0,
@@ -299,11 +357,19 @@ public:
                            'i', "input-yuv-sequence-path", 0,
                            "Input YUV sequence path", 0},
                            [this] (const char *argStr) {
-                            std::cout << "Loading input " << args_.inputSeqs.size() << ", size " << 
+                            uint32_t index = args_.inputSeqEventsFromCli.size();
+                            std::cout << "Loading input " << index << ", size " << 
                                 argsParseState_.inputW << "*" << argsParseState_.inputH << std::endl;
-                            args_.inputSeqs.push_back(
-                              ImageSequence::createFromDir(argStr, argsParseState_.inputW, argsParseState_.inputH)
-                            );
+
+                            args_.inputSeqEventsFromCli.push_back(VideoInputPlaybackEvent{
+                              0,
+                              args_.durationInFrames,
+                              index,
+                              argStr,
+                              argsParseState_.inputW,
+                              argsParseState_.inputH
+                           });
+
                             return true;
                            }
                           );
