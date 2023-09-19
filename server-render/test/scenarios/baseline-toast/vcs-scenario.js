@@ -23,6 +23,7 @@ function frameWillRenderCb(frameIdx) {
     case kFrameIdx_toast1:
       state.params = {
         ...state.params,
+        'toast.source': 'param',
         'toast.color': 'rgba(215, 50, 110, 0.8)',
         'toast.duration_secs': 3,
         'toast.key': toastKey,
