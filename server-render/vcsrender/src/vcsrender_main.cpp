@@ -206,7 +206,10 @@ class VcsRenderApp : public cxx_argp::application
       if (args_.batchJsonSeq) {
         // read given json sequence
         readSd = args_.batchJsonSeq->readJsonForFrame(frameIdx);
-        readSd.layerScale = 1920.0 / 1280.0;
+
+        // DEBUG: set layer scale for 1080p output with 720p input from batch renderer
+        // readSd.layerScale = 1920.0 / 1280.0;
+
         sd = &readSd;
       } else if (args_.sceneDescs.size() > 0) {
         // no json sequence but there are cached scenedescs in memory

@@ -36,6 +36,7 @@ VideoInputBufsById VideoInputLoader::readInputBufsAtFrame(size_t frame) {
   } while (nextEv);
 
   VideoInputBufsById bufsById {};
+  std::vector<uint32_t> removeList {};
 
   for (const auto& kv : activeImageSeqsByInputId_) {
     uint32_t videoInputId = kv.first;
@@ -45,6 +46,7 @@ VideoInputBufsById VideoInputLoader::readInputBufsAtFrame(size_t frame) {
     size_t outFrame = v.startFrame + v.duration;
     if (frame >= outFrame) {
       std::cout << "-- Sequence has ended for input " << videoInputId << " at frame " << frame << std::endl;
+      removeList.push_back(videoInputId);
     } else {
       // still going
       size_t frameInSeq = frame - v.startFrame;
@@ -53,6 +55,10 @@ VideoInputBufsById VideoInputLoader::readInputBufsAtFrame(size_t frame) {
 
       bufsById[videoInputId] = v.imSeq->readYuv420ForFrame(frameInSeq);
     }
+  }
+
+  for (const uint32_t id : removeList) {
+    activeImageSeqsByInputId_.erase(id);
   }
 
   return bufsById;

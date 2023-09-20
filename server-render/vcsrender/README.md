@@ -42,7 +42,7 @@ You can now build with:
 
 This should place the `vcsrender` binary in the `build` subdir.
 
-At runtime, vcsrender expects to find VCS resources such as fonts in a `res` directory two levels down from `vcsrender`. (I.e. `../../res`.) This matches the structure of the daily-vcs repo. This resource location isn't currently configurable, but will be eventually.
+At runtime, vcsrender expects to find VCS resources such as fonts in a `res` directory two levels up from `vcsrender`. (I.e. `../../res`.) This matches the structure of the daily-vcs repo. This resource location isn't currently configurable, but will be eventually.
 
 
 ## macOS setup notes
