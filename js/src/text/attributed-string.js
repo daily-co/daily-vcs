@@ -124,5 +124,7 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
   return {
     fragments,
     font,
+    textAlign,
+    fontSize_px: size_px,
   };
 }

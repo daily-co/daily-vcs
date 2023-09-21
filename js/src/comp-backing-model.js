@@ -721,10 +721,28 @@ class TextNode extends StyledNodeBase {
       return;
     }
 
+    // the text engine seems to allow a bit of overflow for a fragment on a line.
+    // unclear whether it's misconfiguration somewhere down the line, or maybe
+    // some kind of error/bug reading the font metrics?
+    // to avoid text running out of the given bounds, add a bit of safety.
+    const { textAlign, fontSize_px } = this.attrStringDesc;
+    let marginL = 0,
+      marginR = 0;
+    if (frame && frame.w > fontSize_px) {
+      const safetyMargin = Math.ceil(fontSize_px * 0.45) * 2;
+      if (textAlign === 'center') {
+        marginL = marginR = safetyMargin / 2;
+      } else if (textAlign === 'right') {
+        marginL = safetyMargin;
+      } else {
+        marginR = safetyMargin;
+      }
+    }
+
     const textContainerFrame = {
-      x: 0,
+      x: marginL,
       y: 0,
-      width: frame && frame.w ? frame.w : Infinity,
+      width: frame && frame.w ? frame.w - marginL - marginR : Infinity,
       height: frame && frame.h ? frame.h : Infinity,
     };
 
