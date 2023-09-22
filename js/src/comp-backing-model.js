@@ -682,20 +682,15 @@ class TextNode extends StyledNodeBase {
         // measure text's intrinsic size now
         this.computeTextSize();
 
-        // if we have a known layout frame, we also want to update the cached text blocks now
+        // if we have a known layout frame, we'll also want to update the cached text blocks
+        // when the next layout frame update comes around
         if (
           this.layoutFrame &&
           this.layoutFrame.w > 0 &&
           this.layoutFrame.h > 0
         ) {
-          this.computeTextSize(this.layoutFrame);
+          this.flowFrameIsDirty = true;
         }
-
-        /*console.log(
-          "commit measured text size '%s': ",
-          this.text,
-          this.intrinsicSize
-        );*/
       } catch (e) {
         console.error('** exception when measuring text size: ', e);
       }
@@ -703,9 +698,11 @@ class TextNode extends StyledNodeBase {
   }
 
   setLayoutFrame(frame) {
-    if (isEqualLayoutFrame(frame, this.layoutFrame)) return;
+    if (!this.flowFrameIsDirty && isEqualLayoutFrame(frame, this.layoutFrame))
+      return;
 
     this.layoutFrame = frame;
+    this.flowFrameIsDirty = false;
 
     this.computeTextSize(this.layoutFrame);
   }
@@ -726,37 +723,59 @@ class TextNode extends StyledNodeBase {
     // unclear whether it's misconfiguration somewhere down the line, or maybe
     // some kind of error/bug reading the font metrics?
     // to avoid text running out of the given bounds, add a bit of safety.
-    const { textAlign, fontSize_px } = this.attrStringDesc;
+    const { textAlign, fontSize_px = 0 } = this.attrStringDesc;
     let marginL = 0,
       marginR = 0;
-    if (frame && frame.w > fontSize_px) {
-      const safetyMargin = Math.ceil(fontSize_px * 0.45) * 2;
-      if (textAlign === 'center') {
-        marginL = marginR = safetyMargin / 2;
-      } else if (textAlign === 'right') {
-        marginL = safetyMargin;
-      } else {
-        marginR = safetyMargin;
-      }
-    }
-
-    const textContainerFrame = {
-      x: marginL,
-      y: 0,
-      width: frame && frame.w ? frame.w - marginL - marginR : Infinity,
-      height: frame && frame.h ? frame.h : Infinity,
-    };
-
-    const blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
-
-    const { totalBox, numLines } = measureTextLayoutBlocks(blocks);
-
     /*console.log(
-      'measure text: numLines %d, frame, totalBox: ',
-      numLines,
-      frame,
-      totalBox
+      'frame w %s, intrinsic w %s, safety %s',
+      frame.w,
+      this.intrinsicSize?.w,
+      this.flowFrame?.safetyMargin
     );*/
+
+    let safetyMargin = this.flowFrame?.safetyMargin;
+    let blocks;
+    let totalBox, numLines;
+
+    // wrapped in a function so we can call again if safetymargin is adjusted
+    const measure = () => {
+      if (safetyMargin > 0) {
+        if (textAlign === 'center') {
+          marginL = marginR = safetyMargin / 2;
+        } else if (textAlign === 'right') {
+          marginL = safetyMargin;
+        } else {
+          marginR = safetyMargin;
+        }
+      }
+
+      const textContainerFrame = {
+        x: marginL,
+        y: 0,
+        width: frame && frame.w ? frame.w - marginL - marginR : Infinity,
+        height: frame && frame.h ? frame.h : Infinity,
+      };
+
+      blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
+
+      ({ totalBox, numLines } = measureTextLayoutBlocks(blocks));
+
+      /*console.log(
+        'measure text: numLines %d, frame, totalBox: ',
+        numLines,
+        frame,
+        totalBox
+      );*/
+    };
+    measure();
+
+    if (totalBox.w > frame.w) {
+      // totally unscientific, works around text engine issue (see comment above)
+      safetyMargin = Math.ceil(fontSize_px * 0.4) * 2;
+      measure();
+    } else {
+      safetyMargin = 0;
+    }
 
     if (numLines > 1 && frame && frame.w) {
       // for multiple lines, the width is the given max
@@ -773,6 +792,7 @@ class TextNode extends StyledNodeBase {
       y: frame.y,
       w: Math.ceil(totalBox.w),
       h: Math.ceil(totalBox.h),
+      safetyMargin: safetyMargin || undefined,
     };
 
     if (!overrideFrame) {
