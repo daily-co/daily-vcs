@@ -110,7 +110,17 @@ function getVideoTime() {
 main();
 
 async function main() {
-  await loadFontsAsync(compInterface ? compInterface.fontFamilies : null);
+  let fontFamilies, params;
+  if (compInterface) {
+    if (Array.isArray(compInterface.fontFamilies)) {
+      fontFamilies = compInterface.fontFamilies;
+    }
+    if (Array.isArray(compInterface.params)) {
+      params = compInterface.params;
+    }
+  }
+
+  await loadFontsAsync(fontFamilies);
 
   // the backing model for our views.
   // the callback passed here will be called every time React has finished an update.
@@ -120,14 +130,36 @@ async function main() {
     compGetSourceMetadataCb
   );
 
+  // set param defaults based on comp's published interface.
+  // if we got param values as args, use those.
+  const paramValues = {};
+  if (params) {
+    for (const paramDesc of params) {
+      const { id, defaultValue } = paramDesc;
+      if (!id) {
+        console.error('** Invalid paramDesc, no id field');
+        continue;
+      }
+      let value;
+      if ((value = defaultValue) !== undefined) {
+        paramValues[id] = value;
+      }
+    }
+  }
   // bind our React reconciler with the container component and the composition model.
   // when the root container receives a state update, React will reconcile it into composition.
   render(
-    makeVCSRootContainer(ContentRoot, rootContainerRef, {
-      viewportSize: g_viewportSize,
-      pixelsPerGridUnit: composition.pixelsPerGridUnit,
-      renderingEnvironment: ViewContexts.RenderingEnvironmentType.MEDIA_SERVER,
-    }),
+    makeVCSRootContainer(
+      ContentRoot,
+      rootContainerRef,
+      {
+        viewportSize: g_viewportSize,
+        pixelsPerGridUnit: composition.pixelsPerGridUnit,
+        renderingEnvironment:
+          ViewContexts.RenderingEnvironmentType.MEDIA_SERVER,
+      },
+      paramValues
+    ),
     composition
   );
 
@@ -211,12 +243,12 @@ function applyScenarioState(s) {
     rootContainerRef.current.setActiveVideoInputSlots(
       activeVideoInputSlots.slice()
     );
-    console.log('setActiveVideoInputSlots: ', activeVideoInputSlots);
+    //console.log('setActiveVideoInputSlots: ', activeVideoInputSlots);
   }
   if (params) {
     for (const key in params) {
       rootContainerRef.current.setParamValue(key, params[key]);
-      console.log('setParamValue: ', params[key]);
+      //console.log('setParamValue: ', params[key]);
     }
   }
 }

@@ -17,6 +17,11 @@ enum JoinType {
   ROUND = SkPaint::kRound_Join,
 };
 
+enum FillRuleType {
+  NONZERO = 0,  // same as SkPathFillType::kWinding
+  EVENODD = 1,  // same as SkPathFillType::kEvenOdd
+};
+
 enum ImageSourceType {
   DefaultAsset,
   CompositionAsset,
@@ -86,7 +91,7 @@ class CanvexContext {
   void lineTo(double x, double y);
   void quadraticCurveTo(double cp_x, double cp_y, double x, double y);
   void arcTo(double cp_x, double cp_y, double x, double y, double radius);
-  void clip();
+  void clip(FillRuleType fillRule);
   void fill();
   void stroke();
 

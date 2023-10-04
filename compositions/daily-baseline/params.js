@@ -415,9 +415,21 @@ export const compositionParams = [
     values: Object.values(PositionCorner),
   },
   {
+    id: 'image.zPosition',
+    type: 'enum',
+    defaultValue: 'foreground',
+    values: ['foreground', 'background'],
+  },
+  {
     id: 'image.fullScreen',
     type: 'boolean',
     defaultValue: false,
+  },
+  {
+    id: 'image.fullScreenScaleMode',
+    type: 'enum',
+    defaultValue: 'fit',
+    values: ['fill', 'fit'],
   },
   {
     id: 'image.aspectRatio',

@@ -337,9 +337,13 @@ void CanvexContext::arcTo(double cp_x, double cp_y, double x, double y, double r
   path_->arcTo(cp_x, cp_y, x, y, radius);
 }
 
-void CanvexContext::clip() {
+void CanvexContext::clip(FillRuleType fillRule) {
   if (path_) {
     const bool antialias = true;
+    const SkPathFillType skFill = static_cast<SkPathFillType>(fillRule);
+
+    path_->setFillType(skFill);
+
     canvas_->clipPath(*path_, antialias);
   }
 }

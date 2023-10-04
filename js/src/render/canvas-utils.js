@@ -1,6 +1,6 @@
 // 'radius' can be either a number or an object specifying individual
 // corner radii using properties {tl, tr, br, bl}.
-export function roundRect(ctx, x, y, width, height, radius) {
+export function roundRect(ctx, x, y, width, height, radius, closePath = true) {
   if (typeof radius === 'undefined') {
     radius = 0;
   }
@@ -40,7 +40,8 @@ export function roundRect(ctx, x, y, width, height, radius) {
   }
   const maxX = x + width;
   const maxY = y + height;
-  ctx.beginPath();
+
+  if (closePath) ctx.beginPath();
 
   ctx.moveTo(x + radius.tl, y);
   ctx.lineTo(maxX - radius.tr, y);
@@ -59,5 +60,5 @@ export function roundRect(ctx, x, y, width, height, radius) {
 
   ctx.arcTo(x, y, x + radius.tl, y, radius.tl);
 
-  ctx.closePath();
+  if (closePath) ctx.closePath();
 }

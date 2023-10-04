@@ -256,7 +256,18 @@ static void renderDisplayListInSkCanvas(
       }
       case clip: {
         PRINTCMD_ARGS("clip")
-        ctx.clip();
+        if (cmd.args.size() > 1 ||
+          (cmd.args.size() == 1 && cmd.args[0].type != ArgType::string)) {
+          std::cout << "Invalid args for clip: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        }
+        auto fillRule = FillRuleType::NONZERO;
+        if (cmd.args.size() == 1) {
+          if (cmd.args[0].stringValue == "evenodd") {
+            fillRule = FillRuleType::EVENODD;
+          }
+        }
+        ctx.clip(fillRule);
         numCmds++;
         break;
       }
@@ -429,6 +440,8 @@ static void renderDisplayListInSkCanvas(
     stats->render_detail_draw_image_us = timeSpent_drawImage_s * 1.0e6;
     stats->render_detail_draw_shapes_us = timeSpent_drawShapes_s * 1.0e6;
     stats->render_detail_draw_text_us = timeSpent_drawText_s * 1.0e6;
+    stats->num_cmds = numCmds;
+    stats->num_invalid_arg_errors = numInvalidArgErrors;
     stats->num_image_cache_misses = numImageCacheMisses;
   }
 }
@@ -514,6 +527,7 @@ bool RenderDisplayListToRawBuffer(
   SkImageInfo imageInfo;
 
   switch (format) {
+    default:
     case Rgba:
       skFormat = kRGBA_8888_SkColorType;
       break;

@@ -38,6 +38,8 @@ typedef struct CanvexExecutionStats {
 
   // -- render operation stats --
   int32_t num_image_cache_misses;
+  int32_t num_cmds;
+  int32_t num_invalid_arg_errors;
 } CanvexExecutionStats;
 
 

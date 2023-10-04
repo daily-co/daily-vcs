@@ -257,15 +257,16 @@ export default function DailyBaselineVCS() {
     return video;
   }, [params, styles, participantDescs, dominantVideoId, hasScreenShare]);
 
+  let bgGraphics = [];
   let graphics = [];
 
   if (params.showTextOverlay) {
     // copy params to props and ensure types are what the component expects
     let overlayProps = params.text ? { ...params.text } : {};
 
-    if (params.text.source === 'param') {
+    if (params.text?.source === 'param') {
       // default
-    } else if (params.text.source === 'agenda') {
+    } else if (params.text?.source === 'agenda') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -276,7 +277,7 @@ export default function DailyBaselineVCS() {
         highlightIndex: agendaPos,
       };
     } else {
-      const ssrc = standardSources[params.text.source];
+      const ssrc = standardSources[params.text?.source];
       if (!ssrc) {
         console.error(
           '** Invalid standard source requested by param text.source: ',
@@ -363,12 +364,16 @@ export default function DailyBaselineVCS() {
       margin_gu = params['image.margin_gu'];
     }
 
-    graphics.push(
+    const arr =
+      params['image.zPosition'] === 'foreground' ? graphics : bgGraphics;
+
+    arr.push(
       <ImageOverlay
         key="imageOverlay"
         src={params['image.assetName']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
+        fullScreenScaleMode={params['image.fullScreenScaleMode']}
         aspectRatio={params['image.aspectRatio']}
         height_gu={h_gu}
         margin_gu={margin_gu}
@@ -401,10 +406,10 @@ export default function DailyBaselineVCS() {
   // toast source
   let toastKey = 0,
     toastText = '';
-  if (params.toast.source === 'param') {
+  if (params.toast?.source === 'param') {
     toastKey = params['toast.key'] ? parseInt(params['toast.key'], 10) : 0;
     toastText = params['toast.text'];
-  } else {
+  } else if (params.toast) {
     const ssrc = standardSources[params.toast.source];
     if (!ssrc) {
       console.error(
@@ -569,6 +574,7 @@ export default function DailyBaselineVCS() {
 
   return (
     <Box id="main">
+      <Box id="bgBox">{bgGraphics}</Box>
       <Box id="videoBox" layout={videoBoxLayout}>
         {video}
       </Box>

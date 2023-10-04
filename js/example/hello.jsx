@@ -68,6 +68,12 @@ export default function HelloDailyVCS() {
 
   return (
     <Box id="main">
+      <Box
+        id="background"
+        style={{
+          fillColor: 'rgba(90, 0, 0, 1)',
+        }}
+      />
       <VideoGrid
         layout={gridLayout}
         showLabels={params.showParticipantLabels}

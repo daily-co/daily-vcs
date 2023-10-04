@@ -5,6 +5,7 @@ import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list.js';
 
 import {
   encodeCanvasDisplayList_fg,
+  encodeCanvasDisplayList_fg_vlClip,
   encodeCanvasDisplayList_videoLayersPreview,
 } from '../src/render/canvas.js';
 
@@ -160,6 +161,17 @@ export class Composition {
         }
         return { w: 0, h: 0 };
       },
+      useChildSizes: function () {
+        deps.add('childSizes');
+        if (passIndex > 0) {
+          return node.flowChildFrames;
+        }
+        return null;
+      },
+      useChildStacking: function (props) {
+        deps.add('childStacking');
+        node.childStackingProps = props || {};
+      },
     };
   }
 
@@ -177,11 +189,10 @@ export class Composition {
     function recurseLayout(node, parentFrame, childFrames) {
       let frame = { ...parentFrame };
 
+      const thisNodeDeps = new Set();
       let thisNodeChildFrames;
 
       if (node.layoutFunc) {
-        const thisNodeDeps = new Set();
-
         frame = node.layoutFunc(frame, node.layoutParams, {
           ...layoutCtxBase,
           ...makeLayoutCtxHooks(node, thisNodeDeps, passIndex),
@@ -190,7 +201,18 @@ export class Composition {
 
         for (const dep of thisNodeDeps) usedDeps.add(dep);
 
-        if (thisNodeDeps.has('contentSize') || frame.containerTransform) {
+        const usesStacking = thisNodeDeps.has('childStacking');
+        if (usesStacking) {
+          frame.childStacking = node.childStackingProps;
+          delete node.childStackingProps;
+        }
+
+        if (
+          frame.containerTransform ||
+          usesStacking ||
+          thisNodeDeps.has('contentSize') ||
+          thisNodeDeps.has('childSizes')
+        ) {
           // capture child frames (including nested container offsets) if
           // 1) this layout node wants the content size after the first pass, or
           // 2) this node applies a container transform.
@@ -201,14 +223,38 @@ export class Composition {
       node.setLayoutFrame(frame);
 
       /*console.log(
-        "frame for node '%s' (%s): ",
+        "  %d/ frame for node '%s' (%s): ",
+        passIndex,
         node.userGivenId,
         node.constructor.nodeType,
         JSON.stringify(node.layoutFrame)
       );*/
 
-      for (const c of node.children) {
-        recurseLayout(c, frame, thisNodeChildFrames || childFrames);
+      let offY = 0,
+        offX = 0;
+      for (let i = 0; i < node.children.length; i++) {
+        const c = node.children[i];
+        const childStartFrame = {
+          x: frame.x,
+          y: frame.y,
+          w: frame.w,
+          h: frame.h,
+        };
+        if (passIndex > 0 && frame.childStacking && i > 0) {
+          const { direction, interval_px = 0 } = frame.childStacking;
+          const prevChildFrame = thisNodeChildFrames.at(-1);
+          if (direction === 'y') {
+            offY += prevChildFrame.h;
+            offY += interval_px;
+            childStartFrame.y += offY;
+          } else if (direction === 'x') {
+            offX += prevChildFrame.w;
+            offX += interval_px;
+            childStartFrame.x += offX;
+          }
+        }
+
+        recurseLayout(c, childStartFrame, thisNodeChildFrames || childFrames);
       }
 
       if (thisNodeChildFrames) {
@@ -242,7 +288,32 @@ export class Composition {
           flowFrame.w -= frame.containerTransform.w;
           flowFrame.h -= frame.containerTransform.h;
         }
+        if (frame.childStacking) {
+          const { direction, interval_px = 0 } = frame.childStacking;
+          if (direction === 'y') {
+            let h = 0;
+            for (let i = 0; i < thisNodeChildFrames.length; i++) {
+              const cf = thisNodeChildFrames[i];
+              if (i > 0) h += interval_px;
+              h += cf.h;
+            }
+            flowFrame.h = h;
+          } else if (direction === 'x') {
+            let w = 0;
+            for (let i = 0; i < thisNodeChildFrames.length; i++) {
+              const cf = thisNodeChildFrames[i];
+              if (i > 0) w += interval_px;
+              w += cf.w;
+            }
+            flowFrame.w = w;
+          }
+        }
+
         node.flowFrame = flowFrame;
+
+        if (thisNodeDeps.has('childSizes')) {
+          node.flowChildFrames = thisNodeChildFrames;
+        }
       }
 
       if (childFrames) {
@@ -255,8 +326,8 @@ export class Composition {
     // first pass
     recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
 
-    // do second pass only if any node uses the content size hook
-    if (usedDeps.has('contentSize')) {
+    // do second pass only if any node uses the content size hooks
+    if (usedDeps.has('contentSize') || usedDeps.has('childSizes')) {
       passIndex = 1;
       recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
     }
@@ -275,18 +346,18 @@ export class Composition {
       throw new Error('Composition setup is invalid for scene description');
     }
 
+    // get video elements
+    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
+
     // get foreground graphics as a display list
     const encoder = new CanvasDisplayListEncoder(
       this.viewportSize.w,
       this.viewportSize.h
     );
 
-    encodeCanvasDisplayList_fg(this, encoder, imageSources);
+    encodeCanvasDisplayList_fg_vlClip(this, encoder, imageSources, videoLayers);
 
     const fgDisplayList = encoder.finalize();
-
-    // get video elements
-    let videoLayers = encodeCompVideoSceneDesc(this, imageSources, opts);
 
     if (
       videoLayers &&
@@ -681,20 +752,15 @@ class TextNode extends StyledNodeBase {
         // measure text's intrinsic size now
         this.computeTextSize();
 
-        // if we have a known layout frame, we also want to update the cached text blocks now
+        // if we have a known layout frame, we'll also want to update the cached text blocks
+        // when the next layout frame update comes around
         if (
           this.layoutFrame &&
           this.layoutFrame.w > 0 &&
           this.layoutFrame.h > 0
         ) {
-          this.computeTextSize(this.layoutFrame);
+          this.flowFrameIsDirty = true;
         }
-
-        /*console.log(
-          "commit measured text size '%s': ",
-          this.text,
-          this.intrinsicSize
-        );*/
       } catch (e) {
         console.error('** exception when measuring text size: ', e);
       }
@@ -702,9 +768,11 @@ class TextNode extends StyledNodeBase {
   }
 
   setLayoutFrame(frame) {
-    if (isEqualLayoutFrame(frame, this.layoutFrame)) return;
+    if (!this.flowFrameIsDirty && isEqualLayoutFrame(frame, this.layoutFrame))
+      return;
 
     this.layoutFrame = frame;
+    this.flowFrameIsDirty = false;
 
     this.computeTextSize(this.layoutFrame);
   }
@@ -721,23 +789,63 @@ class TextNode extends StyledNodeBase {
       return;
     }
 
-    const textContainerFrame = {
-      x: 0,
-      y: 0,
-      width: frame && frame.w ? frame.w : Infinity,
-      height: frame && frame.h ? frame.h : Infinity,
-    };
-
-    const blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
-
-    const { totalBox, numLines } = measureTextLayoutBlocks(blocks);
-
+    // the text engine seems to allow a bit of overflow for a fragment on a line.
+    // unclear whether it's misconfiguration somewhere down the line, or maybe
+    // some kind of error/bug reading the font metrics?
+    // to avoid text running out of the given bounds, add a bit of safety.
+    const { textAlign, fontSize_px = 0 } = this.attrStringDesc;
+    let marginL = 0,
+      marginR = 0;
     /*console.log(
-      'measure text: numLines %d, frame, totalBox: ',
-      numLines,
-      frame,
-      totalBox
+      'frame w %s, intrinsic w %s, safety %s',
+      frame.w,
+      this.intrinsicSize?.w,
+      this.flowFrame?.safetyMargin
     );*/
+
+    let safetyMargin = this.flowFrame?.safetyMargin;
+    let blocks;
+    let totalBox, numLines;
+
+    // wrapped in a function so we can call again if safetymargin is adjusted
+    const measure = () => {
+      if (safetyMargin > 0) {
+        if (textAlign === 'center') {
+          marginL = marginR = safetyMargin / 2;
+        } else if (textAlign === 'right') {
+          marginL = safetyMargin;
+        } else {
+          marginR = safetyMargin;
+        }
+      }
+
+      const textContainerFrame = {
+        x: marginL,
+        y: 0,
+        width: frame && frame.w ? frame.w - marginL - marginR : Infinity,
+        height: frame && frame.h ? frame.h : Infinity,
+      };
+
+      blocks = performTextLayout(this.attrStringDesc, textContainerFrame);
+
+      ({ totalBox, numLines } = measureTextLayoutBlocks(blocks));
+
+      /*console.log(
+        'measure text: numLines %d, frame, totalBox: ',
+        numLines,
+        frame,
+        totalBox
+      );*/
+    };
+    measure();
+
+    if (totalBox.w > frame.w) {
+      // totally unscientific, works around text engine issue (see comment above)
+      safetyMargin = Math.ceil(fontSize_px * 0.4) * 2;
+      measure();
+    } else {
+      safetyMargin = 0;
+    }
 
     if (numLines > 1 && frame && frame.w) {
       // for multiple lines, the width is the given max
@@ -754,6 +862,7 @@ class TextNode extends StyledNodeBase {
       y: frame.y,
       w: Math.ceil(totalBox.w),
       h: Math.ceil(totalBox.h),
+      safetyMargin: safetyMargin || undefined,
     };
 
     if (!overrideFrame) {

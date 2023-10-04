@@ -10,6 +10,7 @@ export default function ImageOverlay({
   height_gu,
   margin_gu,
   fullScreen,
+  fullScreenScaleMode = 'fit',
   opacity = 1,
   enableFade = false,
   show = false,
@@ -53,7 +54,10 @@ export default function ImageOverlay({
   if (opacity < 0.001) return null;
 
   let layout;
-  if (!fullScreen) {
+  let scaleMode = 'fit';
+  if (fullScreen) {
+    scaleMode = fullScreenScaleMode;
+  } else {
     const layoutProps = {
       positionCorner,
       aspectRatio,
@@ -63,5 +67,12 @@ export default function ImageOverlay({
     layout = [layoutFuncs.pip, layoutProps];
   }
 
-  return <Image src={src} layout={layout} blend={{ opacity }} />;
+  return (
+    <Image
+      src={src}
+      layout={layout}
+      blend={{ opacity }}
+      scaleMode={scaleMode}
+    />
+  );
 }
