@@ -166,17 +166,6 @@ function ToastContent({
     strokeWidth_px: 4,
   };
 
-  /*
-  let maxLineLen = 0;
-  const lines = text.split('\n').reduce((acc, line) => {
-    line = line.trimEnd();
-    if (line.length > 0) {
-      acc.push(line);
-      maxLineLen = Math.max(maxLineLen, line.length);
-    }
-    return acc;
-  }, []);
-*/
   const layoutParams = {
     fontSize_px,
     showIcon,
