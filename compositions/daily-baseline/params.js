@@ -30,6 +30,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'showLowerThirdOverlay',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'showTitleSlate',
     type: 'boolean',
     defaultValue: false,
@@ -528,6 +533,165 @@ export const compositionParams = [
     type: 'number',
     defaultValue: 0,
     shortHelpText: "To send a keyboard press, increment the value of 'key'",
+  },
+
+  // -- lower third params --
+  {
+    id: 'lowerThird.title',
+    type: 'text',
+    defaultValue: 'Hello world',
+  },
+  {
+    id: 'lowerThird.subtitle',
+    type: 'text',
+    defaultValue: 'This is an example subtitle',
+  },
+  {
+    id: 'lowerThird.source',
+    type: 'enum',
+    defaultValue: 'param',
+    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    shortHelpText:
+      'Override this content from a standard source like transcription.',
+  },
+  {
+    id: 'lowerThird.position',
+    type: 'enum',
+    defaultValue: PositionCorner.BOTTOM_LEFT,
+    values: Object.values(PositionCorner),
+  },
+  {
+    id: 'lowerThird.margin_x_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 0.5,
+  },
+  {
+    id: 'lowerThird.margin_y_gu',
+    type: 'number',
+    defaultValue: 1,
+    step: 0.5,
+  },
+  {
+    id: 'lowerThird.alwaysUseMaxW',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'lowerThird.maxW_pct_default',
+    type: 'number',
+    defaultValue: 65,
+  },
+  {
+    id: 'lowerThird.maxW_pct_portrait',
+    type: 'number',
+    defaultValue: 90,
+  },
+  {
+    id: 'lowerThird.rotation_deg',
+    type: 'number',
+    defaultValue: 0,
+  },
+  {
+    id: 'lowerThird.cornerRadius_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 0.1,
+  },
+  {
+    id: 'lowerThird.showIcon',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
+    id: 'lowerThird.icon.assetName',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
+    id: 'lowerThird.icon.size_gu',
+    type: 'number',
+    defaultValue: 3,
+  },
+  {
+    id: 'lowerThird.pad_gu',
+    type: 'number',
+    defaultValue: 2,
+    step: 0.1,
+  },
+  {
+    id: 'lowerThird.color',
+    type: 'text',
+    defaultValue: 'rgba(50, 60, 200, 0.9)',
+  },
+  {
+    id: 'lowerThird.strokeColor',
+    type: 'text',
+    defaultValue: 'rgba(0, 0, 30, 0.44)',
+  },
+  {
+    id: 'lowerThird.stroke_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 0.05,
+  },
+  {
+    id: 'lowerThird.text.color',
+    type: 'text',
+    defaultValue: 'white',
+  },
+  {
+    id: 'lowerThird.text.strokeColor',
+    type: 'text',
+    defaultValue: 'rgba(0, 0, 0, 0.1)',
+  },
+  {
+    id: 'lowerThird.text.stroke_gu',
+    type: 'number',
+    defaultValue: 0.5,
+    step: 0.05,
+  },
+  {
+    id: 'lowerThird.text.fontFamily',
+    type: 'enum',
+    defaultValue: 'Roboto',
+    values: fontFamilies,
+  },
+  {
+    id: 'lowerThird.title.fontSize_gu',
+    type: 'number',
+    defaultValue: 2,
+    step: 0.1,
+  },
+  {
+    id: 'lowerThird.title.fontWeight',
+    type: 'enum',
+    defaultValue: '500',
+    values: fontWeights,
+  },
+  {
+    id: 'lowerThird.title.fontStyle',
+    type: 'enum',
+    defaultValue: '',
+    values: ['normal', 'italic'],
+  },
+  {
+    id: 'lowerThird.subtitle.fontSize_gu',
+    type: 'number',
+    defaultValue: 1.5,
+    step: 0.1,
+  },
+  {
+    id: 'lowerThird.subtitle.fontWeight',
+    type: 'enum',
+    defaultValue: '300',
+    values: fontWeights,
+  },
+  {
+    id: 'lowerThird.subtitle.fontStyle',
+    type: 'enum',
+    defaultValue: '',
+    values: ['normal', 'italic'],
   },
 
   // -- toast params --
