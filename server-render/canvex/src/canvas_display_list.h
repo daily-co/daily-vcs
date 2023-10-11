@@ -33,6 +33,7 @@ enum OpType {
   strokeRect,
   rect,
   fillText,
+  fillText_emoji,
   strokeText,
   drawImage,
   beginPath,

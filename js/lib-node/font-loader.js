@@ -1,5 +1,9 @@
 import fontSetup from '../src/text/font-setup.js';
-import { standardFontFamilies } from '../src/text/standard-fonts.js';
+import {
+  standardFontFamilies,
+  emojiFontFamilyName,
+  defaultFontFamilyName,
+} from '../src/text/standard-fonts.js';
 import * as Path from 'path';
 import { fileURLToPath } from 'url';
 import { logToHostInfo } from './log.js';
@@ -31,8 +35,10 @@ export async function loadFontsAsync(wantedFamilies) {
 
   if (!Array.isArray(wantedFamilies)) {
     // add default font if nothing else was specified
-    wantedFamilies = ['Roboto'];
+    wantedFamilies = [defaultFontFamilyName];
   }
+
+  wantedFamilies = wantedFamilies.concat(emojiFontFamilyName);
 
   for (const { family, variants } of knownFamilies) {
     if (!wantedFamilies.includes(family)) continue;

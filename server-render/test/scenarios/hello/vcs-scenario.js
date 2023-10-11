@@ -15,6 +15,10 @@ function frameWillRenderCb(frameIdx) {
   let didUpdate = false;
   if (frameIdx === outputFrames[1]) {
     state.activeVideoInputSlots.push(true);
+
+    // change text to show some emoji
+    state.params.demoText = 'Emoji: 😭,😎🥶,🎱📱💚.';
+
     didUpdate = true;
   } else if (frameIdx === outputFrames[2]) {
     state.activeVideoInputSlots.push(true);

@@ -77,7 +77,8 @@
     "filesystem": "cpp",
     "__bits": "cpp",
     "concepts": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "__verbose_abort": "cpp"
   },
   "C_Cpp.default.compileCommands": "builddir/vscode_compile_commands.json"
 }

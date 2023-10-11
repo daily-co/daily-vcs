@@ -1,5 +1,9 @@
 import fontSetup from '../src/text/font-setup.js';
-import { standardFontFamilies } from '../src/text/standard-fonts.js';
+import {
+  standardFontFamilies,
+  emojiFontFamilyName,
+  defaultFontFamilyName,
+} from '../src/text/standard-fonts.js';
 
 // callback for font loading
 fontSetup.platformConfig.loadFontSourceAsync = async function (
@@ -23,8 +27,14 @@ export async function loadFontsAsync(
 
   if (!Array.isArray(wantedFamilies)) {
     // add default font if nothing else was specified
-    wantedFamilies = ['Roboto'];
+    wantedFamilies = [defaultFontFamilyName];
   }
+
+  // in `lib-node/font-loader.js`, we load the emoji font explicitly with:
+  ///  wantedFamilies = wantedFamilies.concat(emojiFontFamilyName);
+  // let's not do that in the browser because it's quite large (~20 MB).
+  // the browser text system will use the system emoji font
+  // when we render in `canvas.js`.
 
   for (const { family, variants } of knownFamilies) {
     if (!wantedFamilies.includes(family)) continue;
