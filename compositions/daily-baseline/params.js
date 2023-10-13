@@ -358,7 +358,7 @@ export const compositionParams = [
   {
     id: 'text.fontFamily',
     type: 'enum',
-    defaultValue: fontFamilies[0],
+    defaultValue: 'DMSans',
     values: fontFamilies,
   },
   {

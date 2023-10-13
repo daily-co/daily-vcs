@@ -78,6 +78,46 @@ const Bitter = [
   { fileName: 'Bitter-BlackItalic.ttf', fontWeight: 900, fontStyle: 'italic' },
 ];
 
+const DMSans = [
+  { fileName: 'DMSans-Regular.ttf' },
+  { fileName: 'DMSans-Italic.ttf', fontStyle: 'italic' },
+  { fileName: 'DMSans-Bold.ttf', fontWeight: 700 },
+  { fileName: 'DMSans-BoldItalic.ttf', fontWeight: 700, fontStyle: 'italic' },
+
+  { fileName: 'DMSans-Thin.ttf', fontWeight: 100 },
+  { fileName: 'DMSans-ThinItalic.ttf', fontWeight: 100, fontStyle: 'italic' },
+
+  { fileName: 'DMSans-ExtraLight.ttf', fontWeight: 200 },
+  {
+    fileName: 'DMSans-ExtraLightItalic.ttf',
+    fontWeight: 200,
+    fontStyle: 'italic',
+  },
+
+  { fileName: 'DMSans-Light.ttf', fontWeight: 300 },
+  { fileName: 'DMSans-LightItalic.ttf', fontWeight: 300, fontStyle: 'italic' },
+
+  { fileName: 'DMSans-Medium.ttf', fontWeight: 500 },
+  { fileName: 'DMSans-MediumItalic.ttf', fontWeight: 500, fontStyle: 'italic' },
+
+  { fileName: 'DMSans-SemiBold.ttf', fontWeight: 600 },
+  {
+    fileName: 'DMSans-SemiBoldItalic.ttf',
+    fontWeight: 600,
+    fontStyle: 'italic',
+  },
+
+  { fileName: 'DMSans-ExtraBold.ttf', fontWeight: 800 },
+  {
+    fileName: 'DMSans-ExtraBoldItalic.ttf',
+    fontWeight: 800,
+    fontStyle: 'italic',
+  },
+
+  { fileName: 'DMSans-Black.ttf', fontWeight: 900 },
+  { fileName: 'DMSans-BlackItalic.ttf', fontWeight: 900, fontStyle: 'italic' },
+];
+
 const Exo = [
   { fileName: 'Exo-Regular.ttf' },
   { fileName: 'Exo-Italic.ttf', fontStyle: 'italic' },
@@ -134,6 +174,10 @@ export const standardFontFamilies = [
   {
     family: 'Bitter',
     variants: Bitter,
+  },
+  {
+    family: 'DMSans',
+    variants: DMSans,
   },
   {
     family: 'Exo',
