@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Box, Image, Text } from '#vcs-react/components';
-import { useVideoTime, useViewportSize } from '#vcs-react/hooks';
+import { useVideoTime } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 
 const FADE_DUR = 0.25;
@@ -20,10 +20,11 @@ export default function Slate({
   subtitleStyle = {},
 }) {
   const t = useVideoTime();
-  const viewportSize = useViewportSize();
 
-  // TODO: the fade logic below is the same as in ImageOverlay.
-  // should refactor into a hook shared by both components.
+  // the fade in/out logic below is mostly the same as the `useFade` hook
+  // used by ImageOverlay and others, but with a small twist because
+  // of how OpeningSlate works.
+  // for that reason, not using `useFade` here.
 
   // this component needs to keep track of when it was toggled on/off
   // so we can render the fade in/out operation for this graphic.

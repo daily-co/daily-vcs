@@ -81,6 +81,36 @@ export function gridLabel(parentFrame, params) {
   return { x, y, w, h };
 }
 
+function placeInCorner(
+  x,
+  y,
+  w,
+  h,
+  positionCorner,
+  parentFrame,
+  marginX,
+  marginY
+) {
+  if (
+    positionCorner === PositionCorner.TOP_LEFT ||
+    positionCorner === PositionCorner.TOP_RIGHT
+  ) {
+    y += marginY;
+  } else {
+    y += parentFrame.h - h - marginY;
+  }
+
+  if (
+    positionCorner === PositionCorner.TOP_LEFT ||
+    positionCorner === PositionCorner.BOTTOM_LEFT
+  ) {
+    x += marginX;
+  } else {
+    x += parentFrame.w - w - marginX;
+  }
+  return { x, y };
+}
+
 export function pip(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
   const {
@@ -95,23 +125,16 @@ export function pip(parentFrame, params, layoutCtx) {
   h = Math.round(height_gu * pxPerGu);
   w = Math.round(aspectRatio * h);
 
-  if (
-    positionCorner === PositionCorner.TOP_LEFT ||
-    positionCorner === PositionCorner.TOP_RIGHT
-  ) {
-    y += margin;
-  } else {
-    y += parentFrame.h - h - margin;
-  }
-
-  if (
-    positionCorner === PositionCorner.TOP_LEFT ||
-    positionCorner === PositionCorner.BOTTOM_LEFT
-  ) {
-    x += margin;
-  } else {
-    x += parentFrame.w - w - margin;
-  }
+  ({ x, y } = placeInCorner(
+    x,
+    y,
+    w,
+    h,
+    positionCorner,
+    parentFrame,
+    margin,
+    margin
+  ));
 
   return { x, y, w, h };
 }
@@ -234,4 +257,70 @@ export function placeHighlightRowText(parentFrame, params, layoutCtx) {
   }
 
   return placeTextImpl(parentFrame, w, h, params, pxPerGu);
+}
+
+export function lowerThird(parentFrame, params, layoutCtx) {
+  const {
+    positionCorner = PositionCorner.TOP_LEFT,
+    marginX_gu = 0,
+    marginY_gu = 0,
+  } = params;
+  const { viewport, pixelsPerGridUnit: pxPerGu } = layoutCtx;
+  const asp = viewport.w / viewport.h;
+  const marginX = marginX_gu * pxPerGu;
+  const marginY = marginY_gu * pxPerGu;
+
+  let { x, y, w, h } = parentFrame;
+
+  let defaultW_prop = 0.55;
+  if (params.maxWidth_pct) {
+    if (asp >= 1 && params.maxWidth_pct.default) {
+      defaultW_prop = params.maxWidth_pct.default / 100;
+    } else if (asp < 1 && params.maxWidth_pct.portrait) {
+      defaultW_prop = params.maxWidth_pct.portrait / 100;
+    }
+  }
+  const defaultW = parentFrame.w * defaultW_prop;
+  const defaultH = viewport.h - parentFrame.y - marginY;
+
+  const contentSize = layoutCtx.useContentSize();
+
+  w = contentSize.w > 0 ? contentSize.w : defaultW;
+  h = contentSize.h > 0 ? contentSize.h : defaultH;
+
+  if (params.renderAtMaxWidth) w = defaultW;
+
+  ({ x, y } = placeInCorner(
+    x,
+    y,
+    w,
+    h,
+    positionCorner,
+    parentFrame,
+    marginX,
+    marginY
+  ));
+
+  return { x, y, w, h };
+}
+
+export function lowerThirdSubtitle(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const { titleFontSize_gu = 2 } = params;
+  const margin_t = (titleFontSize_gu + 2.0) * pxPerGu;
+  let { x, y, w, h } = parentFrame;
+
+  y += margin_t;
+  h -= margin_t;
+
+  return { x, y, w, h };
+}
+
+export function textStack(parentFrame, params, layoutCtx) {
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const interval_px = pxPerGu;
+
+  layoutCtx.useChildStacking({ direction: 'y', interval_px });
+
+  return parentFrame;
 }
