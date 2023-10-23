@@ -2,6 +2,7 @@ import * as Path from 'path';
 import * as React from 'react';
 import * as fs from 'fs';
 import { fileURLToPath } from 'url';
+import { setTimeout } from 'timers/promises';
 
 import minimist from 'minimist';
 
@@ -107,6 +108,8 @@ function getVideoTime() {
   return g_currentFrame / fps;
 }
 
+let g_lastCompUpdateFrame = -1;
+
 main();
 
 async function main() {
@@ -177,6 +180,12 @@ async function main() {
     }
 
     rootContainerRef.current.setVideoTime(getVideoTime());
+
+    await setTimeout(1);
+
+    if (g_lastCompUpdateFrame < g_currentFrame) {
+      compUpdatedCb(composition);
+    }
   }
 }
 
@@ -192,6 +201,8 @@ function compGetSourceMetadataCb(comp, type, src) {
 }
 
 function compUpdatedCb(comp) {
+  g_lastCompUpdateFrame = g_currentFrame;
+
   if (!outputFrames.includes(g_currentFrame)) {
     return; // do nothing on frames if they're not part of our test output set
   }
