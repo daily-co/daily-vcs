@@ -2,6 +2,14 @@ import makeEmojiRegex from 'emoji-regex';
 
 const g_emojiRegex = makeEmojiRegex();
 
+export function getFirstEmoji(str) {
+  let match;
+  if ((match = g_emojiRegex.exec(str))) {
+    return match[0];
+  }
+  return '';
+}
+
 export function embedEmojis(fragments) {
   const result = [];
 

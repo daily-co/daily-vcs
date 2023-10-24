@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Text, Video } from '#vcs-react/components';
+import { Box, Emoji, Text, Video } from '#vcs-react/components';
 import { useActiveVideo } from '#vcs-react/hooks';
 import Rand from 'random-seed';
 
@@ -24,6 +24,12 @@ export default function GraphicsTestComposition() {
     <Box id="main">
       <Box>{video}</Box>
       <RandomGraphics />
+      <Box
+        layout={[layoutFuncs.demoEmoji]}
+        style={{ fillColor: 'rgba(0, 0, 200, 0.5)' }}
+      >
+        <Emoji value="😍" blend={{ opacity: 0.85 }} />
+      </Box>
     </Box>
   );
 }
@@ -84,6 +90,15 @@ const layoutFuncs = {
     y += params.y || 0;
     w = 300;
     h = 90;
+
+    return { x, y, w, h };
+  },
+
+  demoEmoji: (parentFrame, params) => {
+    let { x, y, w, h } = parentFrame;
+
+    x = y = 300;
+    w = h = 200;
 
     return { x, y, w, h };
   },

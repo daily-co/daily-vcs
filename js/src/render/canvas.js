@@ -11,6 +11,8 @@ const CanvasRenderMode = {
 
 const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
+const kNotoEmojiBaseline = 0.83;
+
 export function renderCompInCanvas(comp, canvas, imageSources, renderAll) {
   if (!comp.rootNode) return;
 
@@ -494,6 +496,12 @@ function recurseRenderNode(
       }
     }
 
+    if (node.emoji && node.emoji.length > 0) {
+      let { x, y, w, h } = frame;
+      y += h * kNotoEmojiBaseline;
+      drawEmoji(ctx, node.emoji, x, y, w, h, false);
+    }
+
     if (inShapeClip) ctx.restore();
 
     // stroke needs to be rendered after clip
@@ -624,7 +632,7 @@ function drawStyledTextLayoutBlocks(
   }
 }
 
-function drawEmoji(ctx, emoji, x, y, w, h) {
+function drawEmoji(ctx, emoji, x, y, w, h, isInline = true) {
   const isVCSDisplayListEncoder =
     typeof ctx.drawImage_vcsDrawable === 'function';
 
@@ -633,8 +641,9 @@ function drawEmoji(ctx, emoji, x, y, w, h) {
     // better match the browser's inline emoji rendering.
     // the display offset lines up the emoji closer to the typical baseline.
     // maybe these should be computed using the surrounding font's baseline? not sure
-    const emojiDisplayScale = 0.83;
+    const emojiDisplayScale = kNotoEmojiBaseline;
     const emojiDisplayYOff = -0.1 * h;
+    ctx.fillStyle = 'white';
     ctx.fillText_emoji(
       emoji,
       x,

@@ -16,12 +16,14 @@ import {
   performTextLayout,
   measureTextLayoutBlocks,
 } from './text/text-layout.js';
+import { getFirstEmoji } from './text/emoji.js';
 
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)
 export const IntrinsicNodeType = {
   ROOT: 'root',
   BOX: 'box',
+  EMOJI: 'emoji',
   IMAGE: 'image',
   TEXT: 'label',
   VIDEO: 'video',
@@ -72,6 +74,9 @@ export class Composition {
         break;
       case IntrinsicNodeType.BOX:
         node = new BoxNode();
+        break;
+      case IntrinsicNodeType.EMOJI:
+        node = new EmojiNode();
         break;
       case IntrinsicNodeType.IMAGE:
         node = new ImageNode();
@@ -878,6 +883,37 @@ class TextNode extends StyledNodeBase {
       this.intrinsicSize,
       this.textLayoutBlocks
     );*/
+  }
+}
+
+class EmojiNode extends StyledNodeBase {
+  static nodeType = IntrinsicNodeType.EMOJI;
+
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    if (oldProps.value !== newProps.value) return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    const emoji = getFirstEmoji(newProps.value);
+    if (emoji.length < 1) {
+      console.warn(
+        'Emoji built-in component initialized with non-emoji string: ',
+        newProps.value
+      );
+      this.emoji = null;
+    } else {
+      this.emoji = emoji;
+    }
+
+    const pxPerGu = this.container.pixelsPerGridUnit || 20;
+
+    this.intrinsicSize = { w: pxPerGu, h: pxPerGu }; // a reasonable intrinsic size
   }
 }
 
