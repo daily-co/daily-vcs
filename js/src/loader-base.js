@@ -48,6 +48,11 @@ export function makeVCSRootContainer(
       };
 
       this.pendingState = null;
+
+      // keys are message keys;
+      // values are an object with sourceId + videoTime when message was received.
+      // see note in addStandardSourceMessage() for details of how this is used.
+      this.standardSourceMsgTimeAdded = new Map();
     }
 
     static getDerivedStateFromError(error) {
@@ -66,6 +71,9 @@ export function makeVCSRootContainer(
     }
 
     setVideoTime(t, playbackState) {
+      // this call can modify this.pendingState so it must come first
+      this.pruneStandardSourcesAtTime(t);
+
       const newT = {
         ...this.state.time,
         currentTime: t,
@@ -92,7 +100,6 @@ export function makeVCSRootContainer(
           }
         }
       }
-
       this.setState(newState);
     }
 
@@ -179,6 +186,14 @@ export function makeVCSRootContainer(
     }
 
     addStandardSourceMessage(id, data) {
+      if (!data?.key) {
+        console.error(
+          "** Standard source message must contain 'key' (source id %s)",
+          id
+        );
+        return;
+      }
+
       if (!this.pendingState) this.pendingState = {};
 
       const compositionData = {
@@ -196,6 +211,73 @@ export function makeVCSRootContainer(
       srcObj.latest = [...srcObj.latest, data];
 
       this.pendingState.compositionData = compositionData;
+
+      // we need to track the ages of the messages in the 'latest' arrays for each standard source.
+      // these arrays are small FIFO queues, and the consumers on the composition side are expected
+      // to pick up changes within a reasonable time - which varies depending on the source type.
+      // e.g. for emoji reactions, we don't keep them past a second because there's no point
+      // in rendering emoji reactions that are older than that.
+      this.standardSourceMsgTimeAdded.set(data.key, {
+        sourceId: id,
+        t: this.state.time.currentTime,
+      });
+    }
+
+    pruneStandardSourcesAtTime(currentT) {
+      let compositionData;
+
+      for (const [msgKey, { sourceId, t }] of this.standardSourceMsgTimeAdded) {
+        const age = currentT - t;
+
+        // emoji reactions are very short-lived, so they should be kept in the queue
+        // for only a second. we can keep other message types around for longer.
+        // the expectation is that the rendering component on the composition side
+        // will maintain its own state based on data it read from these 'latest' arrays.
+        const isEmojiReaction = sourceId === 'emojiReactions';
+        const maxAge = isEmojiReaction ? 1 : 60;
+
+        if (age > maxAge) {
+          if (!this.pendingState) {
+            this.pendingState = {};
+          }
+          if (!compositionData) {
+            compositionData = {
+              ...(this.pendingState.compositionData
+                ? this.pendingState.compositionData
+                : this.state.compositionData),
+            };
+          }
+
+          const srcObj = compositionData.standardSources[sourceId];
+          if (!srcObj?.latest) {
+            console.error(
+              "** Unknown id '%s' for addStandardSourceMessage",
+              id
+            );
+            continue;
+          }
+
+          // for the other arrays like 'chatMessages', we want to leave some of the latest messages
+          // always available, so check if we're actually going to prune this
+          const minCountToKeep = isEmojiReaction ? 0 : 20;
+
+          if (srcObj.latest.length > minCountToKeep) {
+            this.standardSourceMsgTimeAdded.delete(msgKey);
+
+            const idx = srcObj.latest.findIndex((it) => it.key === msgKey);
+            if (idx < 0) {
+              console.error(
+                "** No item with key '%s' in standard source %s",
+                msgKey,
+                sourceId,
+                srcObj.latest
+              );
+              continue;
+            }
+            srcObj.latest.splice(idx, 1);
+          }
+        }
+      }
     }
 
     render() {

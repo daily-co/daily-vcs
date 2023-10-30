@@ -559,6 +559,7 @@ table {
               <div class="unavailableInfo">This composition doesn't support any standard sources.</div>
               <button data-sourceid="chatMessages">Send random chat message</button>
               <button data-sourceid="transcript">Send random transcript line</button>
+              <button data-sourceid="emojiReactions">Send random emoji reaction</button>
             </div>  
           </div>
           <div class="compInterface">
@@ -916,9 +917,22 @@ function sendRandomTranscriptLine() {
   sendStandardSource('transcript', data);
 }
 
+function sendRandomEmojiReaction() {
+  const key = basicRandomKey();
+  const emojis = ['😍', '🤠', '🔥', '🎈', '💖', '👍'];
+  const emo = emojis[Math.floor(Math.random() * emojis.length)];
+
+  const data = {
+    key,
+    senderDisplayName: 'Person' + basicRandomId(),
+    text: emo
+  };
+  sendStandardSource('emojiReactions', data);
+}
+
 function createStandardSourcesUI(compInterface) {
   // these are the sources we support in the simulator
-  const knownSources = ['chatMessages', 'transcript'];
+  const knownSources = ['chatMessages', 'transcript', 'emojiReactions'];
 
   const enabledSources = [];
   if (Array.isArray(compInterface.standardSources)) {
@@ -940,6 +954,9 @@ function createStandardSourcesUI(compInterface) {
               break;
             case 'transcript':
               sendRandomTranscriptLine();
+              break;
+            case 'emojiReactions':
+              sendRandomEmojiReaction();
               break;
           }
         });
@@ -1742,7 +1759,7 @@ async function recreateVCSCanvasOutput() {
     enablePreload = false; // don't preload again
   }
 
-  const fps = 20; // frame rate for React videoTime updates
+  const fps = 30; // frame rate for React videoTime updates
 
   g_vcsApi = await g_vcsCompLib.startDOMOutputAsync(
     g_outputContainer,

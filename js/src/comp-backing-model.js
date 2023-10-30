@@ -906,10 +906,14 @@ class EmojiNode extends StyledNodeBase {
 
     const emoji = getFirstEmoji(newProps.value);
     if (emoji.length < 1) {
-      console.warn(
-        'Emoji built-in component initialized with non-emoji string: ',
-        newProps.value
-      );
+      if (newProps.value.length > 0) {
+        console.warn(
+          'Emoji built-in component initialized with non-emoji string: "%s", "%s", ',
+          newProps.value,
+          emoji,
+          emoji.length
+        );
+      }
       this.emoji = null;
     } else {
       this.emoji = emoji;
