@@ -82,7 +82,7 @@ export function makeVCSRootContainer(
       // trimming should be after a delay when components have consumed the data.
       // visual components can always internally retain more messages
       // (similar to the Toast queue in baseline composition).
-      const maxItems = 3;
+      const maxItems = 10;
       for (const key of Object.keys(
         this.state.compositionData.standardSources
       )) {

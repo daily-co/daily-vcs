@@ -132,6 +132,12 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
 }
 
 function calculateBaseline(font, fontSize) {
+  if (!font) {
+    console.warn('** calculateBaseline: no font data provided');
+    return {
+      baseline: fontSize * 0.85, // return a guess
+    };
+  }
   const os2Table = font['OS/2'];
   const hheaTable = font.hhea;
   if (!os2Table || !hheaTable) {
