@@ -103,7 +103,7 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
   drawTextWithPaint_(text, x, y, getFillPaint());
 }
 
-void CanvexContext::fillText_emoji(const std::string& text, double x, double y, double w, double h) {
+void CanvexContext::fillText_emoji(const std::string& text, double x, double y, double /*w*/, double h) {
   drawEmojiWithPaint_(text, x, y, h, getFillPaint());
 }
 

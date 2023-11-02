@@ -80,6 +80,7 @@ CanvexSkiaResourceContext::CanvexSkiaResourceContext() {
     { "Anton", {400}, false },
     { "Bangers", {400}, false },
     { "Bitter", {100, 300, 400, 500, 700, 900}, true },
+    { "DMSans", {100, 200, 300, 400, 500, 600, 700, 800, 900}, true },
     { "Exo", {100, 300, 400, 500, 700, 900}, true },
     { "Magra", {400, 700}, false },
     { "PermanentMarker", {400}, false },
