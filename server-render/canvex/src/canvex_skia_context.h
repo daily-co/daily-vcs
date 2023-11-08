@@ -73,6 +73,7 @@ class CanvexContext {
   void strokeRect(double x, double y, double w, double h);
   void rect(double x, double y, double w, double h);
   void fillText(const std::string& text, double x, double y);
+  void fillText_emoji(const std::string& text, double x, double y, double w, double h);
   void strokeText(const std::string& text, double x, double y);
 
   void drawImage(ImageSourceType type, const std::string& imageName,
@@ -157,6 +158,7 @@ class CanvexContext {
 
   // drawing utils
   void drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint);
+  void drawEmojiWithPaint_(const std::string& text, double x, double y, double h, const SkPaint& paint);
 };
 
 } // namespace canvex

@@ -154,6 +154,11 @@ const Teko = [
   { fileName: 'Teko-SemiBold.ttf', fontWeight: 600 },
 ];
 
+const NotoColorEmoji = [{ fileName: 'NotoColorEmoji-Regular.ttf' }];
+
+export const defaultFontFamilyName = 'Roboto';
+export const emojiFontFamilyName = 'NotoColorEmoji';
+
 export const standardFontFamilies = [
   {
     family: 'Roboto',
@@ -198,5 +203,9 @@ export const standardFontFamilies = [
   {
     family: 'Teko',
     variants: Teko,
+  },
+  {
+    family: emojiFontFamilyName,
+    variants: NotoColorEmoji,
   },
 ];

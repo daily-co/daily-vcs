@@ -11,6 +11,8 @@ const CanvasRenderMode = {
 
 const kVideoPreviewColors = ['#f22', '#4c4', '#34f', '#ec1', '#2ad', '#92c'];
 
+const kNotoEmojiBaseline = 0.83;
+
 export function renderCompInCanvas(comp, canvas, imageSources, renderAll) {
   if (!comp.rootNode) return;
 
@@ -465,16 +467,19 @@ function recurseRenderNode(
     }
 
     if (textContent && textContent.length > 0) {
+      const { fontMetrics } = node.attrStringDesc || {};
+
       if (node.textLayoutBlocks) {
         drawStyledTextLayoutBlocks(
           ctx,
           node.textLayoutBlocks,
+          fontMetrics,
           textStyle,
           frame,
           comp
         );
       } else {
-        drawStyledText(ctx, textContent, textStyle, frame, comp);
+        drawStyledText(ctx, textContent, fontMetrics, textStyle, frame, comp);
       }
     } else if (warningOutText && warningOutText.length > 0) {
       // print out an informational label
@@ -489,6 +494,12 @@ function recurseRenderNode(
         drawStyledText(ctx, line, warningStyle, warningFrame, comp);
         warningFrame.y += 20;
       }
+    }
+
+    if (node.emoji && node.emoji.length > 0) {
+      let { x, y, w, h } = frame;
+      y += h * kNotoEmojiBaseline;
+      drawEmoji(ctx, node.emoji, x, y, w, h, false);
     }
 
     if (inShapeClip) ctx.restore();
@@ -559,28 +570,99 @@ function ensureCssColor(color) {
   return color;
 }
 
-function drawStyledTextLayoutBlocks(ctx, blocks, style, frame, comp) {
+function drawStyledTextLayoutBlocks(
+  ctx,
+  blocks,
+  fontMetrics,
+  style,
+  frame,
+  comp
+) {
   let { x, y } = frame;
 
   for (const paragraphLinesArr of blocks) {
     for (const lineDesc of paragraphLinesArr) {
-      const { box, string } = lineDesc;
-      // the lineDesc has a 'runs' property which contains exact glyph positions.
-      // for now, we just draw the string in one shot since we don't offer fancy
-      // letter spacing, inline emojis, or other features that would need per-glyph rendering.
+      const { box, string, runs } = lineDesc;
+      const textBaseX = Number.isFinite(box.x) ? x + box.x : x;
+      const textBaseY = Number.isFinite(box.y) ? y + box.y : y;
+      let xoff = 0;
 
-      const textFrame = {
-        x: Number.isFinite(box.x) ? x + box.x : x,
-        y: Number.isFinite(box.y) ? y + box.y : y,
-        w: box.width,
-        h: box.height,
-      };
-      drawStyledText(ctx, string, style, textFrame, comp);
+      for (const run of runs) {
+        const chunk = string.slice(run.start, run.end);
+
+        const textFrame = {
+          x: textBaseX + xoff,
+          y: textBaseY,
+          w: box.width,
+          h: box.height,
+        };
+
+        // unicode object substitution indicates emojis.
+        // we assume it's at position 0 because embedEmojis() creates such runs
+        if (chunk.indexOf(String.fromCharCode(0xfffc)) === 0) {
+          const attrs = run.attributes;
+          const emoji = attrs?.attachment?.emoji;
+          if (!emoji) {
+            console.warn(
+              'No emoji attachment found for text run marked as such, attrs: ',
+              attrs
+            );
+          } else {
+            const { width = 0, height = 0, yOffset = 0 } = attrs.attachment;
+            drawEmoji(
+              ctx,
+              emoji,
+              Math.round(textFrame.x),
+              Math.round(textFrame.y + yOffset + (fontMetrics?.baseline || 0)),
+              width,
+              height
+            );
+          }
+        } else {
+          drawStyledText(ctx, chunk, fontMetrics, style, textFrame, comp);
+        }
+
+        //console.log('run %s - ', chunk, run);
+
+        for (const glyphPos of run.positions) {
+          xoff += glyphPos.xAdvance;
+        }
+      }
     }
   }
 }
 
-function drawStyledText(ctx, text, style, frame, comp) {
+function drawEmoji(ctx, emoji, x, y, w, h, isInline = true) {
+  const isVCSDisplayListEncoder =
+    typeof ctx.drawImage_vcsDrawable === 'function';
+
+  if (isVCSDisplayListEncoder) {
+    // apply a scale factor to make the NotoColorEmoji font used by the destination renderer
+    // better match the browser's inline emoji rendering.
+    // the display offset lines up the emoji closer to the typical baseline.
+    // maybe these should be computed using the surrounding font's baseline? not sure
+    const emojiDisplayScale = kNotoEmojiBaseline;
+    const emojiDisplayYOff = -0.1 * h;
+    ctx.fillStyle = 'white';
+    ctx.fillText_emoji(
+      emoji,
+      x,
+      Math.round(y + emojiDisplayYOff),
+      Math.round(w * emojiDisplayScale),
+      Math.round(h * emojiDisplayScale)
+    );
+  } else {
+    // in the browser, set font to monospace and let font replacement insert the emoji.
+    // this works in Mac browsers, at least.
+    // alternatively we could load NotoColorEmoji explicitly in `lib-browser/font-loader.js`
+    // and specify that font name here - but it's a large font to load every time, so disabled for now.
+    const emojiDisplayScale = 1;
+    ctx.font = `${h * emojiDisplayScale}px monospace`;
+    ctx.fillText(emoji, x, y);
+  }
+}
+
+function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
   // when encoding a display list, prefer more easily parsed format
   const isVCSDisplayListEncoder =
     typeof ctx.drawImage_vcsDrawable === 'function';
@@ -606,9 +688,12 @@ function drawStyledText(ctx, text, style, frame, comp) {
     ctx.font = `${fontWeight} ${fontStyle} ${fontSize_px}px ${fontFamily}`;
   }
 
-  // since we don't have access to actual font metrics yet,
-  // just take a guess to position the text baseline properly
-  let textY = Math.round(frame.y + fontSize_px * 0.8);
+  let fontBaseline = fontMetrics?.baseline;
+  if (fontBaseline == null) {
+    fontBaseline = fontSize_px * 0.8;
+  }
+
+  let textY = Math.round(frame.y + fontBaseline);
   let textX = Math.round(frame.x);
 
   if (style.strokeColor && style.strokeWidth_px) {

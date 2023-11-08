@@ -103,8 +103,49 @@ void CanvexContext::fillText(const std::string& text, double x, double y) {
   drawTextWithPaint_(text, x, y, getFillPaint());
 }
 
+void CanvexContext::fillText_emoji(const std::string& text, double x, double y, double /*w*/, double h) {
+  drawEmojiWithPaint_(text, x, y, h, getFillPaint());
+}
+
 void CanvexContext::strokeText(const std::string& text, double x, double y) {
   drawTextWithPaint_(text, x, y, getStrokePaint());
+}
+
+void CanvexContext::drawEmojiWithPaint_(const std::string& text, double x, double y, double h, const SkPaint& paint) {
+  std::string fontFamily = "_emoji";
+  
+  auto fontFileNameOpt = skiaResCtx_.getFontFileName(fontFamily, 400, false);
+  if (!fontFileNameOpt.has_value()) {
+    std::cerr << "** Unable to match font name: " << fontFamily << std::endl;
+    return; // --
+  }
+  std::string fontFileName = fontFileNameOpt.value();
+
+  sk_sp<SkTypeface> typeface = skiaResCtx_.typefaceCache[fontFileName];
+  if (!typeface) {
+    // the font look-up call is somewhat expensive, so we cache the typeface objects
+    if (resPath_.empty()) {
+      std::cerr << "Warning: fontResPath is empty, can't load fonts" << std::endl;
+    } else {
+      // FIXME: hardcoded subpath expects to find all fonts in one dir
+      auto fontPath = resPath_ / "fonts" / fontFileName;
+      //std::cerr << "Loading font at: " << fontPath << std::endl;
+      typeface = SkTypeface::MakeFromFile(fontPath.c_str());
+      if (!typeface) {
+        std::cerr << "** Unable to load font at: " << fontPath << std::endl;
+      } else {
+        skiaResCtx_.typefaceCache[fontFileName] = typeface;
+      }
+    }
+  }
+  
+  // on macOS, the Apple font is available via lookup:
+  //auto typeface = SkTypeface::MakeFromName("Apple Color Emoji", {200, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant});
+
+  SkFont font(typeface, h);
+  auto textBlob = SkTextBlob::MakeFromString(text.c_str(), font);
+
+  canvas_->drawTextBlob(textBlob, x, y, paint);
 }
 
 void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double y, const SkPaint& paint) {

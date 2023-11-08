@@ -358,6 +358,28 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case fillText_emoji: {
+        PRINTCMD_ARGS("fillText_emoji")
+        if (cmd.args.size() != 5 || cmd.args[0].type != ArgType::string
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number || cmd.args[4].type != ArgType::number) {
+          std::cout << "Invalid args for fillText_emoji: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          double ts = getMonotonicTime();
+
+          ctx.fillText_emoji(cmd.args[0].stringValue,
+                             cmd.args[1].numberValue, cmd.args[2].numberValue,
+                             cmd.args[3].numberValue, cmd.args[4].numberValue);
+
+          timeSpent_drawText_s += getMonotonicTime() - ts;
+
+          //std::cout << "Time spent on draw emoji: " << timeSpent_drawText_s << std::endl;
+
+          numCmds++;
+        }
+        break;
+      }
       case strokeText: {
         PRINTCMD_ARGS("strokeText")
         if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string

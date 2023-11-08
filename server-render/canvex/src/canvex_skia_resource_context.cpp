@@ -3,6 +3,10 @@
 namespace canvex {
 
 std::optional<std::string> FontVariantMatcher::getFontFileName(const std::string& family, int fontWeight, bool italic) const {
+  if (family_ == "NotoColorEmoji" && (family == "_emoji" || family == family_)) {
+    // no variants for the single emoji font we provide
+    return "NotoColorEmoji-Regular.ttf";
+  }
   if (family != family_) {
     return std::nullopt;
   }
@@ -76,11 +80,13 @@ CanvexSkiaResourceContext::CanvexSkiaResourceContext() {
     { "Anton", {400}, false },
     { "Bangers", {400}, false },
     { "Bitter", {100, 300, 400, 500, 700, 900}, true },
+    { "DMSans", {100, 200, 300, 400, 500, 600, 700, 800, 900}, true },
     { "Exo", {100, 300, 400, 500, 700, 900}, true },
     { "Magra", {400, 700}, false },
     { "PermanentMarker", {400}, false },
     { "SuezOne", {400}, false },
     { "Teko", {300, 400, 500, 600, 700}, false },
+    { "NotoColorEmoji", {400}, false },
   };
 }
 

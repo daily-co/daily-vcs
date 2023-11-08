@@ -1,5 +1,6 @@
 import { getNumericFontWeightFromCSSValue } from './font.js';
 import fontSetup from './font-setup.js';
+import { embedEmojis } from './emoji.js';
 
 const kFallbackFont = fontSetup.fallbackFontFamily;
 
@@ -119,12 +120,38 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
     attributes,
   });
 
-  // TODO: emoji replacement should be handled here
+  fragments = embedEmojis(fragments);
 
   return {
     fragments,
     font,
     textAlign,
     fontSize_px: size_px,
+    fontMetrics: calculateBaseline(font.data, size_px),
+  };
+}
+
+function calculateBaseline(font, fontSize) {
+  const os2Table = font['OS/2'];
+  const hheaTable = font.hhea;
+  if (!os2Table || !hheaTable) {
+    // these tables shouldn't be missing from any real-world TTF/OTF font,
+    // but just in case, take a guess if we don't have the values
+    return {
+      baseline: fontSize * 0.8,
+    };
+  }
+
+  const upm = font.head.unitsPerEm;
+  const ascender = hheaTable.ascent; // this value seems more correct than 'os2Table.typoAscender'
+  //const descender = os2Table.typoDescender;
+  const capHeight = os2Table.capHeight;
+  const lineGap = hheaTable.lineGap || 0;
+
+  const scale = fontSize / upm;
+  let baseline = (upm - ascender + capHeight + lineGap) * scale;
+
+  return {
+    baseline,
   };
 }

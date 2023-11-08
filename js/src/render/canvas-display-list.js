@@ -285,6 +285,10 @@ class CanvasEncodingContext {
     this.encodeCmd('fillText', args);
   }
 
+  fillText_emoji(...args) {
+    this.encodeCmd('fillText_emoji', args);
+  }
+
   strokeText(...args) {
     this.encodeCmd('strokeText', args);
   }

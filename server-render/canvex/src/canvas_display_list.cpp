@@ -284,6 +284,7 @@ class DisplayListJSONHandler {
     {"strokeRect", OpType::strokeRect},
     {"rect", OpType::rect},
     {"fillText", OpType::fillText},
+    {"fillText_emoji", OpType::fillText_emoji},
     {"strokeText", OpType::strokeText},
     {"drawImage", OpType::drawImage},
     {"beginPath", OpType::beginPath},
