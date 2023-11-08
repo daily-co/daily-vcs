@@ -349,7 +349,8 @@ function recurseRenderNode(
         } else {
           // draw a non-live preview of the webframe
           fillColor = 'white';
-          textContent = 'WebFrame: ' + node.src;
+          textContent =
+            'WebFrame: ' + (node.src?.length > 0 ? node.src : '[no URL]');
           textStyle = { textColor: 'rgba(0, 0, 0, 0.5)' };
 
           if (node.keyPressActionLastUpdateTs > 0) {
