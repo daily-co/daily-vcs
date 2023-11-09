@@ -34,6 +34,7 @@ import Slate from './components/Slate.js';
 import WebFrameOverlay from './components/WebFrameOverlay.js';
 import RoomDebug from './components/RoomDebug.js';
 import LowerThird from './components/LowerThird.js';
+import Sidebar from './components/Sidebar.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -267,7 +268,7 @@ export default function DailyBaselineVCS() {
 
     if (params.text?.source === 'param') {
       // default
-    } else if (params.text?.source === 'agenda') {
+    } else if (params.text?.source === 'agenda.items') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -411,7 +412,7 @@ export default function DailyBaselineVCS() {
     if (params.lowerThird.source === 'param') {
       title = params['lowerThird.title'];
       subtitle = params['lowerThird.subtitle'];
-    } else if (params.lowerThird.source === 'agenda') {
+    } else if (params.lowerThird.source === 'agenda.items') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -580,6 +581,77 @@ export default function DailyBaselineVCS() {
     );
   }
 
+  // sidebar
+  let shrinkVideoLayoutForSidebar = false;
+  let sidebarIsHoriz = true;
+  let sidebarSize_gu = 16;
+  if (params.showSidebar) {
+    shrinkVideoLayoutForSidebar = params['sidebar.shrinkVideoLayout'];
+    sidebarIsHoriz = viewportSize.w > viewportSize.h;
+
+    let size_prop = sidebarIsHoriz
+      ? params['sidebar.width_pct_landscape'] / 100
+      : params['sidebar.height_pct_portrait'] / 100;
+    if (!Number.isFinite(size_prop)) size_prop = 0.4;
+
+    sidebarSize_gu =
+      ((sidebarIsHoriz ? viewportSize.w : viewportSize.h) / pxPerGu) *
+      size_prop;
+
+    const bgStyle = {
+      fillColor: params['sidebar.bgColor'] || 'black',
+    };
+    const textStyle = {
+      textColor: params['sidebar.textColor'] || 'white',
+      fontFamily: params['sidebar.fontFamily'] || DEFAULT_FONT,
+      fontWeight: params['sidebar.fontWeight'] || '400',
+      fontSize_gu: params['sidebar.fontSize_gu'] || 1,
+    };
+    const highlightTextStyle = {
+      ...textStyle,
+      textColor: params['sidebar.textHighlight.color'] || 'yellow',
+      fontWeight: params['sidebar.textHighlight.fontWeight'] || '600',
+    };
+
+    // the sidebar can display either an array of messages (from a standard source)
+    // or an array of text rows with a highlight index (from the 'agenda' params).
+    let messages, highlightRows;
+
+    const src = params['sidebar.source'] || 'agenda.items';
+    if (src === 'agenda.items') {
+      const agendaPos = params['agenda.position'] || 0;
+      const agendaItems = parseCommaSeparatedList(
+        params['agenda.items']
+      ).filter((s) => s.length > 0);
+
+      highlightRows = {
+        textRows: agendaItems,
+        highlightIndex: agendaPos,
+      };
+    } else {
+      const ssrc = standardSources[src];
+      if (!ssrc) {
+        console.warn('Sidebar: %s standard source not available', src);
+      } else {
+        messages = ssrc.latest;
+      }
+    }
+
+    graphics.push(
+      <Sidebar
+        key="Sidebar"
+        messages={messages}
+        highlightRows={highlightRows}
+        isHorizontal={sidebarIsHoriz}
+        size_gu={sidebarSize_gu}
+        bgStyle={bgStyle}
+        textStyle={textStyle}
+        highlightTextStyle={highlightTextStyle}
+        padding_gu={params['sidebar.padding_gu']}
+      />
+    );
+  }
+
   // automatic opening slate, will be displayed at start of stream.
   const enableOpeningSlate = params['enableAutoOpeningSlate'];
   if (enableOpeningSlate) {
@@ -654,6 +726,16 @@ export default function DailyBaselineVCS() {
     videoMargins_gu.b =
       parseFloat(params['videoSettings.margin.bottom_vh']) * guPerVh;
   }
+
+  // consider sidebar if it's visible
+  if (shrinkVideoLayoutForSidebar) {
+    if (sidebarIsHoriz) {
+      videoMargins_gu.r = (videoMargins_gu.r || 0) + sidebarSize_gu;
+    } else {
+      videoMargins_gu.b = (videoMargins_gu.b || 0) + sidebarSize_gu;
+    }
+  }
+
   if (
     (isFinite(videoMargins_gu.l) && videoMargins_gu.l !== 0) ||
     (isFinite(videoMargins_gu.r) && videoMargins_gu.r !== 0) ||

@@ -35,6 +35,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'showSidebar',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'showTitleSlate',
     type: 'boolean',
     defaultValue: false,
@@ -316,7 +321,7 @@ export const compositionParams = [
     id: 'text.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override the text content from a standard source like transcription.',
   },
@@ -550,7 +555,7 @@ export const compositionParams = [
     id: 'lowerThird.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override this content from a standard source like transcription.',
   },
@@ -910,6 +915,83 @@ export const compositionParams = [
     values: fontWeights,
   },
 
+  // -- sidebar params --
+  {
+    id: 'sidebar.shrinkVideoLayout',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'sidebar.source',
+    type: 'enum',
+    defaultValue: 'agenda.items',
+    values: ['agenda.items', 'chatMessages', 'transcript'],
+    shortHelpText: 'Choose where the sidebar gets its content.',
+  },
+  {
+    id: 'sidebar.padding_gu',
+    type: 'number',
+    defaultValue: 1.5,
+    step: 0.1,
+  },
+  {
+    id: 'sidebar.width_pct_landscape',
+    type: 'number',
+    defaultValue: 30,
+  },
+  {
+    id: 'sidebar.height_pct_portrait',
+    type: 'number',
+    defaultValue: 25,
+    shortHelpText:
+      'The sidebar is displayed at the bottom when the output size is portrait or square. This param sets its height in that mode.',
+  },
+  {
+    id: 'sidebar.bgColor',
+    type: 'text',
+    defaultValue: 'rgba(0, 0, 50, 0.55)',
+  },
+  {
+    id: 'sidebar.textColor',
+    type: 'text',
+    defaultValue: 'rgba(255, 255, 255, 0.94)',
+  },
+  {
+    id: 'sidebar.fontFamily',
+    type: 'enum',
+    defaultValue: 'DMSans',
+    values: fontFamilies,
+  },
+  {
+    id: 'sidebar.fontWeight',
+    type: 'enum',
+    defaultValue: '300',
+    values: fontWeights,
+  },
+  {
+    id: 'sidebar.fontStyle',
+    type: 'enum',
+    defaultValue: '',
+    values: ['normal', 'italic'],
+  },
+  {
+    id: 'sidebar.fontSize_gu',
+    type: 'number',
+    defaultValue: 1.4,
+    step: 0.1,
+  },
+  {
+    id: 'sidebar.textHighlight.color',
+    type: 'text',
+    defaultValue: 'rgba(255, 230, 0, 1)',
+  },
+  {
+    id: 'sidebar.textHighlight.fontWeight',
+    type: 'enum',
+    defaultValue: '600',
+    values: fontWeights,
+  },
+
   // -- agenda params --
   {
     id: 'agenda.items',
@@ -917,11 +999,14 @@ export const compositionParams = [
     textSizeHint: 'long',
     defaultValue:
       'Introduction, Notes from the conference, Interview with Jane Doe, Q & A',
+    shortHelpText: 'List of items must be comma-separated.',
   },
   {
     id: 'agenda.position',
     type: 'number',
     defaultValue: 0,
+    shortHelpText:
+      'To display the agenda, use the "source" param available on components like TextOverlay, LowerThird and Sidebar.',
   },
 
   // -- debug params --

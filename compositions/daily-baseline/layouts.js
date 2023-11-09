@@ -324,3 +324,31 @@ export function textStack(parentFrame, params, layoutCtx) {
 
   return parentFrame;
 }
+
+export function sidebar(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+  const { isHorizontal, size_gu } = params;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const size_px = Math.ceil(size_gu * pxPerGu);
+
+  if (isHorizontal) {
+    w = size_px;
+    x += parentFrame.w - w;
+  } else {
+    h = size_px;
+    y += parentFrame.h - h;
+  }
+
+  return { x, y, w, h };
+}
+
+export function sidebarPlaceText(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+
+  const contentSize = layoutCtx.useContentSize();
+  if (contentSize.h > parentFrame.h) {
+    y -= contentSize.h - parentFrame.h;
+  }
+
+  return { x, y, w, h };
+}
