@@ -386,24 +386,30 @@ export default function DailyBaselineVCS() {
     );
   }
 
-  graphics.push(
-    <WebFrameOverlay
-      key="webFrameOverlay"
-      src={params['webFrame.url']}
-      viewportWidth_px={params['webFrame.viewportWidth_px']}
-      viewportHeight_px={params['webFrame.viewportHeight_px']}
-      positionCorner={params['webFrame.position']}
-      fullScreen={params['webFrame.fullScreen']}
-      height_gu={params['webFrame.height_gu']}
-      margin_gu={params['webFrame.margin_gu']}
-      opacity={params['webFrame.opacity']}
-      enableFade={params['webFrame.enableFade']}
-      show={params.showWebFrameOverlay}
-      keyPressActionKey={params['webFrame.keyPress.key']}
-      keyPressActionName={params['webFrame.keyPress.keyName']}
-      keyPressModifiers={params['webFrame.keyPress.modifiers']}
-    />
-  );
+  {
+    // webframe overlay
+    const arr =
+      params['webFrame.zPosition'] === 'foreground' ? graphics : bgGraphics;
+
+    arr.push(
+      <WebFrameOverlay
+        key="webFrameOverlay"
+        src={params['webFrame.url']}
+        viewportWidth_px={params['webFrame.viewportWidth_px']}
+        viewportHeight_px={params['webFrame.viewportHeight_px']}
+        positionCorner={params['webFrame.position']}
+        fullScreen={params['webFrame.fullScreen']}
+        height_gu={params['webFrame.height_gu']}
+        margin_gu={params['webFrame.margin_gu']}
+        opacity={params['webFrame.opacity']}
+        enableFade={params['webFrame.enableFade']}
+        show={params.showWebFrameOverlay}
+        keyPressActionKey={params['webFrame.keyPress.key']}
+        keyPressActionName={params['webFrame.keyPress.keyName']}
+        keyPressModifiers={params['webFrame.keyPress.modifiers']}
+      />
+    );
+  }
 
   // lower third
   {

@@ -496,6 +496,12 @@ export const compositionParams = [
     values: Object.values(PositionCorner),
   },
   {
+    id: 'webFrame.zPosition',
+    type: 'enum',
+    defaultValue: 'foreground',
+    values: ['foreground', 'background'],
+  },
+  {
     id: 'webFrame.fullScreen',
     type: 'boolean',
     defaultValue: false,
