@@ -77,22 +77,19 @@ export function makeVCSRootContainer(
 
       newState.time = newT;
 
-      // trim the standard sources arrays of latest messages.
-      // we look at 'this.state' here instead of 'newState' because
-      // trimming should be after a delay when components have consumed the data.
-      // visual components can always internally retain more messages
-      // (similar to the Toast queue in baseline composition).
-      const maxItems = 10;
-      for (const key of Object.keys(
-        this.state.compositionData.standardSources
-      )) {
-        const arr = this.state.compositionData.standardSources[key].latest;
-        if (arr.length > maxItems) {
-          if (!newState.compositionData) {
-            newState.compositionData = { ...this.state.compositionData };
+      if (newState.compositionData) {
+        // trim the standard sources arrays of latest messages.
+        // visual components can always internally retain more messages
+        // (similar to the Toast queue in baseline composition).
+        const maxItems = 20;
+        for (const key of Object.keys(
+          newState.compositionData.standardSources
+        )) {
+          const arr = newState.compositionData.standardSources[key].latest;
+          if (arr.length > maxItems) {
+            const newArr = arr.slice(arr.length - maxItems);
+            newState.compositionData.standardSources[key].latest = newArr;
           }
-          const newArr = arr.slice(arr.length - maxItems);
-          newState.compositionData.standardSources[key].latest = newArr;
         }
       }
 
@@ -195,7 +192,8 @@ export function makeVCSRootContainer(
         console.error("** Unknown id '%s' for addStandardSourceMessage", id);
         return;
       }
-      srcObj.latest.push(data);
+
+      srcObj.latest = [...srcObj.latest, data];
 
       this.pendingState.compositionData = compositionData;
     }

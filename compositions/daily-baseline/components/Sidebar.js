@@ -16,9 +16,9 @@ export default function Sidebar({
   let items;
   if (messages) {
     // show chat messages
-    const maxN = 8;
+    const maxN = 14;
     if (messages.length > maxN) {
-      messages = messages.slice(messages.length - maxN, maxN);
+      messages = messages.slice(messages.length - maxN);
     }
 
     items = messages.map((msg) => {
