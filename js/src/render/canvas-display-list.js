@@ -320,8 +320,13 @@ class CanvasEncodingContext {
     this.encodeCmd('rect', args);
   }
 
-  ellipse(...args) {
-    this.encodeCmd('ellipse', args);
+  roundRect(...args) {
+    if (args.length > 4 && Array.isArray(args[4])) {
+      // the last argument can be an array of corner radii.
+      // flatten this nested array for the canvex parser.
+      args = args.slice(0, 4).concat(args[4]);
+    }
+    this.encodeCmd('roundRect', args);
   }
 
   moveTo(...args) {

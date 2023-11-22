@@ -95,6 +95,22 @@ void CanvexContext::rect(double x, double y, double w, double h) {
   path_->addRect(SkRect::MakeXYWH(x, y, w, h));
 }
 
+void CanvexContext::roundRect(double x, double y, double w, double h, float tl, float tr, float br, float bl) {
+  if (!path_) {
+    path_ = std::make_unique<SkPath>();
+  }
+
+  // Skia roundrect API expects radius pairs (for each corner, x/y radius explicitly defined)
+  const SkScalar radii[8] = {
+    tl, tl,
+    tr, tr,
+    br, br,
+    bl, bl
+  };
+
+  path_->addRoundRect(SkRect::MakeXYWH(x, y, w, h), radii);
+}
+
 void CanvexContext::strokeRect(double x, double y, double w, double h) {
   canvas_->drawRect(SkRect::MakeXYWH(x, y, w, h), getStrokePaint());
 }
