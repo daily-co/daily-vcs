@@ -373,6 +373,7 @@ export default function DailyBaselineVCS() {
       <ImageOverlay
         key="imageOverlay"
         src={params['image.assetName']}
+        emoji={params['image.emoji']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
         fullScreenScaleMode={params['image.fullScreenScaleMode']}
