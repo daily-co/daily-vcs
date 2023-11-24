@@ -419,6 +419,13 @@ export const compositionParams = [
     defaultValue: 'overlay.png',
   },
   {
+    id: 'image.emoji',
+    type: 'text',
+    defaultValue: '',
+    shortHelpText:
+      'Set this value to use a single emoji instead of an image asset.',
+  },
+  {
     id: 'image.position',
     type: 'enum',
     defaultValue: PositionCorner.TOP_RIGHT,
