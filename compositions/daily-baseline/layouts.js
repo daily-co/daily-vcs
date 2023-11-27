@@ -259,7 +259,7 @@ export function placeHighlightRowText(parentFrame, params, layoutCtx) {
   return placeTextImpl(parentFrame, w, h, params, pxPerGu);
 }
 
-export function lowerThird(parentFrame, params, layoutCtx) {
+export function banner(parentFrame, params, layoutCtx) {
   const {
     positionCorner = PositionCorner.TOP_LEFT,
     marginX_gu = 0,
@@ -300,18 +300,6 @@ export function lowerThird(parentFrame, params, layoutCtx) {
     marginX,
     marginY
   ));
-
-  return { x, y, w, h };
-}
-
-export function lowerThirdSubtitle(parentFrame, params, layoutCtx) {
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-  const { titleFontSize_gu = 2 } = params;
-  const margin_t = (titleFontSize_gu + 2.0) * pxPerGu;
-  let { x, y, w, h } = parentFrame;
-
-  y += margin_t;
-  h -= margin_t;
 
   return { x, y, w, h };
 }

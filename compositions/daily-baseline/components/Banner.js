@@ -1,9 +1,9 @@
 import * as React from 'react';
-import { Box, Text, Image } from '#vcs-react/components';
+import { Box, Emoji, Text, Image } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { useFade } from './useFade.js';
 
-export default function LowerThird({
+export default function Banner({
   title,
   subtitle,
   opacity = 1,
@@ -11,6 +11,7 @@ export default function LowerThird({
   show = false,
   showIcon = true,
   iconOverrideAssetName,
+  iconOverrideEmoji,
   iconSize_gu = 3,
   renderAtMaxWidth = false,
   maxWidth_pct = {},
@@ -39,10 +40,10 @@ export default function LowerThird({
   const bgTrs = {};
   if (rotate_deg !== 0) bgTrs.rotate_deg = rotate_deg;
 
-  const iconSrc =
-    iconOverrideAssetName && iconOverrideAssetName.length > 0
-      ? iconOverrideAssetName
-      : 'party-popper_1f389.png';
+  // if emoji is set, it will take priority
+  const iconEmoji = iconOverrideEmoji?.trim() || '';
+  const iconSrc = iconOverrideAssetName?.trim() || '';
+  const iconLayout = [layoutFuncs.toastIcon, { size_gu: iconSize_gu }];
 
   const textPad = {
     l: showIcon ? iconSize_gu + 2 : 0,
@@ -66,15 +67,16 @@ export default function LowerThird({
       style={bgStyle}
       transform={bgTrs}
       clip
-      layout={[layoutFuncs.lowerThird, layoutParams]}
+      layout={[layoutFuncs.banner, layoutParams]}
       blend={{ opacity }}
     >
       <Box layout={[layoutFuncs.pad, { pad_gu }]}>
         {showIcon ? (
-          <Image
-            src={iconSrc}
-            layout={[layoutFuncs.toastIcon, { size_gu: iconSize_gu }]}
-          />
+          iconEmoji?.length > 0 || iconSrc.length < 1 ? (
+            <Emoji value={iconEmoji} layout={iconLayout} />
+          ) : (
+            <Image src={iconSrc} layout={iconLayout} />
+          )
         ) : null}
 
         <Box layout={[layoutFuncs.pad, { pad_gu: textPad }]}>

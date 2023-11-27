@@ -33,7 +33,7 @@ import VideoSplit from './components/VideoSplit.js';
 import Slate from './components/Slate.js';
 import WebFrameOverlay from './components/WebFrameOverlay.js';
 import RoomDebug from './components/RoomDebug.js';
-import LowerThird from './components/LowerThird.js';
+import Banner from './components/Banner.js';
 import Sidebar from './components/Sidebar.js';
 
 // -- the control interface exposed by this composition --
@@ -416,10 +416,10 @@ export default function DailyBaselineVCS() {
   {
     let title = '',
       subtitle = '';
-    if (params.lowerThird.source === 'param') {
-      title = params['lowerThird.title'];
-      subtitle = params['lowerThird.subtitle'];
-    } else if (params.lowerThird.source === 'agenda.items') {
+    if (params.banner.source === 'param') {
+      title = params['banner.title'];
+      subtitle = params['banner.subtitle'];
+    } else if (params.banner.source === 'agenda.items') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -433,11 +433,11 @@ export default function DailyBaselineVCS() {
         }
       }
     } else {
-      const ssrc = standardSources[params.lowerThird.source];
+      const ssrc = standardSources[params.banner.source];
       if (!ssrc) {
         console.error(
-          '** Invalid standard source requested by param lowerThird.source: ',
-          params.lowerThird.source
+          '** Invalid standard source requested by param banner.source: ',
+          params.banner.source
         );
       } else if (ssrc.latest.length > 0) {
         const msg = ssrc.latest.at(ssrc.latest.length - 1);
@@ -447,56 +447,55 @@ export default function DailyBaselineVCS() {
     }
 
     const strokeWidth_px =
-      params['lowerThird.stroke_gu'] > 0
-        ? params['lowerThird.stroke_gu'] * pxPerGu
-        : 0;
+      params['banner.stroke_gu'] > 0 ? params['banner.stroke_gu'] * pxPerGu : 0;
     const textStrokeWidth_px =
-      params['lowerThird.text.stroke_gu'] > 0
-        ? params['lowerThird.text.stroke_gu'] * pxPerGu
+      params['banner.text.stroke_gu'] > 0
+        ? params['banner.text.stroke_gu'] * pxPerGu
         : 0;
 
     graphics.push(
-      <LowerThird
-        key="lowerThird"
+      <Banner
+        key="banner"
         title={title}
         subtitle={subtitle}
         enableFade={true}
-        show={params.showLowerThirdOverlay}
-        positionCorner={params['lowerThird.position']}
-        marginX_gu={params['lowerThird.margin_x_gu']}
-        marginY_gu={params['lowerThird.margin_y_gu']}
-        renderAtMaxWidth={!!params['lowerThird.alwaysUseMaxW']}
+        show={params.showBannerOverlay}
+        positionCorner={params['banner.position']}
+        marginX_gu={params['banner.margin_x_gu']}
+        marginY_gu={params['banner.margin_y_gu']}
+        renderAtMaxWidth={!!params['banner.alwaysUseMaxW']}
         maxWidth_pct={{
-          default: parseFloat(params['lowerThird.maxW_pct_default']),
-          portrait: parseFloat(params['lowerThird.maxW_pct_portrait']),
+          default: parseFloat(params['banner.maxW_pct_default']),
+          portrait: parseFloat(params['banner.maxW_pct_portrait']),
         }}
-        rotate_deg={parseFloat(params['lowerThird.rotation_deg'])}
-        showIcon={params['lowerThird.showIcon']}
-        iconSize_gu={parseFloat(params['lowerThird.icon.size_gu'])}
-        iconOverrideAssetName={params['lowerThird.icon.assetName']}
-        pad_gu={parseFloat(params['lowerThird.pad_gu'])}
+        rotate_deg={parseFloat(params['banner.rotation_deg'])}
+        showIcon={params['banner.showIcon']}
+        iconSize_gu={parseFloat(params['banner.icon.size_gu'])}
+        iconOverrideAssetName={params['banner.icon.assetName']}
+        iconOverrideEmoji={params['banner.icon.emoji']}
+        pad_gu={parseFloat(params['banner.pad_gu'])}
         bgStyle={{
-          fillColor: params['lowerThird.color'],
-          strokeColor: params['lowerThird.strokeColor'],
+          fillColor: params['banner.color'],
+          strokeColor: params['banner.strokeColor'],
           strokeWidth_px,
           cornerRadius_px:
-            parseFloat(params['lowerThird.cornerRadius_gu']) * pxPerGu,
+            parseFloat(params['banner.cornerRadius_gu']) * pxPerGu,
         }}
         textStyle={{
           strokeWidth_px: textStrokeWidth_px,
-          strokeColor: params['lowerThird.text.strokeColor'],
-          textColor: params['lowerThird.text.color'] || 'white',
-          fontFamily: params['lowerThird.text.fontFamily'] || DEFAULT_FONT,
+          strokeColor: params['banner.text.strokeColor'],
+          textColor: params['banner.text.color'] || 'white',
+          fontFamily: params['banner.text.fontFamily'] || DEFAULT_FONT,
         }}
         titleStyle={{
-          fontSize_gu: params['lowerThird.title.fontSize_gu'],
-          fontWeight: params['lowerThird.title.fontWeight'],
-          fontStyle: params['lowerThird.title.fontStyle'],
+          fontSize_gu: params['banner.title.fontSize_gu'],
+          fontWeight: params['banner.title.fontWeight'],
+          fontStyle: params['banner.title.fontStyle'],
         }}
         subtitleStyle={{
-          fontSize_gu: params['lowerThird.subtitle.fontSize_gu'],
-          fontWeight: params['lowerThird.subtitle.fontWeight'],
-          fontStyle: params['lowerThird.subtitle.fontStyle'],
+          fontSize_gu: params['banner.subtitle.fontSize_gu'],
+          fontWeight: params['banner.subtitle.fontWeight'],
+          fontStyle: params['banner.subtitle.fontStyle'],
         }}
       />
     );
@@ -529,6 +528,7 @@ export default function DailyBaselineVCS() {
         text: toastText,
         showIcon: !!params['toast.showIcon'],
         iconOverrideAssetName: params['toast.icon.assetName'],
+        iconOverrideEmoji: params['toast.icon.emoji'],
         durationInSeconds: params['toast.duration_secs']
           ? parseFloat(params['toast.duration_secs'])
           : 4,
