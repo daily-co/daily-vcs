@@ -579,6 +579,11 @@ export const compositionParams = [
     values: Object.values(PositionCorner),
   },
   {
+    id: 'banner.enableTransition',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'banner.margin_x_gu',
     type: 'number',
     defaultValue: 0,
