@@ -458,7 +458,7 @@ export default function DailyBaselineVCS() {
         key="banner"
         title={title}
         subtitle={subtitle}
-        enableFade={true}
+        enableFade={params['banner.enableTransition']}
         show={params.showBannerOverlay}
         positionCorner={params['banner.position']}
         marginX_gu={params['banner.margin_x_gu']}
