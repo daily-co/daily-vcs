@@ -227,15 +227,32 @@ export default function DailyBaselineVCS() {
         break;
       }
       case 'dominant': {
-        // If we prefer screenshare but are following dominant, ignore the
-        // dominant and use the first video (which will be a screenshare because
-        // preferScreenshare is true)
+        // If we prefer screenshare but are following dominant,
+        // ensure the screenshare is bumped to the dominant position,
+        // but also keep the one with the dominant flag as the next in line.
         if (
+          hasScreenShare &&
           params['videoSettings.dominant.followDomFlag'] &&
-          params['videoSettings.preferScreenshare'] &&
-          hasScreenShare
+          params['videoSettings.preferScreenshare']
         ) {
-          videoProps.dominantVideoId = participantDescs[0].videoId;
+          // we know the first video in the array will be the screenshare
+          // because preferScreenshare was passed earlier
+          const sshareVideoId = participantDescs[0].videoId;
+          const domVideoId = videoProps.dominantVideoId;
+
+          videoProps.dominantVideoId = sshareVideoId;
+
+          let idx;
+          if (
+            domVideoId &&
+            (idx = participantDescs.findIndex(
+              (pd) => pd.videoId === domVideoId
+            )) >= 0
+          ) {
+            // move dominant video id to front of array
+            const pd = participantDescs.splice(idx, 1)[0];
+            participantDescs.splice(0, 0, pd);
+          }
         }
 
         video = (
