@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Text, Image } from '#vcs-react/components';
+import { Box, Emoji, Text, Image } from '#vcs-react/components';
 import { useVideoTime } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 import { DEFAULT_FONT } from '../constants.js';
@@ -122,6 +122,7 @@ export default function Toast({
         opacity={item.opacity}
         showIcon={item.showIcon}
         iconOverrideAssetName={item.iconOverrideAssetName}
+        iconOverrideEmoji={item.iconOverrideEmoji}
         iconSize_gu={iconSize_gu}
         style={style}
         maxWidth_pct={maxWidth_pct}
@@ -137,6 +138,7 @@ function ToastContent({
   opacity = 1,
   showIcon = true,
   iconOverrideAssetName,
+  iconOverrideEmoji,
   iconSize_gu = 3,
   style = {},
   maxWidth_pct = {},
@@ -172,10 +174,10 @@ function ToastContent({
     maxWidth_pct,
   };
 
-  const iconSrc =
-    iconOverrideAssetName && iconOverrideAssetName.length > 0
-      ? iconOverrideAssetName
-      : 'party-popper_1f389.png';
+  // if emoji is set, it will take priority
+  const iconEmoji = iconOverrideEmoji?.trim() || '';
+  const iconSrc = iconOverrideAssetName?.trim() || '';
+  const iconLayout = [layoutFuncs.toastIcon, { size_gu: iconSize_gu }];
 
   const textPadL = 1 + (showIcon ? iconSize_gu : 0);
   const textPadR = showIcon ? 1.5 : 1;
@@ -191,10 +193,11 @@ function ToastContent({
     >
       <Box layout={[layoutFuncs.pad, { pad_gu: 1 }]}>
         {showIcon ? (
-          <Image
-            src={iconSrc}
-            layout={[layoutFuncs.toastIcon, { size_gu: iconSize_gu }]}
-          />
+          iconEmoji?.length > 0 || iconSrc.length < 1 ? (
+            <Emoji value={iconEmoji} layout={iconLayout} />
+          ) : (
+            <Image src={iconSrc} layout={iconLayout} />
+          )
         ) : null}
         <Box
           layout={[

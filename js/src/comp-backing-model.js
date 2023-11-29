@@ -332,7 +332,11 @@ export class Composition {
     recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
 
     // do second pass only if any node uses the content size hooks
-    if (usedDeps.has('contentSize') || usedDeps.has('childSizes')) {
+    if (
+      usedDeps.has('contentSize') ||
+      usedDeps.has('childSizes') ||
+      usedDeps.has('childStacking')
+    ) {
       passIndex = 1;
       recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
     }

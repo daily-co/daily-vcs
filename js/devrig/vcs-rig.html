@@ -651,9 +651,11 @@ let g_dominantIdx = -1;
 let g_audioOnlyDemoPeers = [];
 let g_currentRoomPeers = new Map();
 
-let g_paramValues = {};
-
 let g_running = false;
+
+// this state is retained so we can reset the renderer
+let g_paramValues = {};
+let g_standardSources = {};
 
 
 for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
@@ -877,10 +879,25 @@ function screenshareToggled(ev) {
 
 function sendRandomChatMessage() {
   const key = basicRandomKey();
+
+  const strings = [
+    "Lorem ipsum dolor sit amet",
+    "Consectetuer adipiscing elit",
+    "Sed posuere interdum sem",
+    "Quisque ligula eros ullamcorper quis",
+    "Lacinia quis facilisis sed sapien",
+    "Example chat",
+    "Example",
+  ];
+  function lowercaseExample() {
+    const s = strings[Math.floor(Math.random() * strings.length)];
+    return s.toLowerCase();
+  }
+
   const data = {
     key,
     senderDisplayName: 'Person' + basicRandomId(),
-    text: `Chat ipsum ${basicRandomId()} dolor sit amet ${basicRandomId()}`
+    text: `${strings[Math.floor(Math.random() * strings.length)]} ${basicRandomId()} ${lowercaseExample()}.`
   };
   sendStandardSource('chatMessages', data);
 }
@@ -1745,6 +1762,12 @@ async function recreateVCSCanvasOutput() {
   for (const key in g_paramValues) {
     sendParam(key, g_paramValues[key]);
   }
+  for (const key in g_standardSources) {
+    const arr = g_standardSources[key];
+    for (const msg of arr) {
+      g_vcsApi.addStandardSourceMessage(key, msg);
+    }
+  }
 }
 
 function stopVCS() {
@@ -1950,7 +1973,15 @@ function sendStandardSource(sourceId, data) {
 
   g_vcsApi.addStandardSourceMessage(sourceId, data);
 
-  // TODO: retain copy of source values so we can reset renderer
+  // retain copy of source values so we can reset renderer
+  let msgs = g_standardSources[sourceId] || [];
+
+  msgs.push(data);
+  if (msgs.length > 20) {
+    msgs.splice(0, msgs.length - 20);
+  }
+
+  g_standardSources[sourceId] = msgs;
 }
 
 function sendUpdateImageSources(srcs) {

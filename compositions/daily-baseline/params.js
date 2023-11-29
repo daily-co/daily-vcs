@@ -25,12 +25,17 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'showBannerOverlay',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'showWebFrameOverlay',
     type: 'boolean',
     defaultValue: false,
   },
   {
-    id: 'showLowerThirdOverlay',
+    id: 'showSidebar',
     type: 'boolean',
     defaultValue: false,
   },
@@ -316,7 +321,7 @@ export const compositionParams = [
     id: 'text.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override the text content from a standard source like transcription.',
   },
@@ -414,6 +419,13 @@ export const compositionParams = [
     defaultValue: 'overlay.png',
   },
   {
+    id: 'image.emoji',
+    type: 'text',
+    defaultValue: '',
+    shortHelpText:
+      'Set this value to use a single emoji instead of an image asset.',
+  },
+  {
     id: 'image.position',
     type: 'enum',
     defaultValue: PositionCorner.TOP_RIGHT,
@@ -491,6 +503,12 @@ export const compositionParams = [
     values: Object.values(PositionCorner),
   },
   {
+    id: 'webFrame.zPosition',
+    type: 'enum',
+    defaultValue: 'foreground',
+    values: ['foreground', 'background'],
+  },
+  {
     id: 'webFrame.fullScreen',
     type: 'boolean',
     defaultValue: false,
@@ -537,158 +555,170 @@ export const compositionParams = [
 
   // -- lower third params --
   {
-    id: 'lowerThird.title',
+    id: 'banner.title',
     type: 'text',
     defaultValue: 'Hello world',
   },
   {
-    id: 'lowerThird.subtitle',
+    id: 'banner.subtitle',
     type: 'text',
     defaultValue: 'This is an example subtitle',
   },
   {
-    id: 'lowerThird.source',
+    id: 'banner.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda', 'chatMessages', 'transcript'],
+    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override this content from a standard source like transcription.',
   },
   {
-    id: 'lowerThird.position',
+    id: 'banner.position',
     type: 'enum',
     defaultValue: PositionCorner.BOTTOM_LEFT,
     values: Object.values(PositionCorner),
   },
   {
-    id: 'lowerThird.margin_x_gu',
+    id: 'banner.enableTransition',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
+    id: 'banner.margin_x_gu',
     type: 'number',
     defaultValue: 0,
     step: 0.5,
   },
   {
-    id: 'lowerThird.margin_y_gu',
+    id: 'banner.margin_y_gu',
     type: 'number',
     defaultValue: 1,
     step: 0.5,
   },
   {
-    id: 'lowerThird.alwaysUseMaxW',
+    id: 'banner.alwaysUseMaxW',
     type: 'boolean',
     defaultValue: false,
   },
   {
-    id: 'lowerThird.maxW_pct_default',
+    id: 'banner.maxW_pct_default',
     type: 'number',
     defaultValue: 65,
   },
   {
-    id: 'lowerThird.maxW_pct_portrait',
+    id: 'banner.maxW_pct_portrait',
     type: 'number',
     defaultValue: 90,
   },
   {
-    id: 'lowerThird.rotation_deg',
+    id: 'banner.rotation_deg',
     type: 'number',
     defaultValue: 0,
   },
   {
-    id: 'lowerThird.cornerRadius_gu',
+    id: 'banner.cornerRadius_gu',
     type: 'number',
     defaultValue: 0,
     step: 0.1,
   },
   {
-    id: 'lowerThird.showIcon',
+    id: 'banner.showIcon',
     type: 'boolean',
     defaultValue: true,
   },
   {
-    id: 'lowerThird.icon.assetName',
+    id: 'banner.icon.assetName',
     type: 'text',
     defaultValue: '',
   },
   {
-    id: 'lowerThird.icon.size_gu',
+    id: 'banner.icon.emoji',
+    type: 'text',
+    defaultValue: '🎉',
+    shortHelpText:
+      'Set this value to use a single emoji instead of an image asset as the icon.',
+  },
+  {
+    id: 'banner.icon.size_gu',
     type: 'number',
     defaultValue: 3,
   },
   {
-    id: 'lowerThird.pad_gu',
+    id: 'banner.pad_gu',
     type: 'number',
     defaultValue: 2,
     step: 0.1,
   },
   {
-    id: 'lowerThird.color',
+    id: 'banner.color',
     type: 'text',
     defaultValue: 'rgba(50, 60, 200, 0.9)',
   },
   {
-    id: 'lowerThird.strokeColor',
+    id: 'banner.strokeColor',
     type: 'text',
     defaultValue: 'rgba(0, 0, 30, 0.44)',
   },
   {
-    id: 'lowerThird.stroke_gu',
+    id: 'banner.stroke_gu',
     type: 'number',
     defaultValue: 0,
     step: 0.05,
   },
   {
-    id: 'lowerThird.text.color',
+    id: 'banner.text.color',
     type: 'text',
     defaultValue: 'white',
   },
   {
-    id: 'lowerThird.text.strokeColor',
+    id: 'banner.text.strokeColor',
     type: 'text',
     defaultValue: 'rgba(0, 0, 0, 0.1)',
   },
   {
-    id: 'lowerThird.text.stroke_gu',
+    id: 'banner.text.stroke_gu',
     type: 'number',
     defaultValue: 0.5,
     step: 0.05,
   },
   {
-    id: 'lowerThird.text.fontFamily',
+    id: 'banner.text.fontFamily',
     type: 'enum',
     defaultValue: 'Roboto',
     values: fontFamilies,
   },
   {
-    id: 'lowerThird.title.fontSize_gu',
+    id: 'banner.title.fontSize_gu',
     type: 'number',
     defaultValue: 2,
     step: 0.1,
   },
   {
-    id: 'lowerThird.title.fontWeight',
+    id: 'banner.title.fontWeight',
     type: 'enum',
     defaultValue: '500',
     values: fontWeights,
   },
   {
-    id: 'lowerThird.title.fontStyle',
+    id: 'banner.title.fontStyle',
     type: 'enum',
     defaultValue: '',
     values: ['normal', 'italic'],
   },
   {
-    id: 'lowerThird.subtitle.fontSize_gu',
+    id: 'banner.subtitle.fontSize_gu',
     type: 'number',
     defaultValue: 1.5,
     step: 0.1,
   },
   {
-    id: 'lowerThird.subtitle.fontWeight',
+    id: 'banner.subtitle.fontWeight',
     type: 'enum',
     defaultValue: '300',
     values: fontWeights,
   },
   {
-    id: 'lowerThird.subtitle.fontStyle',
+    id: 'banner.subtitle.fontStyle',
     type: 'enum',
     defaultValue: '',
     values: ['normal', 'italic'],
@@ -738,6 +768,13 @@ export const compositionParams = [
     id: 'toast.icon.assetName',
     type: 'text',
     defaultValue: '',
+  },
+  {
+    id: 'toast.icon.emoji',
+    type: 'text',
+    defaultValue: '🎉',
+    shortHelpText:
+      'Set this value to use a single emoji instead of an image asset as the icon.',
   },
   {
     id: 'toast.icon.size_gu',
@@ -910,6 +947,83 @@ export const compositionParams = [
     values: fontWeights,
   },
 
+  // -- sidebar params --
+  {
+    id: 'sidebar.shrinkVideoLayout',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
+    id: 'sidebar.source',
+    type: 'enum',
+    defaultValue: 'agenda.items',
+    values: ['agenda.items', 'chatMessages', 'transcript'],
+    shortHelpText: 'Choose where the sidebar gets its content.',
+  },
+  {
+    id: 'sidebar.padding_gu',
+    type: 'number',
+    defaultValue: 1.5,
+    step: 0.1,
+  },
+  {
+    id: 'sidebar.width_pct_landscape',
+    type: 'number',
+    defaultValue: 30,
+  },
+  {
+    id: 'sidebar.height_pct_portrait',
+    type: 'number',
+    defaultValue: 25,
+    shortHelpText:
+      'The sidebar is displayed at the bottom when the output size is portrait or square. This param sets its height in that mode.',
+  },
+  {
+    id: 'sidebar.bgColor',
+    type: 'text',
+    defaultValue: 'rgba(0, 0, 50, 0.55)',
+  },
+  {
+    id: 'sidebar.textColor',
+    type: 'text',
+    defaultValue: 'rgba(255, 255, 255, 0.94)',
+  },
+  {
+    id: 'sidebar.fontFamily',
+    type: 'enum',
+    defaultValue: 'DMSans',
+    values: fontFamilies,
+  },
+  {
+    id: 'sidebar.fontWeight',
+    type: 'enum',
+    defaultValue: '300',
+    values: fontWeights,
+  },
+  {
+    id: 'sidebar.fontStyle',
+    type: 'enum',
+    defaultValue: '',
+    values: ['normal', 'italic'],
+  },
+  {
+    id: 'sidebar.fontSize_gu',
+    type: 'number',
+    defaultValue: 1.4,
+    step: 0.1,
+  },
+  {
+    id: 'sidebar.textHighlight.color',
+    type: 'text',
+    defaultValue: 'rgba(255, 230, 0, 1)',
+  },
+  {
+    id: 'sidebar.textHighlight.fontWeight',
+    type: 'enum',
+    defaultValue: '600',
+    values: fontWeights,
+  },
+
   // -- agenda params --
   {
     id: 'agenda.items',
@@ -917,11 +1031,14 @@ export const compositionParams = [
     textSizeHint: 'long',
     defaultValue:
       'Introduction, Notes from the conference, Interview with Jane Doe, Q & A',
+    shortHelpText: 'List of items must be comma-separated.',
   },
   {
     id: 'agenda.position',
     type: 'number',
     defaultValue: 0,
+    shortHelpText:
+      'To display the agenda, use the "source" param available on components like TextOverlay, Banner and Sidebar.',
   },
 
   // -- debug params --

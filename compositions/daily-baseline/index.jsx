@@ -33,7 +33,8 @@ import VideoSplit from './components/VideoSplit.js';
 import Slate from './components/Slate.js';
 import WebFrameOverlay from './components/WebFrameOverlay.js';
 import RoomDebug from './components/RoomDebug.js';
-import LowerThird from './components/LowerThird.js';
+import Banner from './components/Banner.js';
+import Sidebar from './components/Sidebar.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -226,15 +227,32 @@ export default function DailyBaselineVCS() {
         break;
       }
       case 'dominant': {
-        // If we prefer screenshare but are following dominant, ignore the
-        // dominant and use the first video (which will be a screenshare because
-        // preferScreenshare is true)
+        // If we prefer screenshare but are following dominant,
+        // ensure the screenshare is bumped to the dominant position,
+        // but also keep the one with the dominant flag as the next in line.
         if (
+          hasScreenShare &&
           params['videoSettings.dominant.followDomFlag'] &&
-          params['videoSettings.preferScreenshare'] &&
-          hasScreenShare
+          params['videoSettings.preferScreenshare']
         ) {
-          videoProps.dominantVideoId = participantDescs[0].videoId;
+          // we know the first video in the array will be the screenshare
+          // because preferScreenshare was passed earlier
+          const sshareVideoId = participantDescs[0].videoId;
+          const domVideoId = videoProps.dominantVideoId;
+
+          videoProps.dominantVideoId = sshareVideoId;
+
+          let idx;
+          if (
+            domVideoId &&
+            (idx = participantDescs.findIndex(
+              (pd) => pd.videoId === domVideoId
+            )) >= 0
+          ) {
+            // move dominant video id to front of array
+            const pd = participantDescs.splice(idx, 1)[0];
+            participantDescs.splice(0, 0, pd);
+          }
         }
 
         video = (
@@ -267,7 +285,7 @@ export default function DailyBaselineVCS() {
 
     if (params.text?.source === 'param') {
       // default
-    } else if (params.text?.source === 'agenda') {
+    } else if (params.text?.source === 'agenda.items') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -372,6 +390,7 @@ export default function DailyBaselineVCS() {
       <ImageOverlay
         key="imageOverlay"
         src={params['image.assetName']}
+        emoji={params['image.emoji']}
         positionCorner={params['image.position']}
         fullScreen={params['image.fullScreen']}
         fullScreenScaleMode={params['image.fullScreenScaleMode']}
@@ -385,33 +404,39 @@ export default function DailyBaselineVCS() {
     );
   }
 
-  graphics.push(
-    <WebFrameOverlay
-      key="webFrameOverlay"
-      src={params['webFrame.url']}
-      viewportWidth_px={params['webFrame.viewportWidth_px']}
-      viewportHeight_px={params['webFrame.viewportHeight_px']}
-      positionCorner={params['webFrame.position']}
-      fullScreen={params['webFrame.fullScreen']}
-      height_gu={params['webFrame.height_gu']}
-      margin_gu={params['webFrame.margin_gu']}
-      opacity={params['webFrame.opacity']}
-      enableFade={params['webFrame.enableFade']}
-      show={params.showWebFrameOverlay}
-      keyPressActionKey={params['webFrame.keyPress.key']}
-      keyPressActionName={params['webFrame.keyPress.keyName']}
-      keyPressModifiers={params['webFrame.keyPress.modifiers']}
-    />
-  );
+  {
+    // webframe overlay
+    const arr =
+      params['webFrame.zPosition'] === 'foreground' ? graphics : bgGraphics;
+
+    arr.push(
+      <WebFrameOverlay
+        key="webFrameOverlay"
+        src={params['webFrame.url']}
+        viewportWidth_px={params['webFrame.viewportWidth_px']}
+        viewportHeight_px={params['webFrame.viewportHeight_px']}
+        positionCorner={params['webFrame.position']}
+        fullScreen={params['webFrame.fullScreen']}
+        height_gu={params['webFrame.height_gu']}
+        margin_gu={params['webFrame.margin_gu']}
+        opacity={params['webFrame.opacity']}
+        enableFade={params['webFrame.enableFade']}
+        show={params.showWebFrameOverlay}
+        keyPressActionKey={params['webFrame.keyPress.key']}
+        keyPressActionName={params['webFrame.keyPress.keyName']}
+        keyPressModifiers={params['webFrame.keyPress.modifiers']}
+      />
+    );
+  }
 
   // lower third
   {
     let title = '',
       subtitle = '';
-    if (params.lowerThird.source === 'param') {
-      title = params['lowerThird.title'];
-      subtitle = params['lowerThird.subtitle'];
-    } else if (params.lowerThird.source === 'agenda') {
+    if (params.banner.source === 'param') {
+      title = params['banner.title'];
+      subtitle = params['banner.subtitle'];
+    } else if (params.banner.source === 'agenda.items') {
       const agendaPos = params['agenda.position'] || 0;
       const agendaItems = parseCommaSeparatedList(
         params['agenda.items']
@@ -425,11 +450,11 @@ export default function DailyBaselineVCS() {
         }
       }
     } else {
-      const ssrc = standardSources[params.lowerThird.source];
+      const ssrc = standardSources[params.banner.source];
       if (!ssrc) {
         console.error(
-          '** Invalid standard source requested by param lowerThird.source: ',
-          params.lowerThird.source
+          '** Invalid standard source requested by param banner.source: ',
+          params.banner.source
         );
       } else if (ssrc.latest.length > 0) {
         const msg = ssrc.latest.at(ssrc.latest.length - 1);
@@ -439,56 +464,55 @@ export default function DailyBaselineVCS() {
     }
 
     const strokeWidth_px =
-      params['lowerThird.stroke_gu'] > 0
-        ? params['lowerThird.stroke_gu'] * pxPerGu
-        : 0;
+      params['banner.stroke_gu'] > 0 ? params['banner.stroke_gu'] * pxPerGu : 0;
     const textStrokeWidth_px =
-      params['lowerThird.text.stroke_gu'] > 0
-        ? params['lowerThird.text.stroke_gu'] * pxPerGu
+      params['banner.text.stroke_gu'] > 0
+        ? params['banner.text.stroke_gu'] * pxPerGu
         : 0;
 
     graphics.push(
-      <LowerThird
-        key="lowerThird"
+      <Banner
+        key="banner"
         title={title}
         subtitle={subtitle}
-        enableFade={true}
-        show={params.showLowerThirdOverlay}
-        positionCorner={params['lowerThird.position']}
-        marginX_gu={params['lowerThird.margin_x_gu']}
-        marginY_gu={params['lowerThird.margin_y_gu']}
-        renderAtMaxWidth={!!params['lowerThird.alwaysUseMaxW']}
+        enableFade={params['banner.enableTransition']}
+        show={params.showBannerOverlay}
+        positionCorner={params['banner.position']}
+        marginX_gu={params['banner.margin_x_gu']}
+        marginY_gu={params['banner.margin_y_gu']}
+        renderAtMaxWidth={!!params['banner.alwaysUseMaxW']}
         maxWidth_pct={{
-          default: parseFloat(params['lowerThird.maxW_pct_default']),
-          portrait: parseFloat(params['lowerThird.maxW_pct_portrait']),
+          default: parseFloat(params['banner.maxW_pct_default']),
+          portrait: parseFloat(params['banner.maxW_pct_portrait']),
         }}
-        rotate_deg={parseFloat(params['lowerThird.rotation_deg'])}
-        showIcon={params['lowerThird.showIcon']}
-        iconSize_gu={parseFloat(params['lowerThird.icon.size_gu'])}
-        iconOverrideAssetName={params['lowerThird.icon.assetName']}
-        pad_gu={parseFloat(params['lowerThird.pad_gu'])}
+        rotate_deg={parseFloat(params['banner.rotation_deg'])}
+        showIcon={params['banner.showIcon']}
+        iconSize_gu={parseFloat(params['banner.icon.size_gu'])}
+        iconOverrideAssetName={params['banner.icon.assetName']}
+        iconOverrideEmoji={params['banner.icon.emoji']}
+        pad_gu={parseFloat(params['banner.pad_gu'])}
         bgStyle={{
-          fillColor: params['lowerThird.color'],
-          strokeColor: params['lowerThird.strokeColor'],
+          fillColor: params['banner.color'],
+          strokeColor: params['banner.strokeColor'],
           strokeWidth_px,
           cornerRadius_px:
-            parseFloat(params['lowerThird.cornerRadius_gu']) * pxPerGu,
+            parseFloat(params['banner.cornerRadius_gu']) * pxPerGu,
         }}
         textStyle={{
           strokeWidth_px: textStrokeWidth_px,
-          strokeColor: params['lowerThird.text.strokeColor'],
-          textColor: params['lowerThird.text.color'] || 'white',
-          fontFamily: params['lowerThird.text.fontFamily'] || DEFAULT_FONT,
+          strokeColor: params['banner.text.strokeColor'],
+          textColor: params['banner.text.color'] || 'white',
+          fontFamily: params['banner.text.fontFamily'] || DEFAULT_FONT,
         }}
         titleStyle={{
-          fontSize_gu: params['lowerThird.title.fontSize_gu'],
-          fontWeight: params['lowerThird.title.fontWeight'],
-          fontStyle: params['lowerThird.title.fontStyle'],
+          fontSize_gu: params['banner.title.fontSize_gu'],
+          fontWeight: params['banner.title.fontWeight'],
+          fontStyle: params['banner.title.fontStyle'],
         }}
         subtitleStyle={{
-          fontSize_gu: params['lowerThird.subtitle.fontSize_gu'],
-          fontWeight: params['lowerThird.subtitle.fontWeight'],
-          fontStyle: params['lowerThird.subtitle.fontStyle'],
+          fontSize_gu: params['banner.subtitle.fontSize_gu'],
+          fontWeight: params['banner.subtitle.fontWeight'],
+          fontStyle: params['banner.subtitle.fontStyle'],
         }}
       />
     );
@@ -521,6 +545,7 @@ export default function DailyBaselineVCS() {
         text: toastText,
         showIcon: !!params['toast.showIcon'],
         iconOverrideAssetName: params['toast.icon.assetName'],
+        iconOverrideEmoji: params['toast.icon.emoji'],
         durationInSeconds: params['toast.duration_secs']
           ? parseFloat(params['toast.duration_secs'])
           : 4,
@@ -576,6 +601,77 @@ export default function DailyBaselineVCS() {
         subtitle={params['titleSlate.subtitle']}
         titleStyle={titleStyle}
         subtitleStyle={subtitleStyle}
+      />
+    );
+  }
+
+  // sidebar
+  let shrinkVideoLayoutForSidebar = false;
+  let sidebarIsHoriz = true;
+  let sidebarSize_gu = 16;
+  if (params.showSidebar) {
+    shrinkVideoLayoutForSidebar = params['sidebar.shrinkVideoLayout'];
+    sidebarIsHoriz = viewportSize.w > viewportSize.h;
+
+    let size_prop = sidebarIsHoriz
+      ? params['sidebar.width_pct_landscape'] / 100
+      : params['sidebar.height_pct_portrait'] / 100;
+    if (!Number.isFinite(size_prop)) size_prop = 0.4;
+
+    sidebarSize_gu =
+      ((sidebarIsHoriz ? viewportSize.w : viewportSize.h) / pxPerGu) *
+      size_prop;
+
+    const bgStyle = {
+      fillColor: params['sidebar.bgColor'] || 'black',
+    };
+    const textStyle = {
+      textColor: params['sidebar.textColor'] || 'white',
+      fontFamily: params['sidebar.fontFamily'] || DEFAULT_FONT,
+      fontWeight: params['sidebar.fontWeight'] || '400',
+      fontSize_gu: params['sidebar.fontSize_gu'] || 1,
+    };
+    const highlightTextStyle = {
+      ...textStyle,
+      textColor: params['sidebar.textHighlight.color'] || 'yellow',
+      fontWeight: params['sidebar.textHighlight.fontWeight'] || '600',
+    };
+
+    // the sidebar can display either an array of messages (from a standard source)
+    // or an array of text rows with a highlight index (from the 'agenda' params).
+    let messages, highlightRows;
+
+    const src = params['sidebar.source'] || 'agenda.items';
+    if (src === 'agenda.items') {
+      const agendaPos = params['agenda.position'] || 0;
+      const agendaItems = parseCommaSeparatedList(
+        params['agenda.items']
+      ).filter((s) => s.length > 0);
+
+      highlightRows = {
+        textRows: agendaItems,
+        highlightIndex: agendaPos,
+      };
+    } else {
+      const ssrc = standardSources[src];
+      if (!ssrc) {
+        console.warn('Sidebar: %s standard source not available', src);
+      } else {
+        messages = ssrc.latest;
+      }
+    }
+
+    graphics.push(
+      <Sidebar
+        key="Sidebar"
+        messages={messages}
+        highlightRows={highlightRows}
+        isHorizontal={sidebarIsHoriz}
+        size_gu={sidebarSize_gu}
+        bgStyle={bgStyle}
+        textStyle={textStyle}
+        highlightTextStyle={highlightTextStyle}
+        padding_gu={params['sidebar.padding_gu']}
       />
     );
   }
@@ -654,6 +750,16 @@ export default function DailyBaselineVCS() {
     videoMargins_gu.b =
       parseFloat(params['videoSettings.margin.bottom_vh']) * guPerVh;
   }
+
+  // consider sidebar if it's visible
+  if (shrinkVideoLayoutForSidebar) {
+    if (sidebarIsHoriz) {
+      videoMargins_gu.r = (videoMargins_gu.r || 0) + sidebarSize_gu;
+    } else {
+      videoMargins_gu.b = (videoMargins_gu.b || 0) + sidebarSize_gu;
+    }
+  }
+
   if (
     (isFinite(videoMargins_gu.l) && videoMargins_gu.l !== 0) ||
     (isFinite(videoMargins_gu.r) && videoMargins_gu.r !== 0) ||

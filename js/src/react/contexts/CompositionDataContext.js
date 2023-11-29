@@ -6,6 +6,7 @@ export function makeEmptyMessage() {
     key: '', // a unique id
     senderDisplayName: '',
     text: '',
+    date: null, // a Date object
   };
 }
 

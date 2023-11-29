@@ -259,7 +259,7 @@ export function placeHighlightRowText(parentFrame, params, layoutCtx) {
   return placeTextImpl(parentFrame, w, h, params, pxPerGu);
 }
 
-export function lowerThird(parentFrame, params, layoutCtx) {
+export function banner(parentFrame, params, layoutCtx) {
   const {
     positionCorner = PositionCorner.TOP_LEFT,
     marginX_gu = 0,
@@ -304,18 +304,6 @@ export function lowerThird(parentFrame, params, layoutCtx) {
   return { x, y, w, h };
 }
 
-export function lowerThirdSubtitle(parentFrame, params, layoutCtx) {
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-  const { titleFontSize_gu = 2 } = params;
-  const margin_t = (titleFontSize_gu + 2.0) * pxPerGu;
-  let { x, y, w, h } = parentFrame;
-
-  y += margin_t;
-  h -= margin_t;
-
-  return { x, y, w, h };
-}
-
 export function textStack(parentFrame, params, layoutCtx) {
   const pxPerGu = layoutCtx.pixelsPerGridUnit;
   const interval_px = pxPerGu;
@@ -323,4 +311,32 @@ export function textStack(parentFrame, params, layoutCtx) {
   layoutCtx.useChildStacking({ direction: 'y', interval_px });
 
   return parentFrame;
+}
+
+export function sidebar(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+  const { isHorizontal, size_gu } = params;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const size_px = Math.ceil(size_gu * pxPerGu);
+
+  if (isHorizontal) {
+    w = size_px;
+    x += parentFrame.w - w;
+  } else {
+    h = size_px;
+    y += parentFrame.h - h;
+  }
+
+  return { x, y, w, h };
+}
+
+export function sidebarPlaceText(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+
+  const contentSize = layoutCtx.useContentSize();
+  if (contentSize.h > parentFrame.h) {
+    y -= contentSize.h - parentFrame.h;
+  }
+
+  return { x, y, w, h };
 }

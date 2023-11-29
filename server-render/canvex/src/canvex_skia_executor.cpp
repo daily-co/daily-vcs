@@ -342,6 +342,26 @@ static void renderDisplayListInSkCanvas(
         }
         break;
       }
+      case roundRect: {
+        PRINTCMD_ARGS("roundRect")
+        if (cmd.args.size() != 8 || cmd.args[0].type != ArgType::number
+           || cmd.args[1].type != ArgType::number || cmd.args[2].type != ArgType::number
+           || cmd.args[3].type != ArgType::number || cmd.args[4].type != ArgType::number
+           || cmd.args[5].type != ArgType::number || cmd.args[6].type != ArgType::number
+           || cmd.args[7].type != ArgType::number) {
+          std::cout << "Invalid args for roundRect: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          double ts = getMonotonicTime();
+
+          ctx.roundRect(cmd.args[0].numberValue, cmd.args[1].numberValue, cmd.args[2].numberValue, cmd.args[3].numberValue,
+                        cmd.args[4].numberValue, cmd.args[5].numberValue, cmd.args[6].numberValue, cmd.args[7].numberValue);
+
+          timeSpent_drawShapes_s += getMonotonicTime() - ts;
+          numCmds++;
+        }
+        break;
+      }
       case fillText: {
         PRINTCMD_ARGS("fillText")
         if (cmd.args.size() != 3 || cmd.args[0].type != ArgType::string

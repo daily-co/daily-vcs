@@ -1,0 +1,1 @@
+{"width":1280,"height":720,"commands":[["save"],["beginPath"],["rect",[0,0,1280,720]],["rect",[0,0,193,140]],["rect",[0,145,193,140]],["rect",[0,290,193,140]],["rect",[192,0,1088,720]],["clip",["evenodd"]],["restore"]]}
