@@ -76,6 +76,8 @@ class CanvexContext {
   void fillText_emoji(const std::string& text, double x, double y, double w, double h);
   void strokeText(const std::string& text, double x, double y);
 
+  void roundRect(double x, double y, double w, double h, float tl, float tr, float br, float bl);
+
   void drawImage(ImageSourceType type, const std::string& imageName,
           double x, double y, double w, double h,
           DrawImageStats* stats);
