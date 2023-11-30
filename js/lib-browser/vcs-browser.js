@@ -384,15 +384,16 @@ class VCSBrowserOutput {
 
     const t = Date.now() / 1000;
 
-    // limit frame rate to React updates
-    if (t - this.lastT >= 1 / this.fps) {
+    // limit frame rate to React updates.
+    // the 5ms fudge factor here accounts for small variances in the render callback interval.
+    if (t - this.lastT >= 1 / this.fps - 0.005) {
+      this.lastT = t;
+
       const videoT = t - this.startT;
 
       const playbackState = this.inPostRoll ? 'postroll' : 'playing'; // type defined in TimeContext.js
 
       this.rootContainerRef.current.setVideoTime(videoT, playbackState);
-
-      this.lastT = t;
 
       //const t1 = Date.now() / 1000;
       //console.log("updated react, time spent %f ms", Math.round((t1-t)*1000));

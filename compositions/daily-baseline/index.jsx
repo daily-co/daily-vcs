@@ -35,6 +35,7 @@ import WebFrameOverlay from './components/WebFrameOverlay.js';
 import RoomDebug from './components/RoomDebug.js';
 import Banner from './components/Banner.js';
 import Sidebar from './components/Sidebar.js';
+import EmojiReactions from './components/EmojiReactions.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -42,7 +43,7 @@ export const compositionInterface = {
     name: 'Daily Baseline',
     description: "Composition with Daily's baseline features",
   },
-  standardSources: ['chatMessages', 'transcript'],
+  standardSources: ['chatMessages', 'transcript', 'emojiReactions'],
   fontFamilies,
   imagePreloads,
   params: compositionParams,
@@ -707,6 +708,36 @@ export default function DailyBaselineVCS() {
         subtitle={params['openingSlate.subtitle']}
         titleStyle={titleStyle}
         subtitleStyle={subtitleStyle}
+      />
+    );
+  }
+
+  // emoji reactions
+  {
+    let latest;
+    if (params['emojiReactions.source'] === 'param') {
+      // get value from params
+      const key = parseInt(params['emojiReactions.key'], 10);
+      const text = params['emojiReactions.emoji'];
+      if (key > 0 && text.length > 0) {
+        latest = [{ key, text }];
+      }
+    } else {
+      // get value from the standard source
+      const ssrc = standardSources['emojiReactions'];
+      if (!ssrc) {
+        console.error(
+          '** Invalid standard source requested for emojiReactions'
+        );
+      } else {
+        latest = ssrc.latest;
+      }
+    }
+    graphics.push(
+      <EmojiReactions
+        key="emojiReactions"
+        xOffset_gu={params['emojiReactions.offset_x_gu']}
+        latestReactions={latest}
       />
     );
   }

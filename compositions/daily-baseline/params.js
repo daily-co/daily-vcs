@@ -1041,6 +1041,32 @@ export const compositionParams = [
       'To display the agenda, use the "source" param available on components like TextOverlay, Banner and Sidebar.',
   },
 
+  // -- emoji reactions params --
+  {
+    id: 'emojiReactions.source',
+    type: 'enum',
+    defaultValue: 'emojiReactions',
+    values: ['emojiReactions', 'param'],
+    shortHelpText:
+      "To send a reaction using param values instead of the standard source, set this to 'param', set 'emoji' below, and increment the value of 'key'.",
+  },
+  {
+    id: 'emojiReactions.key',
+    type: 'number',
+    defaultValue: 0,
+  },
+  {
+    id: 'emojiReactions.emoji',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
+    id: 'emojiReactions.offset_x_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 1,
+  },
+
   // -- debug params --
   {
     id: 'debug.showRoomState',
