@@ -158,8 +158,7 @@ async function main() {
       {
         viewportSize: g_viewportSize,
         pixelsPerGridUnit: composition.pixelsPerGridUnit,
-        renderingEnvironment:
-          ViewContexts.RenderingEnvironmentType.MEDIA_SERVER,
+        renderingEnvironment: ViewContexts.RenderingEnvironmentType.OFFLINE,
       },
       paramValues
     ),

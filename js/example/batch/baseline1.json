@@ -1,0 +1,34 @@
+{
+  "compositionId": "daily:baseline",
+  "durationInFrames": 100,
+  "framesPerSecond": 30,
+  "outputSize": {
+    "w": 1280,
+    "h": 720
+  },
+  "eventsByFrame": {
+    "0": {
+      "activeVideoInputSlots": [true, true],
+      "params": {
+        "mode": "split"
+      }
+    },
+    "30": {
+      "params": {
+        "showTextOverlay": true
+      }
+    },
+    "50": {
+      "activeVideoInputSlots": [true, true, true],
+      "params": {
+        "mode": "grid"
+      }
+    },
+    "80": {
+      "activeVideoInputSlots": [true, true],
+      "params": {
+        "text.content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam a tellus vitae quam feugiat ullam."
+      }
+    }
+  }
+}
