@@ -321,7 +321,7 @@ export const compositionParams = [
     id: 'text.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
+    values: ['param', 'highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override the text content from a standard source like transcription.',
   },
@@ -568,7 +568,7 @@ export const compositionParams = [
     id: 'banner.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
+    values: ['param', 'highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override this content from a standard source like transcription.',
   },
@@ -956,8 +956,8 @@ export const compositionParams = [
   {
     id: 'sidebar.source',
     type: 'enum',
-    defaultValue: 'agenda.items',
-    values: ['agenda.items', 'chatMessages', 'transcript'],
+    defaultValue: 'highlightLines.items',
+    values: ['highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText: 'Choose where the sidebar gets its content.',
   },
   {
@@ -1024,21 +1024,21 @@ export const compositionParams = [
     values: fontWeights,
   },
 
-  // -- agenda params --
+  // -- highlightLines params --
   {
-    id: 'agenda.items',
+    id: 'highlightLines.items',
     type: 'text',
     textSizeHint: 'long',
     defaultValue:
-      'Introduction, Notes from the conference, Interview with Jane Doe, Q & A',
-    shortHelpText: 'List of items must be comma-separated.',
+      'Introduction\nNotes from the conference\nInterview with Jane Doe\nQ & A',
+    shortHelpText:
+      'To display the data configured here, set the "source" param available on components like TextOverlay, Banner and Sidebar.',
   },
   {
-    id: 'agenda.position',
+    id: 'highlightLines.position',
     type: 'number',
     defaultValue: 0,
-    shortHelpText:
-      'To display the agenda, use the "source" param available on components like TextOverlay, Banner and Sidebar.',
+    shortHelpText: 'To remove the highlight, set position to -1.',
   },
 
   // -- emoji reactions params --

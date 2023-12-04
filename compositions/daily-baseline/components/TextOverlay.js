@@ -22,7 +22,7 @@ export default function TextOverlay({
   useStroke,
   highlightColor,
   highlightFontWeight,
-  highlightRows,
+  highlightLines,
 }) {
   const textStyle = {
     textColor: color || 'rgba(255, 250, 200, 0.95)',
@@ -51,8 +51,8 @@ export default function TextOverlay({
     yOffset_gu: offset_y_gu,
   };
 
-  if (highlightRows) {
-    const { textRows, highlightIndex } = highlightRows;
+  if (highlightLines) {
+    const { textLines, highlightIndex } = highlightLines;
 
     const highlightStyle = {
       ...textStyle,
@@ -64,11 +64,11 @@ export default function TextOverlay({
       <Box
         layout={[
           layoutFuncs.placeHighlightRowText,
-          { ...layoutParams, numRows: textRows.length, fontSize_gu },
+          { ...layoutParams, numRows: textLines.length, fontSize_gu },
         ]}
       >
         <HighlightRowText
-          {...{ textRows, highlightIndex, textStyle, highlightStyle }}
+          {...{ textLines, highlightIndex, textStyle, highlightStyle }}
         />
       </Box>
     );
