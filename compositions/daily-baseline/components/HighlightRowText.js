@@ -4,16 +4,16 @@ import { useVideoTime, useViewportSize } from '#vcs-react/hooks';
 import * as layoutFuncs from '../layouts.js';
 
 export default function HighlightRowText({
-  textRows = [],
+  textLines = [],
   highlightIndex = 0,
   textStyle = {},
   highlightStyle = {},
 }) {
-  const numItems = textRows.length;
+  const numItems = textLines.length;
   const items = [];
 
-  for (let i = 0; i < textRows.length; i++) {
-    const label = textRows[i];
+  for (let i = 0; i < textLines.length; i++) {
+    const label = textLines[i];
     const isHighlight = i === highlightIndex;
     const itemKey = `${i}_${label}_${isHighlight}`;
     items.push(

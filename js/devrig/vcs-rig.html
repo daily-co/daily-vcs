@@ -310,7 +310,7 @@ table {
   position: relative;
 }
 #controls .compInterface .params > div.tall {
-  height: 60px;
+  height: 78px;
 }
 #controls .compInterface .params > div.status-experimental {
   font-style: italic;
@@ -357,7 +357,7 @@ table {
 #controls .compInterface .params textarea {
   display: inline-block;
   width: calc(100% - var(--label-width-with-margin));
-  height: 50px;
+  height: 70px;
 }
 #controls .compInterface .params select {
   display: inline-block;
@@ -1152,7 +1152,7 @@ function createParamsUI(compInterface, groupsContainerEl) {
           const {textSizeHint} = paramDesc;
           if (textSizeHint === 'long') {
             el = document.createElement('textarea');
-            el.innerText = defaultValue || '';
+            el.textContent = defaultValue || '';
             isTall = true;
             el.addEventListener('input', paramTextEdited);
           } else {
