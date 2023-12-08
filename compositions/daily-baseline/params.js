@@ -596,6 +596,12 @@ export const compositionParams = [
     step: 0.5,
   },
   {
+    id: 'banner.padding_gu',
+    type: 'number',
+    defaultValue: 2,
+    step: 0.1,
+  },
+  {
     id: 'banner.alwaysUseMaxW',
     type: 'boolean',
     defaultValue: false,
@@ -642,12 +648,6 @@ export const compositionParams = [
     id: 'banner.icon.size_gu',
     type: 'number',
     defaultValue: 3,
-  },
-  {
-    id: 'banner.pad_gu',
-    type: 'number',
-    defaultValue: 2,
-    step: 0.1,
   },
   {
     id: 'banner.color',

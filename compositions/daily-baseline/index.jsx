@@ -484,7 +484,7 @@ export default function DailyBaselineVCS() {
         iconSize_gu={parseFloat(params['banner.icon.size_gu'])}
         iconOverrideAssetName={params['banner.icon.assetName']}
         iconOverrideEmoji={params['banner.icon.emoji']}
-        pad_gu={parseFloat(params['banner.pad_gu'])}
+        padding_gu={parseFloat(params['banner.padding_gu'])}
         bgStyle={{
           fillColor: params['banner.color'],
           strokeColor: params['banner.strokeColor'],

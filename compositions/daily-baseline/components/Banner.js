@@ -16,7 +16,7 @@ export default function Banner({
   renderAtMaxWidth = false,
   maxWidth_pct = {},
   positionCorner,
-  pad_gu = 2,
+  padding_gu = 2,
   bgStyle = {},
   textStyle = {},
   titleStyle: titleStyle_prop = {},
@@ -70,7 +70,7 @@ export default function Banner({
       layout={[layoutFuncs.banner, layoutParams]}
       blend={{ opacity }}
     >
-      <Box layout={[layoutFuncs.pad, { pad_gu }]}>
+      <Box layout={[layoutFuncs.pad, { pad_gu: padding_gu }]}>
         {showIcon ? (
           iconEmoji?.length > 0 || iconSrc.length < 1 ? (
             <Emoji value={iconEmoji} layout={iconLayout} />
