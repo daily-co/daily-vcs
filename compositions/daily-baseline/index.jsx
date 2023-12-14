@@ -35,6 +35,7 @@ import WebFrameOverlay from './components/WebFrameOverlay.js';
 import RoomDebug from './components/RoomDebug.js';
 import Banner from './components/Banner.js';
 import Sidebar from './components/Sidebar.js';
+import EmojiReactions from './components/EmojiReactions.js';
 
 // -- the control interface exposed by this composition --
 export const compositionInterface = {
@@ -42,7 +43,7 @@ export const compositionInterface = {
     name: 'Daily Baseline',
     description: "Composition with Daily's baseline features",
   },
-  standardSources: ['chatMessages', 'transcript'],
+  standardSources: ['chatMessages', 'transcript', 'emojiReactions'],
   fontFamilies,
   imagePreloads,
   params: compositionParams,
@@ -285,15 +286,10 @@ export default function DailyBaselineVCS() {
 
     if (params.text?.source === 'param') {
       // default
-    } else if (params.text?.source === 'agenda.items') {
-      const agendaPos = params['agenda.position'] || 0;
-      const agendaItems = parseCommaSeparatedList(
-        params['agenda.items']
-      ).filter((s) => s.length > 0);
-
-      overlayProps.highlightRows = {
-        textRows: agendaItems,
-        highlightIndex: agendaPos,
+    } else if (params.text?.source === 'highlightLines.items') {
+      overlayProps.highlightLines = {
+        textLines: parseHighlightLines(params['highlightLines.items']),
+        highlightIndex: params['highlightLines.position'] || 0,
       };
     } else {
       const ssrc = standardSources[params.text?.source];
@@ -436,17 +432,15 @@ export default function DailyBaselineVCS() {
     if (params.banner.source === 'param') {
       title = params['banner.title'];
       subtitle = params['banner.subtitle'];
-    } else if (params.banner.source === 'agenda.items') {
-      const agendaPos = params['agenda.position'] || 0;
-      const agendaItems = parseCommaSeparatedList(
-        params['agenda.items']
-      ).filter((s) => s.length > 0);
+    } else if (params.banner.source === 'highlightLines.items') {
+      const pos = params['highlightLines.position'] || 0;
+      const items = parseHighlightLines(params['highlightLines.items']);
 
-      if (agendaPos >= 0 && agendaPos < agendaItems.length) {
-        title = `Now: ${agendaItems[agendaPos]}`;
+      if (pos >= 0 && pos < items.length) {
+        title = `Now: ${items[pos]}`;
 
-        if (agendaPos < agendaItems.length - 1) {
-          subtitle = `Next: ${agendaItems[agendaPos + 1]}`;
+        if (pos < items.length - 1) {
+          subtitle = `Next: ${items[pos + 1]}`;
         }
       }
     } else {
@@ -490,7 +484,7 @@ export default function DailyBaselineVCS() {
         iconSize_gu={parseFloat(params['banner.icon.size_gu'])}
         iconOverrideAssetName={params['banner.icon.assetName']}
         iconOverrideEmoji={params['banner.icon.emoji']}
-        pad_gu={parseFloat(params['banner.pad_gu'])}
+        padding_gu={parseFloat(params['banner.padding_gu'])}
         bgStyle={{
           fillColor: params['banner.color'],
           strokeColor: params['banner.strokeColor'],
@@ -601,6 +595,7 @@ export default function DailyBaselineVCS() {
         subtitle={params['titleSlate.subtitle']}
         titleStyle={titleStyle}
         subtitleStyle={subtitleStyle}
+        enableFade={params['titleSlate.enableTransition']}
       />
     );
   }
@@ -638,19 +633,14 @@ export default function DailyBaselineVCS() {
     };
 
     // the sidebar can display either an array of messages (from a standard source)
-    // or an array of text rows with a highlight index (from the 'agenda' params).
-    let messages, highlightRows;
+    // or text lines with an optional highlight index (from the 'highlightLines' params).
+    let messages, highlightLines;
 
-    const src = params['sidebar.source'] || 'agenda.items';
-    if (src === 'agenda.items') {
-      const agendaPos = params['agenda.position'] || 0;
-      const agendaItems = parseCommaSeparatedList(
-        params['agenda.items']
-      ).filter((s) => s.length > 0);
-
-      highlightRows = {
-        textRows: agendaItems,
-        highlightIndex: agendaPos,
+    const src = params['sidebar.source'] || 'highlightLines.items';
+    if (src === 'highlightLines.items') {
+      highlightLines = {
+        textLines: parseHighlightLines(params['highlightLines.items']),
+        highlightIndex: params['highlightLines.position'] || 0,
       };
     } else {
       const ssrc = standardSources[src];
@@ -665,7 +655,7 @@ export default function DailyBaselineVCS() {
       <Sidebar
         key="Sidebar"
         messages={messages}
-        highlightRows={highlightRows}
+        highlightLines={highlightLines}
         isHorizontal={sidebarIsHoriz}
         size_gu={sidebarSize_gu}
         bgStyle={bgStyle}
@@ -707,6 +697,36 @@ export default function DailyBaselineVCS() {
         subtitle={params['openingSlate.subtitle']}
         titleStyle={titleStyle}
         subtitleStyle={subtitleStyle}
+      />
+    );
+  }
+
+  // emoji reactions
+  {
+    let latest;
+    if (params['emojiReactions.source'] === 'param') {
+      // get value from params
+      const key = parseInt(params['emojiReactions.key'], 10);
+      const text = params['emojiReactions.emoji'];
+      if (key > 0 && text.length > 0) {
+        latest = [{ key, text }];
+      }
+    } else {
+      // get value from the standard source
+      const ssrc = standardSources['emojiReactions'];
+      if (!ssrc) {
+        console.error(
+          '** Invalid standard source requested for emojiReactions'
+        );
+      } else {
+        latest = ssrc.latest;
+      }
+    }
+    graphics.push(
+      <EmojiReactions
+        key="emojiReactions"
+        xOffset_gu={params['emojiReactions.offset_x_gu']}
+        latestReactions={latest}
       />
     );
   }
@@ -780,8 +800,11 @@ export default function DailyBaselineVCS() {
   );
 }
 
-function parseCommaSeparatedList(str) {
+function parseHighlightLines(str) {
   if (!str || str.length < 1) return [];
 
-  return str.split(',').map((s) => s.trim());
+  return str
+    .split('\n')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }

@@ -22,6 +22,7 @@ export function makeEmptyPeer() {
 
 export const RenderingEnvironmentType = {
   UNKNOWN: '',
+  OFFLINE: 'offline',
   MEDIA_SERVER: 'media-server',
   PARTICIPANT_CLIENT: 'participant-client',
   PASSIVE_VIEWER_CLIENT: 'passive-viewer-client',

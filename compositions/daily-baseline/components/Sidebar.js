@@ -5,7 +5,7 @@ import * as layoutFuncs from '../layouts.js';
 
 export default function Sidebar({
   messages,
-  highlightRows,
+  highlightLines,
   isHorizontal = true,
   size_gu = 16,
   padding_gu = 1,
@@ -30,9 +30,9 @@ export default function Sidebar({
         </Text>
       );
     });
-  } else if (highlightRows) {
-    const { highlightIndex, textRows } = highlightRows;
-    items = textRows.map((text, idx) => {
+  } else if (highlightLines) {
+    const { highlightIndex, textLines } = highlightLines;
+    items = textLines.map((text, idx) => {
       return (
         <Text
           key={idx}

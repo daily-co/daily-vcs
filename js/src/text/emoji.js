@@ -3,9 +3,8 @@ import makeEmojiRegex from 'emoji-regex';
 const g_emojiRegex = makeEmojiRegex();
 
 export function getFirstEmoji(str) {
-  g_emojiRegex.lastIndex = 0;
   let match;
-  if ((match = g_emojiRegex.exec(str))) {
+  if ((match = str.match(g_emojiRegex))) {
     return match[0];
   }
   return '';
@@ -17,11 +16,10 @@ export function embedEmojis(fragments) {
   for (let i = 0; i < fragments.length; i++) {
     const fragment = fragments[i];
 
-    let match;
     let lastIndex = 0;
-    g_emojiRegex.lastIndex = 0;
+    const matches = fragment.string.matchAll(g_emojiRegex);
 
-    while ((match = g_emojiRegex.exec(fragment.string))) {
+    for (const match of matches) {
       const index = match.index;
       const emoji = match[0];
       const emojiSize = fragment.attributes.fontSize;

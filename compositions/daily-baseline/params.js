@@ -321,7 +321,7 @@ export const compositionParams = [
     id: 'text.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
+    values: ['param', 'highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override the text content from a standard source like transcription.',
   },
@@ -568,7 +568,7 @@ export const compositionParams = [
     id: 'banner.source',
     type: 'enum',
     defaultValue: 'param',
-    values: ['param', 'agenda.items', 'chatMessages', 'transcript'],
+    values: ['param', 'highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText:
       'Override this content from a standard source like transcription.',
   },
@@ -594,6 +594,12 @@ export const compositionParams = [
     type: 'number',
     defaultValue: 1,
     step: 0.5,
+  },
+  {
+    id: 'banner.padding_gu',
+    type: 'number',
+    defaultValue: 2,
+    step: 0.1,
   },
   {
     id: 'banner.alwaysUseMaxW',
@@ -642,12 +648,6 @@ export const compositionParams = [
     id: 'banner.icon.size_gu',
     type: 'number',
     defaultValue: 3,
-  },
-  {
-    id: 'banner.pad_gu',
-    type: 'number',
-    defaultValue: 2,
-    step: 0.1,
   },
   {
     id: 'banner.color',
@@ -886,6 +886,11 @@ export const compositionParams = [
 
   // -- title slate params --
   {
+    id: 'titleSlate.enableTransition',
+    type: 'boolean',
+    defaultValue: true,
+  },
+  {
     id: 'titleSlate.title',
     type: 'text',
     defaultValue: 'Title slate',
@@ -956,8 +961,8 @@ export const compositionParams = [
   {
     id: 'sidebar.source',
     type: 'enum',
-    defaultValue: 'agenda.items',
-    values: ['agenda.items', 'chatMessages', 'transcript'],
+    defaultValue: 'highlightLines.items',
+    values: ['highlightLines.items', 'chatMessages', 'transcript'],
     shortHelpText: 'Choose where the sidebar gets its content.',
   },
   {
@@ -1024,21 +1029,47 @@ export const compositionParams = [
     values: fontWeights,
   },
 
-  // -- agenda params --
+  // -- highlightLines params --
   {
-    id: 'agenda.items',
+    id: 'highlightLines.items',
     type: 'text',
     textSizeHint: 'long',
     defaultValue:
-      'Introduction, Notes from the conference, Interview with Jane Doe, Q & A',
-    shortHelpText: 'List of items must be comma-separated.',
+      'Introduction\nNotes from the conference\nInterview with Jane Doe\nQ & A',
+    shortHelpText:
+      'To display the data configured here, set the "source" param available on components like TextOverlay, Banner and Sidebar.',
   },
   {
-    id: 'agenda.position',
+    id: 'highlightLines.position',
     type: 'number',
     defaultValue: 0,
+    shortHelpText: 'To remove the highlight, set position to -1.',
+  },
+
+  // -- emoji reactions params --
+  {
+    id: 'emojiReactions.source',
+    type: 'enum',
+    defaultValue: 'emojiReactions',
+    values: ['emojiReactions', 'param'],
     shortHelpText:
-      'To display the agenda, use the "source" param available on components like TextOverlay, Banner and Sidebar.',
+      "To send a reaction using param values instead of the standard source, set this to 'param', set 'emoji' below, and increment the value of 'key'.",
+  },
+  {
+    id: 'emojiReactions.key',
+    type: 'number',
+    defaultValue: 0,
+  },
+  {
+    id: 'emojiReactions.emoji',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
+    id: 'emojiReactions.offset_x_gu',
+    type: 'number',
+    defaultValue: 0,
+    step: 1,
   },
 
   // -- debug params --
