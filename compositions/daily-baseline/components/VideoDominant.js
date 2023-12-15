@@ -33,8 +33,12 @@ export default function VideoDominant(props) {
   itemInterval_gu = Math.max(0, itemInterval_gu);
   outerPadding_gu = Math.max(0, outerPadding_gu);
 
+  const audioDominantParticipant = participantDescs.find(
+    (d) => d.isAudioOnly && d.dominant
+  );
+
   if (
-    (!followDominantFlag || !dominantVideoId) &&
+    (!followDominantFlag || (!dominantVideoId && !audioDominantParticipant)) &&
     participantDescs.length > 0
   ) {
     dominantVideoId = participantDescs[0].videoId;
@@ -64,9 +68,11 @@ export default function VideoDominant(props) {
   function makeDominantItem(itemIdx) {
     const key = 'videodominant_item' + itemIdx;
 
-    const participant = participantDescs.find(
-      (d) => d.videoId != null && d.videoId == dominantVideoId
-    );
+    const participant =
+      audioDominantParticipant ||
+      participantDescs.find(
+        (d) => d.videoId != null && d.videoId == dominantVideoId
+      );
 
     // override point #1 for custom decorations on the dominant item.
     // we use a VideoSingle component to actually render these,
@@ -102,7 +108,9 @@ export default function VideoDominant(props) {
     const key = 'videodominant_tiles_' + itemIdx;
 
     let pArr = participantDescs.filter(
-      (d) => d.videoId == null || d.videoId !== dominantVideoId
+      (d) =>
+        d !== audioDominantParticipant &&
+        (d.videoId == null || d.videoId !== dominantVideoId)
     );
     if (pArr.length > maxItems) {
       pArr = pArr.slice(0, maxItems);

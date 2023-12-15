@@ -262,7 +262,7 @@ table {
 #controls .standardSource .unavailableInfo {
   color: var(--grey-text-color);
 }
-#controls .standardSource button {
+#controls button.action {
   background: var(--bg-color-lighter2);
   color: white;
   border: none;
@@ -542,6 +542,9 @@ table {
               <div class="audioParticipantInputContainer">
                 <input type="number" value="0" step="1" />
               </div>
+              <div class="audioParticipantControls">
+                <button class="action" id="randomizeAudioOnlyParticipantBtn">Randomize one as dominant</button>
+              </div>
             </div>
           </div>
           <div class="testImage">
@@ -558,9 +561,9 @@ table {
             <h3>Standard sources</h3>
             <div class="standardSourceControls">
               <div class="unavailableInfo">This composition doesn't support any standard sources.</div>
-              <button data-sourceid="chatMessages">Send random chat message</button>
-              <button data-sourceid="transcript">Send random transcript line</button>
-              <button data-sourceid="emojiReactions">Send random emoji reaction</button>
+              <button class="action" data-sourceid="chatMessages">Send random chat message</button>
+              <button class="action" data-sourceid="transcript">Send random transcript line</button>
+              <button class="action" data-sourceid="emojiReactions">Send random emoji reaction</button>
             </div>  
           </div>
           <div class="compInterface">
@@ -765,6 +768,30 @@ function setAudioDemoParticipants(ev) {
       });
     }
   }
+  updateRoomPeers();
+  sendRoomPeers();
+}
+
+function randomizeAudioDemoParticipantAsDominant() {
+  const n = g_audioOnlyDemoPeers.length;
+  if (n < 1) return;
+
+  const idx = Math.floor(n * Math.random());
+  g_audioOnlyDemoPeers = g_audioOnlyDemoPeers.map((p, i) => {
+    p = {...p};
+    p.audio.dominant = idx === i;
+    return p;
+  });
+
+  console.log("audio peer %d is dominant", idx);
+
+  if (g_dominantIdx >= 0) {
+    // clear out the dominant flag for video inputs
+    g_dominantIdx = -1;
+    sendActiveVideoInputSlots();
+    createVideoInputsUI();
+  }
+
   updateRoomPeers();
   sendRoomPeers();
 }
@@ -1436,6 +1463,17 @@ async function start() {
   const enabledSources = createStandardSourcesUI(compInterface);
 
   g_vcsApi.setEnabledStandardSources(enabledSources);
+
+  if (0) {
+    // show experimental UI for audio-only participant state.
+    // this is esoteric enough that it's not worth showing upfront.
+    // it should be moved into some kind of special menu probably.
+    const randomizeAudioOnlyParticipantBtn = document.getElementById('randomizeAudioOnlyParticipantBtn');
+    randomizeAudioOnlyParticipantBtn.style = 'display: inline';
+    randomizeAudioOnlyParticipantBtn.addEventListener('click', (ev) => {
+      randomizeAudioDemoParticipantAsDominant();
+    });
+  }
 }
 
 window.addEventListener('load', function(ev) {
