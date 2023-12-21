@@ -1,6 +1,7 @@
 #include "yuv_compositor.h"
 #include <algorithm>
 #include <iostream>
+#include <cmath>
 #include "libyuv.h"
 
 

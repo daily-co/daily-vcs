@@ -1,7 +1,10 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
+#include <memory>
 #include <iostream>
+#include <unordered_map>
 
 namespace vcsrender {
 

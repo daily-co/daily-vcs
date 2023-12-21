@@ -33,6 +33,11 @@ if system_mac
 else
   message('Building for Linux x86_64')
   libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/linux-x64'
+  
+  libyuv_lib = cpp.find_library('yuv_internal', static : true, dirs : libyuv_libdir)
+  libyuv_libs = [
+    libyuv_lib
+  ]
 endif
 
 libyuv_include = include_directories('./libyuv/include')

@@ -6,9 +6,13 @@ fi
 
 set -e
 
-ext=${infile##*.}
-basefilename=$(basename "$infile" $ext)
-outfile=$(dirname "$infile")/"$basefilename"yuv
+if [ -z "$3" ]; then
+  ext=${infile##*.}
+  basefilename=$(basename "$infile" $ext)
+  outfile=$(dirname "$infile")/"$basefilename"yuv
+else
+  outfile=$3
+fi
 
 ffmpeg -y -i "$infile" -pix_fmt yuv420p -update 1 "$outfile"
 

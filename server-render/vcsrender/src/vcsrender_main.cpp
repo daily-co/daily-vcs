@@ -97,7 +97,6 @@ class VcsRenderApp : public cxx_argp::application
 
   size_t sceneDescCursor_ = 0;
 
-
   bool check_arguments() override
   {
     if (args_.outputSeqPath.empty()) {

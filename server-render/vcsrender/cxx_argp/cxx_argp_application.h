@@ -33,7 +33,7 @@ protected:
 		std::signal(SIGTERM, application::signal_handler);
 	}
 
-	~application()
+	virtual ~application()
 	{
 		std::signal(SIGTERM, SIG_DFL);
 		std::signal(SIGINT, SIG_DFL);

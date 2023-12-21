@@ -12,9 +12,13 @@ fi
 
 set -e
 
-ext=${infile##*.}
-basefilename=$(basename "$infile" $ext)
-outfile=$(dirname "$infile")/"$basefilename"png
+if [ -z "$3" ]; then
+  ext=${infile##*.}
+  basefilename=$(basename "$infile" $ext)
+  outfile=$(dirname "$infile")/"$basefilename"png
+else
+  outfile=$3
+fi
 
 ffmpeg -y -f rawvideo -s "$size" -i "$infile"  -update 1 "$outfile"
 

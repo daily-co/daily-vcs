@@ -57,13 +57,15 @@ void SceneJsonSequence::load_() {
   for (auto const& path : sortedFiles) {
     auto filename = path.stem().string();
     auto fileId = filename.substr(fileRootWithoutId_.size(), 2);
-    size_t frameIdx = std::stoi(filename.substr(filename.size() - numDigits_, numDigits_));
     std::cout << "JSON file: " << filename << ", " << fileId << std::endl;
 
-    if (frameIdx < 0) {
-      std::cerr << "Invalid frame index in sequence: " << frameIdx << std::endl;
+    const int frameIdx_i = std::stoi(filename.substr(filename.size() - numDigits_, numDigits_));
+    if (frameIdx_i < 0) {
+      std::cerr << "Invalid frame index in sequence: " << frameIdx_i << std::endl;
       continue;
     }
+    const size_t frameIdx = static_cast<size_t>(frameIdx_i);
+
     if (fileId != "vl" && fileId != "fg") {
       std::cerr << "Unknown JSON file in sequence: " << filename << std::endl;
       continue;
