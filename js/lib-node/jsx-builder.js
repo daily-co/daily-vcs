@@ -128,6 +128,16 @@ async function processCompDir(compDir, buildDir, assetDir) {
       const dstDir = Path.resolve(buildDir, 'components');
       ensureDirSync(dstDir);
       copySessionAssetCodeFiles(Path.resolve(assetDir, 'components'), dstDir);
+
+      // also allow overrides subdir
+      if (fs.existsSync(Path.resolve(assetDir, 'components', 'overrides'))) {
+        const dstDir = Path.resolve(buildDir, 'components', 'overrides');
+        ensureDirSync(dstDir);
+        copySessionAssetCodeFiles(
+          Path.resolve(assetDir, 'components', 'overrides'),
+          dstDir
+        );
+      }
     }
 
     function copySessionAssetCodeFiles(srcDir, dstDir) {
