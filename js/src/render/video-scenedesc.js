@@ -51,6 +51,12 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources, opts) {
     if (node.scaleMode) {
       attrs.scaleMode = '' + node.scaleMode;
     }
+    if (node.blend) {
+      const { opacity } = node.blend;
+      if (Number.isFinite(opacity)) {
+        attrs.opacity = Math.min(1, Math.max(0, opacity));
+      }
+    }
 
     sceneDesc.push({
       type: srcDrawable.vcsSourceType,
