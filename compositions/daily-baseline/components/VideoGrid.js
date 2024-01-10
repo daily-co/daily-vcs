@@ -19,6 +19,7 @@ export default function VideoGrid(gridProps) {
     itemInterval_gu = -1,
     outerPadding_gu = -1,
     preserveItemAspectRatio = true,
+    fullScreenHighlightItemIndex = -1,
   } = gridProps;
 
   const totalNumItems = participantDescs.length;
@@ -36,16 +37,28 @@ export default function VideoGrid(gridProps) {
     } = itemProps;
     let key = 'videogriditem_' + index;
 
-    const itemLayout = [
-      layoutFuncs.grid,
-      {
-        index,
-        total: totalNumItems,
-        innerMargin_gu: itemInterval_gu,
-        outerMargin_gu: outerPadding_gu,
-        preserveItemAspectRatio,
-      },
-    ];
+    let itemLayout;
+    let videoBlend;
+
+    if (fullScreenHighlightItemIndex >= 0) {
+      // special full-screen highlight mode
+      itemLayout = null;
+      videoBlend = {
+        opacity: fullScreenHighlightItemIndex === index ? 1 : 0,
+      };
+    } else {
+      // default grid layout
+      itemLayout = [
+        layoutFuncs.grid,
+        {
+          index,
+          total: totalNumItems,
+          innerMargin_gu: itemInterval_gu,
+          outerMargin_gu: outerPadding_gu,
+          preserveItemAspectRatio,
+        },
+      ];
+    }
 
     // override point for custom decorations on grid items
     const {
@@ -110,6 +123,7 @@ export default function VideoGrid(gridProps) {
           style={videoStyle}
           scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
           layout={customLayoutForVideo}
+          blend={videoBlend}
         />
       );
     }
