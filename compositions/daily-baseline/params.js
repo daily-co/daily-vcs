@@ -168,6 +168,13 @@ export const compositionParams = [
     defaultValue: true,
   },
   {
+    id: 'videoSettings.grid.fullScreenHighlightItemIndex',
+    type: 'number',
+    defaultValue: -1,
+    step: 1,
+  },
+
+  {
     id: 'videoSettings.dominant.position',
     type: 'enum',
     defaultValue: PositionEdge.LEFT,
