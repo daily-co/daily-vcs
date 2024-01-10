@@ -158,6 +158,13 @@ function recurseRenderNode(
       style += `object-fit: ${cssFit}; `;
     }
 
+    if (node.blend) {
+      const { opacity } = node.blend;
+      if (Number.isFinite(opacity) && opacity >= 0) {
+        style += `opacity: ${opacity}; `;
+      }
+    }
+
     el.style = style;
 
     elementState.final.byLayerId[layerId] = el;
