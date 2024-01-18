@@ -27,7 +27,9 @@ std::unique_ptr<ImageSequence> ImageSequence::createFromDir(std::string inputSeq
   }
 
   if (numDigits == 0) {
-    throw std::runtime_error("Image sequence file name format not valid");
+    std::stringstream ss;
+    ss << "Image sequence file name format not valid, pattern not found in directory: " << inputSeqDir;
+    throw std::runtime_error(ss.str());
   }
 
   auto seq = std::make_unique<ImageSequence>(dir, pattern, numDigits, ext);

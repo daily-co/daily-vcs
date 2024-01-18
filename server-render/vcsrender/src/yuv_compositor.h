@@ -38,6 +38,7 @@ class YuvCompositor {
   CanvexResourceCtx canvexCtx_;
 
   std::shared_ptr<Yuv420PlanarBuf> compBuf_;
+  std::shared_ptr<Yuv420PlanarBuf> compTempBuf_;
 
   uint8_t* fgRGBABuf_;
   uint32_t fgRGBABufRowBytes_;
@@ -50,7 +51,7 @@ class YuvCompositor {
 
   void renderLayerInPlace_(
     Yuv420PlanarBuf& dstBuf,
-    Yuv420PlanarBuf& srcBuf,
+    const Yuv420PlanarBuf& srcBuf,
     const VideoLayerDesc& layerDesc
   );
 };

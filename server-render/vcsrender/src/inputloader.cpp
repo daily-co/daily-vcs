@@ -51,7 +51,7 @@ VideoInputBufsById VideoInputLoader::readInputBufsAtFrame(size_t frame) {
       // still going
       size_t frameInSeq = frame - v.startFrame;
 
-      std::cout << "Reading " << frameInSeq << " for input " << videoInputId << std::endl;
+      //std::cout << "Reading " << frameInSeq << " for input " << videoInputId << std::endl;
 
       bufsById[videoInputId] = v.imSeq->readYuv420ForFrame(frameInSeq);
     }
@@ -72,7 +72,7 @@ void VideoInputLoader::startPlaybackForEvent_(VideoInputPlaybackEvent* ev) {
     ev->frameIndex,
     ev->durationInFrames
   };
-  std::cout << "  ... loaded input " << ev->videoInputId << " imseq from " << ev->seqDir << std::endl;
+  //std::cout << "  ... loaded input " << ev->videoInputId << " imseq from " << ev->seqDir << std::endl;
 }
 
 

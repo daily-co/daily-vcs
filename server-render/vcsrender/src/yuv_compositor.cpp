@@ -11,15 +11,12 @@ namespace vcsrender {
 static void blendRGBAOverI420_inPlace(
   Yuv420PlanarBuf& dstBuf,
   uint8_t* rgbaBuf, // size must be same as dstBuf
-  size_t rgbaRowBytes
+  size_t rgbaRowBytes,
+  Yuv420PlanarBuf& tempBuf
 ) {
   const int w = dstBuf.w;
   const int h = dstBuf.h;
-  const int chromaW = w / 2;
-
-  // TODO: temp buffer should be passed from outside
-  // instead of alloc here
-  Yuv420PlanarBuf tempBuf(w, h);
+  const int chromaW = (w + 1) / 2;
 
   // DEBUG: write a gradient into the input.
   // this helps detect whether rendering issues are before or after this step.
@@ -101,23 +98,26 @@ YuvCompositor::YuvCompositor(int32_t w, int32_t h, const std::string& canvexResD
   canvexCtx_ = CanvexResourceCtxCreate(canvexResDir.c_str());
 
   // retained buffer for the final 4:2:0 composite
-  compBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_);
+  compBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_, false);
+
+  // retained temp buffer used for final composite
+  compTempBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_, false);
 
   // retained buffer for overlay graphics in RGBA format
   fgRGBABufRowBytes_ = w_ * 4;
-  fgRGBABuf_ = new uint8_t[fgRGBABufRowBytes_ * h_];
+  fgRGBABuf_ = (uint8_t *) malloc(fgRGBABufRowBytes_ * h_);
   memset(fgRGBABuf_, 0, fgRGBABufRowBytes_ * h_);
 
   // retained buffer used as intermediate during layer rendering;
   // will be resized if needed, so initial capacity is a guess of what's usually enough
   layerTempBufSize_ = lround(1.2 * compBuf_->dataSize);
-  layerTempBuf_ = new uint8_t[layerTempBufSize_];
+  layerTempBuf_ = (uint8_t *) malloc(layerTempBufSize_);
 }
 
 YuvCompositor::~YuvCompositor() {
   if (canvexCtx_) CanvexResourceCtxDestroy(canvexCtx_);
-  if (fgRGBABuf_) delete fgRGBABuf_;
-  if (layerTempBuf_) delete layerTempBuf_;
+  if (fgRGBABuf_) free(fgRGBABuf_);
+  if (layerTempBuf_) free(layerTempBuf_);
 }
 
 bool YuvCompositor::setVideoLayersJSON(const std::string& jsonStr) {
@@ -148,7 +148,6 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   //std::cout << "rendering frame " << frameIdx << " ... " << std::endl;
 
   if (pendingCanvexJSONUpdate_) {
-    std::cout << " .. updating canvex buffer" << std::endl;
     CanvexRenderJSON_RGBA(
       canvexCtx_,
       pendingCanvexJSONUpdate_->c_str(),
@@ -167,7 +166,7 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   compBuf_->clearWithBlack();
 
   if (!videoLayers_ || videoLayers_->size() < 1) {
-    std::cout << " .. videoLayers is empty" << std::endl;
+    //std::cout << " .. videoLayers is empty" << std::endl;
   } else {
     //std::cout << " .. videoLayers count = " << videoLayers_->size() << std::endl;
 
@@ -175,19 +174,20 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
     for (size_t i = 0; i < n; i++) {
       const auto& layerDesc = (*videoLayers_)[i];
       auto inputId = layerDesc.id;
+      //std::cout << " . .. rendering layer #" << i << " with id " << inputId << std::endl;
       auto inputHit = inputBufsById.find(inputId);
       if (inputHit == inputBufsById.end()) {
-        std::cerr << "** No video input provided for id " << inputId << " requested by layerDesc #" << i << std::endl;
+        // it's fine if there's no input by this id, then we just don't render
+        //std::cout << "** No video input provided for id " << inputId << " requested by layerDesc #" << i << std::endl;
         continue;
       }
-
-      //std::cout << " . .. rendering layer #" << i << " with id " << inputId << std::endl;
-      renderLayerInPlace_(*compBuf_, *(inputHit->second), layerDesc);
+      const auto srcBuf = inputHit->second;
+      renderLayerInPlace_(*compBuf_, *srcBuf, layerDesc);
     }
   }
 
   // composite RGBA foreground
-  blendRGBAOverI420_inPlace(*compBuf_, fgRGBABuf_, fgRGBABufRowBytes_);
+  blendRGBAOverI420_inPlace(*compBuf_, fgRGBABuf_, fgRGBABufRowBytes_, *compTempBuf_);
 
   //std::cout << "frame finished." << std::endl;
 
@@ -196,7 +196,7 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
 
 void YuvCompositor::renderLayerInPlace_(
   Yuv420PlanarBuf& dstBuf,
-  Yuv420PlanarBuf& srcBuf,
+  const Yuv420PlanarBuf& srcBuf,
   const VideoLayerDesc& layerDesc)
 {
   // not const because cropping may change these
@@ -261,7 +261,7 @@ void YuvCompositor::renderLayerInPlace_(
   const int dstXOffset = lround(layerDesc.frame.x);
   const int dstYOffset = lround(layerDesc.frame.y);
 
-  Yuv420PlanarBuf tempScaledBuf(scaleBufW, scaleBufH);
+  Yuv420PlanarBuf tempScaledBuf(scaleBufW, scaleBufH, false);
 
   if (scaleBufW != scaleW || scaleBufH != scaleH) {
     tempScaledBuf.clearWithBlack();
@@ -270,14 +270,14 @@ void YuvCompositor::renderLayerInPlace_(
   libyuv::I420Scale(
         srcBuf.data + srcDataOffY, // source
         srcRowBytes_y,
-        srcBuf.getCbData() + srcDataOffCh,
+        srcBuf.getConstCbData() + srcDataOffCh,
         srcRowBytes_ch,
-        srcBuf.getCrData() + srcDataOffCh,
+        srcBuf.getConstCrData() + srcDataOffCh,
         srcRowBytes_ch,
         srcW,
         srcH,
         tempScaledBuf.data + dstDataOffY, // destination
-        scaleBufW,
+        tempScaledBuf.rowBytes_y,
         tempScaledBuf.getCbData() + dstDataOffCh,
         tempScaledBuf.rowBytes_ch,
         tempScaledBuf.getCrData() + dstDataOffCh,
@@ -300,7 +300,7 @@ void YuvCompositor::renderLayerInPlace_(
   const int maxDstX = std::min(outW - 1, dstXOffset + scaleBufW - 1);
   const int srcCopyXOffset = minDstX - dstXOffset;
 
-  srcRowBytes_y = scaleBufW;
+  srcRowBytes_y = tempScaledBuf.rowBytes_y;
   const int srcCopyLen_y = std::min(scaleBufW, std::max(0, maxDstX - minDstX));
 
   for (int y = minDstY; y <= maxDstY; y++) {
