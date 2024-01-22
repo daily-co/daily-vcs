@@ -32,7 +32,8 @@ table {
 
 #mainContainer {
   width: 100%;
-  height: 100%;
+  height: 100vh;
+  overflow: hidden;
   display: flex;
   flex-direction: row;
 }
@@ -40,10 +41,11 @@ table {
 #leftSplit {
   width: 64%;
   min-width: 960px;
-  height: 100%;
+  height: 100vh;
   flex: 0 0 auto;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 #rightSplit {
@@ -155,12 +157,23 @@ table {
 }
 
 #outputWrapper {
-  flex: none;
   background-color: black;
   overflow: hidden;
-  width: 640px;
+  width: 100%;
   height: 360px;
+  flex: 0 0 auto;
+  position: relative;
 }
+#outputContainer {
+  position: relative;
+  width: 640px;
+}
+#controlsWrapper {
+  flex: 1 0 0;
+  overflow-y: scroll;
+  position: relative;
+}
+
 #deco {
   flex: none;
   margin-top: 1px;
@@ -274,16 +287,18 @@ table {
   display: none;
 }
 #controls .compInterface {
-  margin-top: 1.5em;
+  margin-top: 2.0em;
 }
-#controls .compInterface .paramsJumpMenu {
-  position: sticky;
-  top: -12px;
+.paramsJumpMenu {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
   text-align: right;
   font-size: 11px;
   z-index: 999;
+  height: 20px;
 }
-#controls .compInterface .paramsJumpMenu select {
+.paramsJumpMenu select {
   font-size: 11px;
   background-color: var(--bg-color);
   border: 1px solid var(--control-outline-color);
@@ -293,7 +308,7 @@ table {
 }
 
 #controls .compInterface #paramGroup_ {
-  margin-top: -2.5em;
+  margin-top: -0.5em;
 }
 
 #controls .compInterface .paramsContainer {
@@ -506,74 +521,79 @@ table {
       <div id="leftSplit">
         <div id="outputWrapper">
           <div id="outputContainer"></div>
-        </div>
-        <div id="deco">
-          <div id="compInfo">
-            <div class="name"></div>
-            <div class="description"></div>
-          </div>
-          <div id="playbackControl">
-            <button>Stop</button>
-          </div>
-          <div id="compOutput">
-            <span>Output:</span>
-            <span>
-              <button class="selected" data-outputid="landscape">16:9</button><button data-outputid="square">Square</button><button data-outputid="portrait">9:16</button>
-            </span>
+          <div class="paramsJumpMenu">
+            <label>Jump to:</label>
+            <select>
+            </select>
           </div>
         </div>
-        <div id="controls">
-          <div class="vc">
-            <h3>Media input</h3>
-            <div class="mediaInput">
-              <div class="labels">
-                <div>Active video inputs</div>
-                <div>Make dominant</div>
-                <div>Paused</div>
-                <div>Toggle screenshare</div>
-                <div>Randomize name</div>
+        <div id="controlsWrapper">
+          <div>
+            <div id="deco">
+              <div id="compInfo">
+                <div class="name"></div>
+                <div class="description"></div>
               </div>
-              <div class="buttonContainer"></div>
-            </div>
-            <div class="roomInput">
-              <div>
-                <div>Audio-only demo participants</div>
+              <div id="playbackControl">
+                <button>Stop</button>
               </div>
-              <div class="audioParticipantInputContainer">
-                <input type="number" value="0" step="1" />
-              </div>
-              <div class="audioParticipantControls">
-                <button class="action" id="randomizeAudioOnlyParticipantBtn">Randomize one as dominant</button>
+              <div id="compOutput">
+                <span>Output:</span>
+                <span>
+                  <button class="selected" data-outputid="landscape">16:9</button><button data-outputid="square">Square</button><button data-outputid="portrait">9:16</button>
+                </span>
               </div>
             </div>
-          </div>
-          <div class="testImage">
-            <h3>Asset images</h3>
-            <div class="testImageControls">
-              <div id="imageDropTarget">Drop an image file here</div>
-              <div id="imageDropAssetName">
-                <label>Asset name for drop:</label>
-                <input type="text" value="overlay.png" />
+            <div id="controls">
+
+              <div class="vc">
+                <h3>Media input</h3>
+                <div class="mediaInput">
+                  <div class="labels">
+                    <div>Active video inputs</div>
+                    <div>Make dominant</div>
+                    <div>Paused</div>
+                    <div>Toggle screenshare</div>
+                    <div>Randomize name</div>
+                  </div>
+                  <div class="buttonContainer"></div>
+                </div>
+                <div class="roomInput">
+                  <div>
+                    <div>Audio-only demo participants</div>
+                  </div>
+                  <div class="audioParticipantInputContainer">
+                    <input type="number" value="0" step="1" />
+                  </div>
+                  <div class="audioParticipantControls">
+                    <button class="action" id="randomizeAudioOnlyParticipantBtn">Randomize one as dominant</button>
+                  </div>
+                </div>
               </div>
-            </div>  
-          </div>
-          <div class="standardSource">
-            <h3>Standard sources</h3>
-            <div class="standardSourceControls">
-              <div class="unavailableInfo">This composition doesn't support any standard sources.</div>
-              <button class="action" data-sourceid="chatMessages">Send random chat message</button>
-              <button class="action" data-sourceid="transcript">Send random transcript line</button>
-              <button class="action" data-sourceid="emojiReactions">Send random emoji reaction</button>
-            </div>  
-          </div>
-          <div class="compInterface">
-            <h3>Composition interface</h3>
-            <div class="paramsJumpMenu">
-              <label>Jump to:</label>
-              <select>
-              </select>
-            </div>
-            <div class="paramsContainer">
+              <div class="testImage">
+                <h3>Asset images</h3>
+                <div class="testImageControls">
+                  <div id="imageDropTarget">Drop an image file here</div>
+                  <div id="imageDropAssetName">
+                    <label>Asset name for drop:</label>
+                    <input type="text" value="overlay.png" />
+                  </div>
+                </div>  
+              </div>
+              <div class="standardSource">
+                <h3>Standard sources</h3>
+                <div class="standardSourceControls">
+                  <div class="unavailableInfo">This composition doesn't support any standard sources.</div>
+                  <button class="action" data-sourceid="chatMessages">Send random chat message</button>
+                  <button class="action" data-sourceid="transcript">Send random transcript line</button>
+                  <button class="action" data-sourceid="emojiReactions">Send random emoji reaction</button>
+                </div>  
+              </div>
+              <div class="compInterface">
+                <h3>Composition interface</h3>
+                <div class="paramsContainer">
+                </div>
+              </div>
             </div>
           </div>
         </div>  
@@ -1058,7 +1078,9 @@ function paramGroupJumpSelected(ev) {
 
   sel.blur();
 
-  const groupEl = document.getElementById('paramGroup_'+groupName);
+  const groupEl = (groupName === '_top') ? 
+                    document.getElementById('deco') :
+                    document.getElementById('paramGroup_'+groupName);
   if (groupEl) {
     groupEl.scrollIntoView();
   }
@@ -1066,14 +1088,23 @@ function paramGroupJumpSelected(ev) {
 
 function createParamGroupJumpMenuUI(groups, sel) {
   let hasGroups = false;
+  let hasTopItem = false;
 
   for (const group of groups) {
     if (group.items.length < 1) continue;
     hasGroups = true;
 
-    const opt = document.createElement('option');
+    let opt;
+    if (!hasTopItem) {
+      hasTopItem = true;
+      opt = document.createElement('option');
+      opt.setAttribute('value', '_top');
+      opt.innerText = '(top)';
+      sel.appendChild(opt);
+    }
+    opt = document.createElement('option');
     opt.setAttribute('value', group.name);
-    opt.innerText = group.name;
+    opt.innerText = group.name ? group.name : 'Main params';
     sel.appendChild(opt);
   }
 
@@ -1457,7 +1488,7 @@ async function start() {
   // create composition UI
   const groups = createParamsUI(compInterface, document.querySelector("#controls .compInterface .paramsContainer"));
 
-  createParamGroupJumpMenuUI(groups, document.querySelector("#controls .compInterface .paramsJumpMenu select"));
+  createParamGroupJumpMenuUI(groups, document.querySelector(".paramsJumpMenu select"));
 
   // create source UI
   const enabledSources = createStandardSourcesUI(compInterface);
@@ -1759,7 +1790,8 @@ function outputModeChanged(ev) {
   // adjust size of the output container's parent which renders the background color.
   const scale = g_outputScale;
   const box = g_outputContainer.parentElement;
-  box.style = `width: ${newViewport.w * scale}px; height: ${newViewport.h * scale}px;`;
+  box.style = `height: ${newViewport.h * scale}px;`;
+  g_outputContainer.style = `width: ${newViewport.w * scale}px;`;
 
   recreateVCSCanvasOutput();
 }
