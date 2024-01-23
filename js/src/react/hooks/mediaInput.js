@@ -32,6 +32,7 @@ export function useActiveVideo(opts) {
     let dominantId = null;
     let displayNamesById = {};
     let pausedById = {};
+    let frameSizesById = {};
     let maxSimultaneousVideoInputs = activeVideoInputSlots.length;
 
     for (let i = 0; i < maxSimultaneousVideoInputs; i++) {
@@ -66,6 +67,7 @@ export function useActiveVideo(opts) {
       }
       displayNamesById[videoId] = slot.displayName;
       pausedById[videoId] = paused;
+      frameSizesById[videoId] = slot.frameSize || { w: 0, h: 0 };
     }
 
     if (preferScreenshare && activeScreenshareIds.length > 0) {
@@ -80,6 +82,7 @@ export function useActiveVideo(opts) {
       dominantId,
       displayNamesById,
       pausedById,
+      frameSizesById,
       maxSimultaneousVideoInputs,
     };
   }, [
