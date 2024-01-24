@@ -59,6 +59,7 @@ export function useActiveVideoAndAudio({
             displayName: peer.displayName || 'Audio participant',
             highlighted: false,
             paused: peer.audio.paused,
+            dominant: peer.audio.dominant,
           };
         })
       );

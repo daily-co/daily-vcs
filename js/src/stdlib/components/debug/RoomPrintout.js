@@ -15,6 +15,14 @@ export function RoomPrintout({
     const total = peers.length;
     const items = [];
 
+    function makeInputPrintout(input, typeStr) {
+      const { id, paused, dominant } = input;
+      let line = `${typeStr} ${id}`;
+      if (paused) line += ' (paused)';
+      if (dominant) line += ' [dominant]';
+      return line;
+    }
+
     for (let i = 0; i < total; i++) {
       const peer = peers[i];
       const { id, displayName, video, audio, screenshareVideo } = peer;
@@ -27,22 +35,13 @@ export function RoomPrintout({
       lines.push(`"${displayName}"`);
 
       if (video?.id != null) {
-        const { id, paused } = video;
-        let line = `video ${id}`;
-        if (paused) line += ' (paused)';
-        lines.push(line);
+        lines.push(makeInputPrintout(video, 'video'));
       }
       if (screenshareVideo?.id != null) {
-        const { id, paused } = screenshareVideo;
-        let line = `sshare ${id}`;
-        if (paused) line += ' (paused)';
-        lines.push(line);
+        lines.push(makeInputPrintout(screenshareVideo, 'sshare'));
       }
       if (audio?.id != null) {
-        const { id, paused } = audio;
-        let line = `audio ${id}`;
-        if (paused) line += ' (paused)';
-        lines.push(line);
+        lines.push(makeInputPrintout(audio, 'audio'));
       }
 
       items.push(

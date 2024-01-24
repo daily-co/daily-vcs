@@ -8,5 +8,6 @@ export function Video(props) {
     style: props.style || {},
     src: props.src,
     scaleMode: props.scaleMode || 'fill',
+    blend: props.blend || {},
   });
 }

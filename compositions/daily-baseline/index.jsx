@@ -185,6 +185,9 @@ export default function DailyBaselineVCS() {
             preserveItemAspectRatio={
               params['videoSettings.grid.preserveAspectRatio']
             }
+            fullScreenHighlightItemIndex={
+              params['videoSettings.grid.fullScreenHighlightItemIndex']
+            }
           />
         );
         break;
