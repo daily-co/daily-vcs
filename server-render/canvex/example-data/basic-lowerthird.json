@@ -11,7 +11,7 @@
     ["save"],
     ["fillStyle", "rgba(255, 250, 200, 0.95)"],
     ["font", ["300", "", 50, "Roboto"]],
-    ["fillText", ["Hello from canvex", 20, 542]],
+    ["fillText", ["Hello from VCS", 20, 542]],
     ["restore"],
     ["save"],
     [

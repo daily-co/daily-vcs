@@ -1,0 +1,21 @@
+{
+  "width": 1280,
+  "height": 720,
+  "commands": [
+    ["save"],
+    ["save"],
+    ["save"],
+    ["save"],
+    ["fillStyle", "rgba(255, 250, 200, 0.95)"],
+    ["font", ["400", "", 50, "Roboto"]],
+    ["strokeStyle", "rgba(0, 0, 0, 0.8)"],
+    ["lineWidth", 12],
+    ["lineJoin", "round"],
+    ["strokeText", ["An example text overlay", 376, 371]],
+    ["fillText", ["An example text overlay", 376, 371]],
+    ["restore"],
+    ["restore"],
+    ["restore"],
+    ["restore"]
+  ]
+}

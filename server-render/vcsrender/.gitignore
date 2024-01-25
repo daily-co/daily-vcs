@@ -1,0 +1,4 @@
+build/**
+target/**
+example-data/temp/**
+.vscode/**
