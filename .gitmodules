@@ -1,0 +1,3 @@
+[submodule "server-render/canvex/canvex-skia"]
+	path = server-render/canvex/canvex-skia
+	url = git@github.com:daily-co/canvex-skia.git
