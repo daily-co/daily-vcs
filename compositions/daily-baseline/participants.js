@@ -32,6 +32,7 @@ export function useActiveVideoAndAudio({
       dominantId,
       displayNamesById,
       pausedById,
+      frameSizesById,
     } = activeVideoObj;
 
     let items = activeIds.map((videoId, i) => {
@@ -44,6 +45,7 @@ export function useActiveVideoAndAudio({
         displayName: displayNamesById[videoId] || '',
         highlighted: videoId === dominantId,
         paused: pausedById[videoId],
+        frameSize: frameSizesById[videoId] || { w: 0, h: 0 },
       };
     });
 

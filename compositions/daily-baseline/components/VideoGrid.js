@@ -97,6 +97,9 @@ export default function VideoGrid(gridProps) {
       );
     }
 
+    const videoScaleMode = isScreenshare ? scaleModeForScreenshare : scaleMode;
+    const hasLiveVideo = !isAudioOnly && !paused;
+
     let highlight;
     if (enableDefaultHighlight && highlightDominant && highlighted) {
       const highlightStyle = {
@@ -105,11 +108,31 @@ export default function VideoGrid(gridProps) {
         cornerRadius_px: videoStyle.cornerRadius_px,
       };
 
-      highlight = <Box style={highlightStyle} key={key + '_highlight'} />;
+      let highlightLayout;
+      if (hasLiveVideo && videoScaleMode === 'fit') {
+        const { frameSize } = itemProps;
+        const aspectRatio =
+          frameSize?.w > 0 && frameSize?.h > 0 ? frameSize.w / frameSize.h : 0;
+        if (aspectRatio > 0) {
+          highlightLayout = [
+            layoutFuncs.fit,
+            {
+              contentAspectRatio: aspectRatio,
+            },
+          ];
+        }
+      }
+      highlight = (
+        <Box
+          style={highlightStyle}
+          key={key + '_highlight'}
+          layout={highlightLayout}
+        />
+      );
     }
 
     let video;
-    if (isAudioOnly || paused) {
+    if (!hasLiveVideo) {
       video = (
         <PausedPlaceholder
           layout={customLayoutForVideo}
@@ -121,7 +144,7 @@ export default function VideoGrid(gridProps) {
         <Video
           src={videoId}
           style={videoStyle}
-          scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
+          scaleMode={videoScaleMode}
           layout={customLayoutForVideo}
           blend={videoBlend}
         />

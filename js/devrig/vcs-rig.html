@@ -1940,6 +1940,19 @@ function sendActiveVideoInputSlots() {
     } else {
       arr.push(false);
     }
+
+    const el = g_defaultSources.videoSlots[i]?.element;
+    if (el?.videoWidth) {
+      obj.frameSize = {
+        w: el.videoWidth,
+        h: el.videoHeight
+      };
+    } else if (el?.width) {
+      obj.frameSize = {
+        w: el.width,
+        h: el.height
+      };
+    }
   }
 
   g_vcsApi.setActiveVideoInputSlots(arr);
