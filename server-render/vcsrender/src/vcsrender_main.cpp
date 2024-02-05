@@ -164,9 +164,17 @@ class VcsRenderApp : public cxx_argp::application
       std::cout << "DEBUG: loading test JSONs" << std::endl;
 
       // DEBUG: load some test JSONs
-      std::string videoLayersJson_test_2inputs = R"(
-        [ {"type":"video","id":0,"frame":{"x":0,"y":0,"w":960,"h":1080},"attrs":{"scaleMode":"fill"}},
-          {"type":"video","id":1,"frame":{"x":960,"y":100,"w":960,"h":540},"attrs":{"scaleMode":"fill"}} ]
+      std::string videoLayersJson_test_2inputs = /*R"(
+        [
+          {"type":"video","id":0,"frame":{"x":0,"y":0,"w":960,"h":1080},"attrs":{"scaleMode":"fill"}},
+          {"type":"video","id":1,"frame":{"x":960,"y":100,"w":960,"h":540},"attrs":{"scaleMode":"fill"}}
+        ]
+      )";*/
+      R"(
+        [
+          {"type":"video","id":0,"frame":{"x":300,"y":0,"w":1620,"h":1080},"attrs":{"scaleMode":"fill", "cornerRadiusPx": 0}},
+          {"type":"video","id":1,"frame":{"x":100,"y":100,"w":640,"h":640},"attrs":{"scaleMode":"fill", "cornerRadiusPx": 64}}
+        ]
       )";
       std::string videoLayersJson_test_16inputs = readTextFile("example-data/vl_16inputs_720.json");
 
