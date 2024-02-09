@@ -98,10 +98,10 @@ YuvCompositor::YuvCompositor(int32_t w, int32_t h, const std::string& canvexResD
   canvexCtx_ = CanvexResourceCtxCreate(canvexResDir.c_str());
 
   // retained buffer for the final 4:2:0 composite
-  compBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_, false);
+  compBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_);
 
   // retained temp buffer used for final composite
-  compTempBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_, false);
+  compTempBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_);
 
   // retained buffer for overlay graphics in RGBA format
   fgRGBABufRowBytes_ = w_ * 4;
