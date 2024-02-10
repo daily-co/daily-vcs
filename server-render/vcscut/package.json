@@ -1,0 +1,11 @@
+{
+  "name": "@daily-co/vcs-cut",
+  "version": "0.1.0",
+  "author": "Daily (https://daily.co)",
+  "license": "BSD-2-Clause",
+  "type": "module",
+  "engines": {
+    "node": ">=18.19.0"
+  },
+  "main": "cut.js"
+}
