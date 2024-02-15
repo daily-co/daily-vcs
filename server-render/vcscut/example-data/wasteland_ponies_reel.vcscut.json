@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "description": "An AI-generated social media reel where cringe dad tries his hand at poetry and ponies."
+  },
+  "sources": [
+    {
+      "id": "wlponies",
+      "path": "example-data/sources/wasteland_ponies_footage.mp4"
+    }
+  ],
+  "clips": [
+    {
+      "start": "0.0",
+      "duration": "5.23",
+      "description": "Clip 1",
+      "id": "c1",
+      "source": "wlponies"
+    },
+    {
+      "start": "5.76",
+      "duration": "9.30",
+      "description": "Clip 2",
+      "id": "c2",
+      "source": "wlponies"
+    },
+    {
+      "start": "23.86",
+      "duration": "11.76",
+      "description": "Clip 3",
+      "id": "c3",
+      "source": "wlponies"
+    },
+    {
+      "start": "41.13",
+      "duration": "5.5",
+      "description": "Clip 4",
+      "id": "c4",
+      "source": "wlponies"
+    },
+    {
+      "start": "53.63",
+      "duration": "12.13",
+      "description": "Clip 5",
+      "id": "c5",
+      "source": "wlponies"
+    }
+  ],
+  "cut": {
+    "duration": "44.92",
+    "audio": [
+      {
+        "clips": ["c1"]
+      },
+      {
+        "clips": ["c2"]
+      },
+      {
+        "clips": ["c3"]
+      },
+      {
+        "clips": ["c4"]
+      },
+      {
+        "clips": ["c5"]
+      }
+    ],
+    "events": [
+      {
+        "t": "0",
+        "clips": ["c1"],
+        "params": {
+          "mode": "single"
+        }
+      },
+      {
+        "t": "1.5",
+        "params": {
+          "showTextOverlay": true,
+          "text.align_horizontal": "center",
+          "text.align_vertical": "bottom",
+          "text.offset_x_gu": 0,
+          "text.offset_y_gu": 4,
+          "text.rotation_deg": 0,
+          "text.scale_x": 1,
+          "text.fontSize_gu": 3.8,
+          "text.strokeColor": "rgba(0, 0, 50, 0.5)",
+          "text.stroke_gu": 0.6,
+          "text.fontWeight": "500",
+          "text.fontFamily": "Bitter",
+          "text.color": "cornflowerblue",
+          "text.content": "Podcast Prancer Welcomes You to His Toy Horse Poetry Hour!"
+        }
+      },
+      {
+        "t": "2",
+        "params": {
+          "showImageOverlay": true,
+          "image.assetName": "",
+          "image.emoji": "😸",
+          "image.position": "top-right",
+          "image.aspectRatio": 1,
+          "image.margin_gu": 0.5,
+          "image.height_gu": 15,
+          "image.enableFade": true,
+          "image.opacity": 1
+        }
+      },
+      {
+        "t": "5.23",
+        "clips": ["c2"],
+        "params": {
+          "text.content": "Host Heralds In Cruel April with Plastic Stallions!",
+          "text.offset_y_gu": 5,
+          "text.rotation_deg": -2,
+          "text.color": "yellow",
+          "text.fontSize_gu": 4,
+          "showImageOverlay": false
+        }
+      },
+      {
+        "t": "14.53",
+        "clips": ["c3"],
+        "params": {
+          "text.content": "Surprise Summer Showers Star in Poetry Podcast Pantomime!",
+          "text.offset_y_gu": 4,
+          "text.rotation_deg": 1,
+          "text.color": "cornflowerblue",
+          "text.fontSize_gu": 3.3
+        }
+      },
+      {
+        "t": "16.5",
+        "params": {
+          "showImageOverlay": true,
+          "image.assetName": "",
+          "image.emoji": "💦",
+          "image.position": "top-left",
+          "image.aspectRatio": 1,
+          "image.margin_gu": 1,
+          "image.height_gu": 14,
+          "image.enableFade": true,
+          "image.opacity": 1
+        }
+      },
+      {
+        "t": "20.5",
+        "params": {
+          "showImageOverlay": false,
+          "text.content": "Toy Horses Toast in Hofgarten, Gabbing Galloper Talks on for an Entire Hour!",
+          "text.offset_y_gu": 3.8,
+          "text.rotation_deg": 0,
+          "text.color": "yellow",
+          "text.fontSize_gu": 3.1
+        }
+      },
+      {
+        "t": "26.29",
+        "clips": ["c4"],
+        "params": {
+          "text.content": "Regaling Royal Sled Rides with Toy Horses: Not Your Average Poetry Hour!",
+          "text.offset_y_gu": 4.8,
+          "text.offset_x_gu": 1,
+          "text.rotation_deg": 0.9,
+          "text.fontSize_gu": 3.3,
+          "text.color": "white"
+        }
+      },
+      {
+        "t": "31.79",
+        "clips": ["c5"],
+        "params": {
+          "text.content": "Mountains of Pillows Free Our Rhymery Ringleader from Winter's Chill!",
+          "text.offset_y_gu": 5,
+          "text.offset_x_gu": 0,
+          "text.rotation_deg": -1,
+          "showImageOverlay": true,
+          "image.assetName": "",
+          "image.emoji": "🏔️",
+          "text.color": "cornflowerblue",
+          "text.fontSize_gu": 3.3
+        }
+      },
+      {
+        "t": "39",
+        "params": {
+          "showImageOverlay": false,
+          "text.content": "All The King’s Horses: Plastic Ponies Ride into Patchwork Pillow Sunset!",
+          "text.offset_y_gu": 4,
+          "text.rotation_deg": 2,
+          "text.fontSize_gu": 3.1
+        }
+      },
+      {
+        "t": "43.5",
+        "params": {
+          "showTitleSlate": true,
+          "titleSlate.enableFade": true,
+          "titleSlate.title": "Subscribe to @pauli on Slack for more toy horse hijinks and rhyming rambles.",
+          "titleSlate.subtitle": "Don't miss the madcap mane event!",
+          "titleSlate.bgColor": "cornflowerblue",
+          "titleSlate.fontWeight": "600",
+          "titleSlate.fontFamily": "Magra",
+          "titleSlate.textColor": "white"
+        }
+      }
+    ]
+  }
+}

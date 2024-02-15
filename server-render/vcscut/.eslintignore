@@ -1,0 +1,2 @@
+# this is not a TypeScript project, so disable eslint for now
+*.js
