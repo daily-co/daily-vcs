@@ -197,9 +197,12 @@ class VcsRenderApp : public cxx_argp::application
   }
 
   int renderLoop() {
+    double tStart = getMonotonicTime();
     double renderTimeAcc_s = 0.0;
 
-    for (size_t frameIdx = 0; frameIdx < inputTimings_->durationInFrames; frameIdx++) {
+    const auto numFrames = inputTimings_->durationInFrames;
+
+    for (size_t frameIdx = 0; frameIdx < numFrames; frameIdx++) {
       const auto dstPath = makeOutputFilePath(frameIdx);
 
       SceneDescAtFrame readSd;
@@ -260,7 +263,10 @@ class VcsRenderApp : public cxx_argp::application
         renderTimeAcc_s += timeSpent_render;
       }
 
-      std::cout << " " << (timeSpent_render * 1000) << " ms" << std::endl;
+      std::cout << " " << (timeSpent_render * 1000) << " ms";
+
+      // rewind console output if not last frame
+      std::cout << (frameIdx < numFrames - 1 ? "        \r" : "\r\n") << std::flush;
 
       auto dstFile = fopen(dstPath.c_str(), "wb");
       auto writeResult = fwrite(renderResult->data, renderResult->dataSize, 1, dstFile);
@@ -274,12 +280,17 @@ class VcsRenderApp : public cxx_argp::application
       if (interrupted()) break;
     }
 
-    std::cout << "\nAvg render time: " << (renderTimeAcc_s / (inputTimings_->durationInFrames - 1) * 1000) << " ms" << std::endl;
+    double tEnd = getMonotonicTime();
 
     if (interrupted()) {
       std::cerr << "Interrupted." << std::endl;
       return 1;
     }
+
+    std::cout << "\nAvg composite per frame: " << (renderTimeAcc_s / (numFrames - 1) * 1000) << " ms" << std::endl;
+
+    std::cout << "Avg total per frame: " << ((tEnd - tStart) / numFrames * 1000) << " ms" << std::endl;
+
     return 0;
   }
 

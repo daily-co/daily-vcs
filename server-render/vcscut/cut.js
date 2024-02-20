@@ -51,6 +51,7 @@ if (!edlJsonPath || edlJsonPath.length < 1) {
 const edl = JSON.parse(fs.readFileSync(edlJsonPath, { encoding: 'utf8' }));
 
 let defaultFps = 30;
+let fpsDetected = false;
 let outputSize = {
   w: 1280,
   h: 720,
@@ -92,9 +93,10 @@ for (let source of edl.sources) {
 
     source.videoMetadata = findBasicVideoPropsInMovieMetadata(metadata);
 
-    if (source.videoMetadata?.fps > 0) {
+    if (source.videoMetadata?.fps > 0 && !fpsDetected) {
       defaultFps = source.videoMetadata?.fps;
-      console.log('setting fps for cut: ', defaultFps);
+      fpsDetected = true;
+      console.log('Setting frame rate from first source: ', defaultFps);
     }
   }
 }

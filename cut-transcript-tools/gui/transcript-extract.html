@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Transcript extract tool</title>
+
+  <style>
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 13px;
+  background: white;
+  color: black;
+  margin: 0;
+  padding: 0rem;
+  display: flex;
+  justify-content: center;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+input {
+  font-family: inherit;
+}
+select {
+  font-family: inherit;
+}
+
+textarea {
+  font-family: inherit;
+  font-size: 13px;
+  resize: none;
+}
+
+button {
+  border-radius: 0.6em;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  padding: 0.3em 0.9em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button:hover {
+  border-color: #646cff;
+}
+
+
+#main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-width: 1000px;
+  width: 100%;
+}
+
+#header {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+#header h1 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+#dropAreaLabel {
+  display: inline-block;
+  position: relative;
+  margin-right: 1rem;
+}
+
+#transcriptSplit {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: row;
+  padding: 0;
+  overflow: hidden;
+}
+#transcriptSplit h2 {
+  margin-top: 0;
+}
+#transcriptSplit > div {
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+#extractList {
+  width: 25%;
+  min-width: 240px;
+  max-width: 400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+#extractList .info {
+  color: #888;
+}
+#extractList .list {
+  flex: 1 1 auto;
+  margin-top: 1em
+}
+#extractList .actions > button {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 0.5em;
+}
+
+#transcriptViewer {
+  flex: 1 1 auto;
+  background-color: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#transcriptViewer .viewer {
+  width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  overflow-y: scroll;
+}
+
+.viewer > .transcript {
+  background-color: white;
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  letter-spacing: 0.2px;
+}
+.viewer > .transcript .info {
+  color: #aaa;
+}
+
+#transcriptViewer > .info {
+  padding-top: 1em;
+}
+.info p {
+  margin-bottom: 1em;
+  margin-top: 0;
+}
+
+.transcriptPg {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+.transcriptPg.speaker_0 {
+  color: #0947c2;
+}
+.transcriptPg.speaker_1 {
+  color: #237200;
+  font-style: italic;
+}
+.transcriptPg > span.sentence {
+  cursor: pointer;
+}
+.transcriptPg > span.sentence:hover {
+  background-color: #eee;
+}
+.transcriptPg > span.sel {
+  background-color: yellow;
+}
+.transcriptPg > span.sel:hover {
+  background-color: #ffe81e;
+}
+.transcriptPg > span.selected-saved {
+  background-color: #d6eedf;
+  border-top: 3px solid #d6eedf;
+  border-bottom: 3px solid #d6eedf;
+  border-radius: 6px;
+}
+
+.extractStatus {
+  padding: 0.75rem;
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.extractStatus > div {
+  flex: 1 0 0;
+  vertical-align: middle;
+}
+.extractStatus > div:last-child {
+  margin-right: 0;
+  text-align: right;
+}
+.extractStatus .label {
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: #555;
+}
+.extractStatus .value {
+  display: inline-block;
+  font-weight: 500;
+}
+
+#extractList .list div {
+  padding: 0.5em;
+  width: 100%;
+  cursor: pointer;
+}
+#extractList .list div.extract.selected {
+  background-color: #d6eedf;
+}
+
+  </style>
+</head>
+
+<body>
+  <div id="main">
+    <div id="header">
+      <h1>VCSCut Transcript Editor</h1>
+
+      <div>
+        <div id="dropAreaLabel">Drop the Deepgram transcript file here:</div>
+        <input type="file" id="fileInput" />
+      </div>  
+    </div>
+
+    <div id="transcriptSplit">
+
+      <div id="transcriptViewer">
+        <h2>Transcript</h2>
+  
+        <div class="viewer">
+          <div class="transcript">
+            <span class="info">Load a transcript file above to view it here.</span>
+          </div>
+        </div>
+
+        <div class="info">
+          <p>To select an extract start point, click on a sentence.</p>
+          <p>To set the end point, Option + click.</p>
+          <p>To clear both, double-click transcript background.</p>
+        </div>
+  
+        <div class="extractStatus">
+          <div class="start">
+            <span class="label">Start:</span>
+            <span class="value"></span>
+          </div>
+          <div class="end">
+            <span class="label">End:</span>
+            <span class="value"></span>
+          </div>
+          <div class="duration">
+            <span class="label">Duration:</span>
+            <span class="value"></span>
+          </div>
+          <div>
+            <button disabled id="btnSaveExtract">Save extract</button>
+          </div>
+        </div>
+  
+      </div>
+
+      <div id="extractList">
+        <h2>Saved Extracts</h2>
+
+        <div class="info">
+          <div class="duration">
+            <span class="label">Total duration:</span>
+            <span class="value">N/A</span>
+          </div>
+        </div>
+
+        <div class="list">
+
+        </div>
+
+        <div class="actions">
+          <button disabled id="btnDel">Delete</button>
+          <button id="btnCopyJson">Copy JSON</button>
+          <button id="btnCopyJsonQuoted">Copy JSON quoted for CLI</button>
+        </div>
+
+      </div>
+  
+    </div>
+
+  </div>
+
+<script>
+
+let g_transcriptObj;
+
+const g_transcriptEl = document.querySelector(".viewer > .transcript");
+const g_startTimeEl = document.querySelector(".extractStatus .start .value");
+const g_endTimeEl = document.querySelector(".extractStatus .end .value");
+const g_durationEl = document.querySelector(".extractStatus .duration .value");
+
+const g_btnSave = document.getElementById("btnSaveExtract");
+const g_btnDel = document.getElementById("btnDel");
+
+const g_savedExtractsListBox = document.querySelector("#extractList .list");
+
+let g_transcriptViewerSpanEls;
+
+let g_startT = null;
+let g_endT = null;
+
+let g_savedExtracts = [];
+let g_selectedExtractStartT = -1;
+
+window.addEventListener('load', () => {
+  updateStartEndDisplay();
+
+  document.getElementById("fileInput").addEventListener("change", (ev) => {
+    fileDropped(ev.target.files[0]);
+  }, false);
+
+  document.getElementById('btnCopyJson').addEventListener('click', copyJsonAction);
+
+  document.getElementById('btnCopyJsonQuoted').addEventListener('click', (ev) => { copyJsonAction(ev, true) });
+
+  g_btnSave.addEventListener('click', saveExtract);
+
+  g_btnDel.addEventListener('click', deleteSavedExtract);
+
+  g_transcriptEl.addEventListener('dblclick', (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    clearTranscriptSelection();
+  });
+
+  document.getElementById('extractList').addEventListener('click', (ev) => {
+    // clear selection when background clicked
+    g_selectedExtractStartT = -1;
+    updateSelectionColors();
+  });
+
+  if (g_transcriptObj) {
+    try {
+      renderTranscript(g_transcriptObj, g_transcriptEl);
+    } catch (e) {
+      alert("Error reading transcript:\n\n" + e.message);
+    }
+  }
+});
+
+function saveExtract() {
+  const extractStart = g_startT;
+  const extractEnd = g_endT;
+  if (extractStart == null || extractEnd == null) return;
+
+  // find the extracted sentences in the transcript
+  const sentences = [];
+  for (const st of g_displayedSentences) {
+    const {start, end} = st;
+
+    if (start >= extractStart && end <= extractEnd) {
+      sentences.push(st);
+    }
+  }
+  if (sentences.length < 1) {
+    console.error("** Couldn't find any sentences for extract range: ", extractStart, extractEnd, g_displayedSentences);
+    alert("Error finding extract in transcript");
+    return;
+  }
+
+  g_savedExtracts.push({
+    start: extractStart,
+    end: extractEnd,
+    sentences
+  });
+
+  updateSavedExtractsDisplay();
+}
+
+function deleteSavedExtract() {
+  if (g_selectedExtractStartT < 0.0) return;
+
+  let idx = g_savedExtracts.findIndex(e => e.start === g_selectedExtractStartT);
+  if (idx < 0) {
+    alert("Invalid startT: " + g_selectedExtractStartT);
+    console.error("Couldn't find %f in: ", g_selectedExtractStartT, g_savedExtracts);
+    return;
+  }
+
+  g_savedExtracts.splice(idx, 1);
+  g_selectedExtractStartT = -1;
+  updateSelectionColors();
+}
+
+function updateSavedExtractsDisplay() {
+  const box = g_savedExtractsListBox;
+
+  removeChildren(box);
+
+  let duration = 0;
+
+  for (const ext of g_savedExtracts) {
+    const {start, end, sentences} = ext;
+    const el = document.createElement("div");
+    el.classList.add('extract');
+    if (start === g_selectedExtractStartT) {
+      el.classList.add('selected');
+    }
+
+    duration += end - start;
+
+    el.innerText = `${start.toFixed(3)} - ${end.toFixed(3)} (${sentences.length} sentence${sentences.length > 1 ? 's' : ''})`;
+
+    el.setAttribute('data-start-time', start);
+
+    el.addEventListener('click', (ev) => { onSavedExtractClicked(ev, start, end) });
+    
+    box.appendChild(el);
+  }
+
+  const durEl = document.querySelector("#extractList .info .duration .value");
+  durEl.innerText = `${duration.toFixed(3)} s`;
+
+  if (g_selectedExtractStartT >= 0) {
+    g_btnDel.removeAttribute('disabled');
+  } else {
+    g_btnDel.setAttribute('disabled', true);
+  }
+}
+
+async function fileDropped(file) {
+  try {
+  const text = await file.text();
+  g_transcriptObj = JSON.parse(text);
+  renderTranscript(g_transcriptObj, g_transcriptEl);
+  } catch (e) {
+    alert("Error reading file:\n\n" + e.message);
+  }
+}
+
+function makeJson() {
+  const obj = {
+    extracts: g_savedExtracts.map((e) => { return {start: e.start, end: e.end} })
+  };
+  return JSON.stringify(obj);
+}
+
+function copyJsonAction(ev, makeQuoted) {
+  if (g_startT == null || g_endT == null) {
+    alert("You must set both start and end times.");
+    return;
+  }
+  let json = makeJson();
+
+  if (makeQuoted) {
+    json = json.replace(/[\""]/g, '\\"');
+    json = `"${json}"`;
+  }
+
+  try {
+      navigator.clipboard.writeText(json).then(() => {
+        alert("Copied to clipboard:\n\n"+json);
+      });
+    } catch (e) {
+      console.error("Exception copying text to clipboard: ", e);
+      alert("Copy failed:\n"+e);
+    }
+}
+
+function onSavedExtractClicked(ev, start, end) {
+  ev.stopPropagation();
+
+  g_selectedExtractStartT = start;
+
+  updateSavedExtractsDisplay();
+
+  for (const spanEl of g_transcriptViewerSpanEls) {
+    const spStart = parseFloat(spanEl.dataset.startTime);
+    const spEnd = parseFloat(spanEl.dataset.endTime);
+    const isSel = (spStart >= start && spEnd <= end);
+    if (isSel) spanEl.classList.add('selected-saved');
+    else spanEl.classList.remove('selected-saved');
+  }
+}
+
+function onSentenceClicked(ev) {
+  const span = ev.target;
+  const start = span.dataset.startTime;
+  const end = span.dataset.endTime;
+  const altDown = ev.altKey || ev.ctrlKey; // allow ctrl too
+  
+  if (start == null || end == null) {
+    console.error("Invalid data for sentence element");
+    return;
+  }
+  if (!altDown) {
+    g_startT = parseFloat(start);
+  } else {
+    g_endT = parseFloat(end);
+  }
+  updateStartEndDisplay();
+  updateSelectionColors();
+}
+
+function updateStartEndDisplay() {
+  const hasStart = Number.isFinite(g_startT);
+  const hasEnd = Number.isFinite(g_endT);
+
+  g_startTimeEl.innerText = hasStart ? ""+(g_startT.toFixed(3)) : "[not set]";
+  g_endTimeEl.innerText = hasEnd ? ""+(g_endT.toFixed(3)) : "[not set]";
+
+  const duration = (hasStart && hasEnd) ? g_endT - g_startT : null;
+
+  g_durationEl.innerText = duration != null ? ""+(duration.toFixed(3)) : "[not set]";
+
+  if (duration == null || duration <= 0) {
+    g_btnSave.setAttribute('disabled', true);
+  } else {
+    g_btnSave.removeAttribute('disabled');
+  }
+}
+
+const kParagraphDefaultStyle = 'sentence';
+
+function updateSelectionColors() {
+  if (!g_transcriptViewerSpanEls) return;
+
+  g_selectedExtractStartT = -1; // clear selection
+  updateSavedExtractsDisplay();
+
+  const rangeStart = g_startT;
+  const rangeEnd = g_endT;
+  
+  for (const span of g_transcriptViewerSpanEls) {
+    const start = span.dataset.startTime;
+    const end = span.dataset.endTime;
+
+    let className = kParagraphDefaultStyle;
+
+    if (start >= rangeStart && end <= rangeEnd) className += ' sel';
+
+    span.className = className;
+  }
+}
+
+let g_displayedSentences;
+
+function renderTranscript(transcriptObj, box) {
+  const alt = transcriptObj?.results?.channels[0].alternatives[0];
+  if (!alt) {
+    throw new Error("Invalid data");
+  }
+  const { words } = alt;
+  const { paragraphs } = alt.paragraphs;
+  if (!Array.isArray(paragraphs)) {
+    throw new Error("Transcript object not in expected format (missing paragraphs)");
+  }
+  console.log("paragraph count = %d, word count = %d", paragraphs.length, words.length);
+
+  removeChildren(box);
+
+  g_transcriptViewerSpanEls = [];
+  g_displayedSentences = [];
+
+  for (const pg of paragraphs) {
+    const { sentences, speaker } = pg;
+    if (!Array.isArray(sentences)) {
+      throw new Error("Transcript object not in expected format (missing sentences)");
+    }
+    if (speaker == null) {
+      throw new Error("Transcript object not in expected format (missing speaker id for paragraph)");
+    }
+    
+    const pgBox = document.createElement('div');
+    pgBox.className = `transcriptPg speaker_${speaker}`;
+    box.appendChild(pgBox);
+
+    for (const st of sentences) {
+      const { text, start, end } = st;
+      const span = document.createElement('span');
+
+      span.innerText = text;
+      span.className = kParagraphDefaultStyle;
+
+      span.setAttribute('data-start-time', start);
+      span.setAttribute('data-end-time', end);
+      span.setAttribute('data-speaker', speaker);
+
+      span.addEventListener('click', onSentenceClicked);
+
+      pgBox.appendChild(span);
+
+      g_transcriptViewerSpanEls.push(span);
+
+      g_displayedSentences.push({ text, start, end, speaker });
+
+      const spacer = document.createElement('span');
+      spacer.innerText = ' ';
+      pgBox.appendChild(spacer);
+    }
+
+    updateSelectionColors();
+  }
+}
+
+function clearTranscriptSelection() {
+  g_startT = null;
+  g_endT = null;
+  updateStartEndDisplay();
+  updateSelectionColors();
+}
+
+function removeChildren(box) {
+  let child;
+  while ((child = box.firstChild)) {
+    box.removeChild(child);
+  }
+}
+
+/*
+transcriptEl.addEventListener('select', (ev) => {
+  const start = ev.target.selectionStart;
+  const end = ev.target.selectionEnd;
+  console.log("sel: ", start, end);
+});
+*/
+
+</script>
+
+</body>
+</html>

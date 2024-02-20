@@ -19,6 +19,7 @@ export default function VideoSingle(props) {
     overrideParticipant,
     disableRoundedCorners = false,
     overrideDecoration,
+    zoomFactor = 1,
   } = props;
 
   if (
@@ -104,6 +105,7 @@ export default function VideoSingle(props) {
         style={videoStyle}
         scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
         layout={customLayoutForVideo}
+        zoom={zoomFactor}
       />
     );
   }
