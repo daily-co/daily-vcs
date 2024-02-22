@@ -191,6 +191,8 @@ class VcsRenderApp : public cxx_argp::application
       args_.batchJsonSeq = SceneJsonSequence::createFromDir(args_.batchJsonSeqPath);
     }
 
+    std::filesystem::create_directory(outputSeqDir_);
+
     return renderLoop();
   }
 
