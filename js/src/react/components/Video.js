@@ -9,5 +9,6 @@ export function Video(props) {
     src: props.src,
     scaleMode: props.scaleMode || 'fill',
     blend: props.blend || {},
+    zoom: Number.isFinite(props.zoom) && props.zoom > 0 ? props.zoom : 1,
   });
 }

@@ -955,6 +955,20 @@ class ImageNode extends StyledNodeBase {
 class VideoNode extends ImageNode {
   // inherits 'src', etc.
   static nodeType = IntrinsicNodeType.VIDEO;
+
+  shouldUpdate(container, oldProps, newProps) {
+    if (super.shouldUpdate(container, oldProps, newProps)) return true;
+
+    if (oldProps.zoom !== newProps.zoom) return true;
+
+    return false;
+  }
+
+  commit(container, oldProps, newProps) {
+    super.commit(container, oldProps, newProps);
+
+    this.zoom = newProps.zoom;
+  }
 }
 
 class WebFrameNode extends ImageNode {
