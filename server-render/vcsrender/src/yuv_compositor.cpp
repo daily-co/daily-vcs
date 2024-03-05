@@ -225,7 +225,7 @@ void YuvCompositor::renderLayerInPlace_(
     // it must be >=1 because zooming out would break the fill.
     // also apply a sanity upper limit of 4x.
     double zoom = layerDesc.attrs.zoomFactor;
-    if (!isfinite(zoom) || zoom < 1.0) {
+    if (!std::isfinite(zoom) || zoom < 1.0) {
       zoom = 1.0;
     } else if (zoom > 4.0) {
       zoom = 4.0;
