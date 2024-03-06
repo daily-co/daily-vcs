@@ -89,7 +89,7 @@ function recurseRenderNode(
   let isImg = false;
 
   switch (node.constructor.nodeType) {
-    case IntrinsicNodeType.VIDEO:
+    case IntrinsicNodeType.VIDEO: {
       const src = imageSources.videoSlots.find(
         (s) => s.vcsSourceId === node.src
       );
@@ -110,6 +110,7 @@ function recurseRenderNode(
         }
       }
       break;
+    }
   }
 
   if (srcDOM) {
@@ -119,31 +120,43 @@ function recurseRenderNode(
     frame.w = Math.round(frame.w);
     frame.h = Math.round(frame.h);
 
+    let contentStyle = 'width: 100%; height: 100%;';
+
     // it's not enough to identify layers by just the node uuid
     // because the video node's source attribute may change;
     // instead reconcile using the uuid + source tuple.
     const layerId = node.uuid + ':' + srcId;
 
     let el = elementState.initial.byLayerId[layerId];
+    let contentEl;
     if (!el) {
+      el = document.createElement('div');
+
       if (isImg) {
-        el = document.createElement('img');
-        el.src = srcDOM.src;
+        contentEl = document.createElement('img');
+        contentEl.src = srcDOM.src;
       } else {
-        el = document.createElement('video');
-        el.srcObject = srcDOM.srcObject;
-        el.setAttribute('muted', true);
-        el.setAttribute('autoPlay', true);
+        contentEl = document.createElement('video');
+        contentEl.srcObject = srcDOM.srcObject;
+        contentEl.setAttribute('muted', true);
+        contentEl.setAttribute('autoPlay', true);
       }
+      el.appendChild(contentEl);
+
       el.setAttribute('data-vcs-video-layer-id', layerId);
 
       containerEl.appendChild(el);
+    } else {
+      contentEl = el.childNodes[0];
     }
 
     let style = '';
     style += 'position: absolute; ';
     style += `top: ${frame.y}px; left: ${frame.x}px; `;
     style += `width: ${frame.w}px; height: ${frame.h}px; `;
+
+    // clip the container so inner video element can be zoomed
+    style += `clip-path: content-box; `;
 
     if (
       node.style &&
@@ -153,17 +166,22 @@ function recurseRenderNode(
       style += `border-radius: ${node.style.cornerRadius_px}px; `;
     }
 
-    if (node.scaleMode) {
-      const cssFit = node.scaleMode === 'fit' ? 'contain' : 'cover';
-      style += `object-fit: ${cssFit}; `;
-    }
-
     if (node.blend) {
       const { opacity } = node.blend;
       if (Number.isFinite(opacity) && opacity >= 0) {
         style += `opacity: ${opacity}; `;
       }
     }
+
+    if (node.scaleMode) {
+      const cssFit = node.scaleMode === 'fit' ? 'contain' : 'cover';
+      contentStyle += `object-fit: ${cssFit}; `;
+    }
+    if (Number.isFinite(node.zoom) && node.zoom !== 1.0) {
+      contentStyle += `transform: scale(${node.zoom}); `;
+    }
+
+    contentEl.style = contentStyle;
 
     el.style = style;
 

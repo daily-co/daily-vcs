@@ -97,7 +97,14 @@ static void renderDisplayListInSkCanvas(
       }
       case scale: {
         PRINTCMD_ARGS("scale")
-        // TODO: implement
+        if (cmd.args.size() != 2
+           || cmd.args[0].type != ArgType::number || cmd.args[1].type != ArgType::number) {
+          std::cout << "Invalid args for scale: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.scale(cmd.args[0].numberValue, cmd.args[1].numberValue);
+          numCmds++;
+        }
         break;
       }
       case rotate: {
@@ -113,7 +120,14 @@ static void renderDisplayListInSkCanvas(
       }
       case translate: {
         PRINTCMD_ARGS("translate")
-        // TODO: implement
+        if (cmd.args.size() != 2
+           || cmd.args[0].type != ArgType::number || cmd.args[1].type != ArgType::number) {
+          std::cout << "Invalid args for translate: "; debugPrintArgs(cmd, std::cout);
+          numInvalidArgErrors++;
+        } else {
+          ctx.translate(cmd.args[0].numberValue, cmd.args[1].numberValue);
+          numCmds++;
+        }
         break;
       }
       case fillStyle: {

@@ -51,6 +51,9 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources, opts) {
     if (node.scaleMode) {
       attrs.scaleMode = '' + node.scaleMode;
     }
+    if (Number.isFinite(node.zoom)) {
+      attrs.zoomFactor = node.zoom;
+    }
     if (node.blend) {
       const { opacity } = node.blend;
       if (Number.isFinite(opacity)) {

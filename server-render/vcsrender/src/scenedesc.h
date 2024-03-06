@@ -34,6 +34,7 @@ enum VCSScaleMode {
 struct VideoLayerAttrs {
   VCSScaleMode scaleMode = VCSScaleMode::fill;
   double cornerRadiusPx = 0.0;
+  double zoomFactor = 1.0;
 };
 
 struct VideoLayerDesc {

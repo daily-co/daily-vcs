@@ -223,7 +223,7 @@ class VcsRenderApp : public cxx_argp::application
       if (sd && (sd->json_vl || sd->json_fg)) {
         std::cout << "applying scene desc at frame " << frameIdx << std::endl;
 
-        const double t0 = getMonotonicTime();
+        //const double t0 = getMonotonicTime();
 
         if (sd->json_vl) {
           comp_->setVideoLayersJSON(*sd->json_vl, sd->layerScale);
@@ -232,8 +232,8 @@ class VcsRenderApp : public cxx_argp::application
           comp_->setFgDisplayListJSON(*sd->json_fg);
         }
 
-        const double timeSpent_sceneDescJson = getMonotonicTime() - t0;
-        std::cout << "  .. time spent on scenedesc json parsing: " << (timeSpent_sceneDescJson * 1000) << " ms" << std::endl;
+        //const double timeSpent_sceneDescJson = getMonotonicTime() - t0;
+        //std::cout << "  .. time spent on scenedesc json parsing: " << (timeSpent_sceneDescJson * 1000) << " ms" << std::endl;
       }
 
       // load inputs
@@ -248,7 +248,7 @@ class VcsRenderApp : public cxx_argp::application
       }*/
       auto inputBufs = inputLoader_->readInputBufsAtFrame(frameIdx);
 
-      std::cout << "-- rendering frame " << frameIdx << "..." << std::endl;
+      std::cout << "-- rendering frame " << frameIdx << "...";
 
       const double t0 = getMonotonicTime();
 
@@ -260,7 +260,7 @@ class VcsRenderApp : public cxx_argp::application
         renderTimeAcc_s += timeSpent_render;
       }
 
-      std::cout << "  render time " << (timeSpent_render * 1000) << " ms, writing..." << std::endl;
+      std::cout << " " << (timeSpent_render * 1000) << " ms" << std::endl;
 
       auto dstFile = fopen(dstPath.c_str(), "wb");
       auto writeResult = fwrite(renderResult->data, renderResult->dataSize, 1, dstFile);

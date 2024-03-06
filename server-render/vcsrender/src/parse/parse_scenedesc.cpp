@@ -158,6 +158,9 @@ class VideoLayerListJSONHandler {
         if (currKey_ == "cornerRadiusPx") {
           currentLayer().attrs.cornerRadiusPx = d * layerScale;
           return true;
+        } else if (currKey_ == "zoomFactor") {
+          currentLayer().attrs.zoomFactor = d;
+          return true;
         }
         break;
     }
@@ -185,26 +188,8 @@ class VideoLayerListJSONHandler {
         break;
 
       case frameObj:
-        if (currKey_ == "x") {
-          currentLayer().frame.x = i * layerScale;
-          return true;
-        } else if (currKey_ == "y") {
-          currentLayer().frame.y = i * layerScale;
-          return true;
-        } else if (currKey_ == "w") {
-          currentLayer().frame.w = i * layerScale;
-          return true;
-        } else if (currKey_ == "h") {
-          currentLayer().frame.h = i * layerScale;
-          return true;
-        }
-        break;
-
       case attrsObj:
-        if (currKey_ == "cornerRadiusPx") {
-          currentLayer().attrs.cornerRadiusPx = i * layerScale;
-          return true;
-        }
+        if (Double(i)) return true;
         break;
     }
     std::stringstream ss;

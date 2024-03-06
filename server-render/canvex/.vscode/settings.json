@@ -78,7 +78,8 @@
     "__bits": "cpp",
     "concepts": "cpp",
     "variant": "cpp",
-    "__verbose_abort": "cpp"
+    "__verbose_abort": "cpp",
+    "charconv": "cpp"
   },
   "C_Cpp.default.compileCommands": "builddir/vscode_compile_commands.json"
 }

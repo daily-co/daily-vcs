@@ -60,7 +60,9 @@ class CanvexContext {
 
   void save();
   void restore();
+  void scale(double x, double y);
   void rotate(double radians);
+  void translate(double x, double y);
 
   void setFillStyle(const std::string& s);
   void setStrokeStyle(const std::string& s);
