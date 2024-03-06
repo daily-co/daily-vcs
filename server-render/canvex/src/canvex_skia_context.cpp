@@ -29,8 +29,16 @@ void CanvexContext::restore() {
   stateStack_.pop_back();
 }
 
+void CanvexContext::scale(double x, double y) {
+  canvas_->scale(x, y);
+}
+
 void CanvexContext::rotate(double radians) {
   canvas_->rotate(radians * (180.0 / M_PI));
+}
+
+void CanvexContext::translate(double x, double y) {
+  canvas_->translate(x, y);
 }
 
 void CanvexContext::setFillStyle(const std::string& s) {

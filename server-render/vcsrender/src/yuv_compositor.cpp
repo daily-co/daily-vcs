@@ -182,6 +182,7 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
         continue;
       }
       const auto srcBuf = inputHit->second;
+
       renderLayerInPlace_(*compBuf_, *srcBuf, layerDesc);
     }
   }
@@ -218,25 +219,49 @@ void YuvCompositor::renderLayerInPlace_(
   const double dstAsp = layerDesc.frame.w / layerDesc.frame.h;
 
   if (layerDesc.attrs.scaleMode == VCSScaleMode::fill) {
-    // compute aspect ratio to fill the available frame
+    // compute aspect ratio to fill the available frame.
+
+    // in fill mode, zoom can be applied.
+    // it must be >=1 because zooming out would break the fill.
+    // also apply a sanity upper limit of 4x.
+    double zoom = layerDesc.attrs.zoomFactor;
+    if (!std::isfinite(zoom) || zoom < 1.0) {
+      zoom = 1.0;
+    } else if (zoom > 4.0) {
+      zoom = 4.0;
+    }
+
+    double cropW = srcW;
+    double cropH = srcH;
+    double xOff_px = 0;
+    double yOff_px = 0;
+
     if (origAsp > dstAsp) {
       // cropping left and right sides, so modify source width
-      double origW = srcW;
-      srcW = floor(dstAsp * srcH);
-
-      // offset crop to center
-      double xOff_px = (origW - srcW) / 2.0;
-      srcDataOffY = floor(xOff_px);
-      srcDataOffCh = floor(xOff_px / 2.0);
+      cropW = dstAsp * srcH;
     } else if (origAsp < dstAsp) {
       // cropping top and bottom sides, so modify source height
-      double origH = srcH;
-      srcH = floor(srcW / dstAsp);
+      cropH = srcW / dstAsp;
+    }
 
-      // offset crop to center
-      double yOff_px = (origH - srcH) / 2.0;
-      srcDataOffY = floor(yOff_px) * srcRowBytes_y;
-      srcDataOffCh = floor(yOff_px / 2.0) * srcRowBytes_ch;
+    if (zoom > 1.0) {
+      cropW /= zoom;
+      cropH /= zoom;
+    }
+
+    // offset crop to center
+    xOff_px = ((double)srcW - cropW) / 2.0;
+    yOff_px = ((double)srcH - cropH) / 2.0;
+
+    srcW = floor(cropW);
+    srcH = floor(cropH);
+    if (xOff_px != 0.0) {
+      srcDataOffY = floor(xOff_px);
+      srcDataOffCh = floor(xOff_px / 2.0);
+    }
+    if (yOff_px != 0.0) {
+      srcDataOffY += floor(yOff_px) * srcRowBytes_y;
+      srcDataOffCh += floor(yOff_px / 2.0) * srcRowBytes_ch;
     }
   } else {
     // fit into the given frame
