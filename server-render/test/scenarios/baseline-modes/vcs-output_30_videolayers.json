@@ -1,1 +1,1 @@
-[{"type":"video","id":0,"frame":{"x":0,"y":0,"w":1280,"h":720},"attrs":{"scaleMode":"fill"}},{"type":"video","id":1,"frame":{"x":1010,"y":30,"w":240,"h":240},"attrs":{"scaleMode":"fill"}}]
+[{"type":"video","id":0,"frame":{"x":0,"y":0,"w":1280,"h":720},"attrs":{"scaleMode":"fill","zoomFactor":1}},{"type":"video","id":1,"frame":{"x":1010,"y":30,"w":240,"h":240},"attrs":{"scaleMode":"fill","zoomFactor":1}}]
