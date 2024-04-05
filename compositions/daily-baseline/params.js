@@ -85,6 +85,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.filterForUnpausedMediaTypes',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
     id: 'videoSettings.showParticipantLabels',
     type: 'boolean',
     defaultValue: false,

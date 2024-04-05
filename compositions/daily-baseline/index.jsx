@@ -105,6 +105,8 @@ export default function DailyBaselineVCS() {
       omitPausedVideo,
       omitAudioOnly: params['videoSettings.omitAudioOnly'],
       omitExtraScreenshares: params['videoSettings.omitExtraScreenshares'],
+      filterForUnpausedMediaTypes:
+        params['videoSettings.filterForUnpausedMediaTypes'],
     });
 
   const { preferredVideoIds, includeOtherVideoIds } =

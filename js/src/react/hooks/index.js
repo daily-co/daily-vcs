@@ -10,4 +10,4 @@ export {
   useGrid,
   useActiveVideo,
 } from './mediaInput.js';
-export { useAudioOnlyPeers } from './room.js';
+export { useAudioOnlyPeers, useUnpausedPeers } from './room.js';
