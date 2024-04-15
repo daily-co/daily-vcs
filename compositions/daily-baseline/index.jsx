@@ -139,6 +139,9 @@ export default function DailyBaselineVCS() {
       showLabels: params['videoSettings.showParticipantLabels'],
       scaleMode: params['videoSettings.scaleMode'],
       scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
+      zoomFactors: parseCommaSeparatedList(
+        params['videoSettings.zoomFactorsList']
+      ),
       labelsOffset_px: {
         x: params['videoSettings.labels.offset_x_gu']
           ? parseFloat(params['videoSettings.labels.offset_x_gu']) * pxPerGu
@@ -812,4 +815,10 @@ function parseHighlightLines(str) {
     .split('\n')
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
+}
+
+function parseCommaSeparatedList(str) {
+  if (!str || str.length < 1) return [];
+
+  return str.split(',').map((s) => s.trim());
 }

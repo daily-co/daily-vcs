@@ -118,6 +118,12 @@ export const compositionParams = [
     values: ['fill', 'fit'],
   },
   {
+    id: 'videoSettings.zoomFactorsList',
+    type: 'text',
+    defaultValue: '',
+    experimental: true,
+  },
+  {
     id: 'videoSettings.placeholder.bgColor',
     type: 'text',
     defaultValue: 'rgb(0, 50, 80)',

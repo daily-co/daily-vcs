@@ -18,6 +18,11 @@ if system_mac
   if build_cpu == 'x86_64'
     message('Building for macOS X86')
     libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/mac-x64'
+
+    libyuv_lib = cpp.find_library('yuv_internal', static : true, dirs : libyuv_libdir)
+    libyuv_libs = [
+      libyuv_lib
+    ]
   else
     message('Building for macOS ARM')
     libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/mac-arm64'
