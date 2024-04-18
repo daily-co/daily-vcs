@@ -37,7 +37,11 @@ export default function VideoPip(props) {
     const hasDominantScreenshare =
       preferScreenshare && firstParticipant && firstParticipant.isScreenshare;
 
-    if (hasDominantScreenshare && participantWithDomFlag) {
+    if (
+      hasDominantScreenshare &&
+      participantWithDomFlag &&
+      !participantWithDomFlag.isScreenshare
+    ) {
       // if we have a dominant screenshare, it takes precedence,
       // so put the dominant-flagged video into the PiP instead
       otherParticipants = [participantWithDomFlag];
