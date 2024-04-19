@@ -368,12 +368,32 @@ export class Composition {
 
     const fgDisplayList = encoder.finalize();
 
-    if (
-      videoLayers &&
-      videoLayers.length > 0 &&
-      opts &&
-      opts.disallowMultipleVideoLayersPerInputId
-    ) {
+    if (videoLayers && videoLayers.length > 0) {
+      videoLayers = this.validateVideoLayersOutput(videoLayers, opts);
+    }
+
+    if (prev) {
+      // if the caller provides their previous cached sceneDesc,
+      // only return those keys that have changed.
+      // deep compare here should be fast enough because videoLayers is
+      // a fairly small object, and fgDisplayList is a flat array.
+      let obj = {};
+      if (!deepEqual(prev.videoLayers, videoLayers))
+        obj.videoLayers = videoLayers;
+      if (!deepEqual(prev.fgDisplayList, fgDisplayList))
+        obj.fgDisplayList = fgDisplayList;
+      return obj;
+    }
+
+    return {
+      videoLayers,
+      fgDisplayList,
+    };
+  }
+
+  validateVideoLayersOutput(videoLayers, opts) {
+    // check for target-specific limitations
+    if (opts?.disallowMultipleVideoLayersPerInputId) {
       // VCS elements can be composed to render the same input many times,
       // but compositing targets may not support this (if they have a fixed set
       // of output layers where each input is represented once).
@@ -395,29 +415,50 @@ export class Composition {
 
       if (duplicatedIds.size > 0) {
         console.error(
-          'Composition#writeSceneDescription: found and removed duplicated video ids: ',
+          'Composition#validateVideoLayersOutput: found and removed duplicated video ids: ',
           duplicatedIds
         );
       }
     }
 
-    if (prev) {
-      // if the caller provides their previous cached sceneDesc,
-      // only return those keys that have changed.
-      // deep compare here should be fast enough because videoLayers is
-      // a fairly small object, and fgDisplayList is a flat array.
-      let obj = {};
-      if (!deepEqual(prev.videoLayers, videoLayers))
-        obj.videoLayers = videoLayers;
-      if (!deepEqual(prev.fgDisplayList, fgDisplayList))
-        obj.fgDisplayList = fgDisplayList;
-      return obj;
+    // check for overlap where a layer is completely hidden by another, which is probably a bug
+    let overlapWarningMsg = '';
+    let pfix = '';
+    if (videoLayers.length > 1) {
+      const n = videoLayers.length;
+      for (let i = 0; i < n - 1; i++) {
+        const { frame, id } = videoLayers[i];
+        const xMin = frame.x;
+        const xMax = frame.x + frame.w;
+        const yMin = frame.y;
+        const yMax = frame.y + frame.h;
+
+        for (let j = i + 1; j < n; j++) {
+          const { frame: topFrame, id: topId } = videoLayers[j];
+          const xMin2 = topFrame.x;
+          const xMax2 = topFrame.x + topFrame.w;
+          const yMin2 = topFrame.y;
+          const yMax2 = topFrame.y + topFrame.h;
+
+          if (
+            xMin >= xMin2 &&
+            xMax <= xMax2 &&
+            yMin >= yMin2 &&
+            yMax <= yMax2
+          ) {
+            overlapWarningMsg += `${pfix}Layer ${topId} (z-index ${j}) covers ${id} (z-index ${i}) entirely`;
+            pfix = ' ';
+          }
+        }
+      }
+      if (overlapWarningMsg.length > 0) {
+        console.error(
+          `Composition#validateVideoLayersOutput: ${overlapWarningMsg}`
+        );
+      }
     }
 
-    return {
-      videoLayers,
-      fgDisplayList,
-    };
+    return videoLayers;
   }
 
   writeVideoLayersPreview() {
