@@ -347,23 +347,10 @@ function recurseRenderNode(
             }
           }
         } else {
-          // draw a non-live preview of the webframe
-          fillColor = 'white';
-          textContent =
-            'WebFrame: ' + (node.src?.length > 0 ? node.src : '[no URL]');
-          textStyle = { textColor: 'rgba(0, 0, 0, 0.5)' };
-
-          if (node.keyPressActionLastUpdateTs > 0) {
-            const tSinceKeypress =
-              Date.now() / 1000 - node.keyPressActionLastUpdateTs;
-            if (
-              tSinceKeypress < 1 &&
-              node.keyPressAction.name &&
-              node.keyPressAction.name.length > 0
-            ) {
-              textContent = 'Key pressed: ' + node.keyPressAction.name;
-            }
-          }
+          // on the web client, don't draw anything to the canvas.
+          // there's a high-level callback (webFrameCb) on the DOM renderer
+          // that an application can use to render a WebFrame in their own way
+          // (whether as an iframe or something else).
         }
         break;
       }

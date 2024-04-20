@@ -17,6 +17,7 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
     updateCb,
     errorCb,
     getAssetUrlCb,
+    webFrameCb,
     fps = 20,
     scaleFactor = 1,
     enablePreload,
@@ -28,15 +29,12 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
     `startDOMOutputAsync: Invalid viewport size specified: ${w}, ${h}`
   );
 
-  const vcs = new VCSBrowserOutput(
-    w,
-    h,
-    fps,
-    scaleFactor,
+  const vcs = new VCSBrowserOutput(w, h, fps, scaleFactor, {
     updateCb,
     errorCb,
-    getAssetUrlCb
-  );
+    getAssetUrlCb,
+    webFrameCb,
+  });
 
   console.log('created renderer %s: viewport size %d * %d', vcs.uuid, w, h);
 
@@ -53,7 +51,9 @@ export async function startDOMOutputAsync(rootEl, w, h, imageSources, opts) {
 }
 
 class VCSBrowserOutput {
-  constructor(w, h, fps, scaleFactor, updateCb, errorCb, getAssetUrlCb) {
+  constructor(w, h, fps, scaleFactor, callbacks) {
+    const { updateCb, errorCb, getAssetUrlCb, webFrameCb } = callbacks;
+
     this.viewportSize = { w, h };
 
     this.isProductionBuild = VCS_BUILD_IS_PROD;
@@ -69,6 +69,7 @@ class VCSBrowserOutput {
 
     // DOM state
     this.videoBox = null;
+    this.customOverlayBox = null;
     this.fgCanvas = null;
     this.scaleFactor = scaleFactor || 1;
 
@@ -87,6 +88,7 @@ class VCSBrowserOutput {
     this.updateCb = updateCb;
     this.errorCb = errorCb;
     this.getAssetUrlCb = getAssetUrlCb || this.getAssetUrl.bind(this);
+    this.webFrameCb = webFrameCb;
   }
 
   // --- asset loading utilities ---
@@ -221,7 +223,11 @@ class VCSBrowserOutput {
   }
 
   resetOutputScalingCSS() {
-    this.videoBox.style = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
+    // this style sets up a container where elements can be added using their layout frames
+    // as absolute coordinates
+    const layoutContainerStyle = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
+    this.videoBox.style = layoutContainerStyle;
+    this.customOverlayBox.style = layoutContainerStyle;
     this.fgCanvas.style = 'position: absolute; width: 100%; height: auto;';
   }
 
@@ -281,11 +287,14 @@ class VCSBrowserOutput {
 
     // create elements to contain rendering
     this.videoBox = document.createElement('div');
+    this.customOverlayBox = document.createElement('div');
+    this.customOverlayBox.id = 'vcs-custom-overlay-container';
     this.fgCanvas = document.createElement('canvas');
     this.fgCanvas.width = this.viewportSize.w;
     this.fgCanvas.height = this.viewportSize.h;
     innerRoot.appendChild(this.videoBox);
     innerRoot.appendChild(this.fgCanvas);
+    innerRoot.appendChild(this.customOverlayBox);
 
     this.resetOutputScalingCSS();
 
@@ -362,8 +371,18 @@ class VCSBrowserOutput {
     }
 
     if (opts && opts.newWebFrameProps) {
-      console.log('got webframe props update: ', opts.newWebFrameProps);
-      // TODO: do something with these props -- currently not handled at all in web client
+      //console.log('got webframe props update: ', opts.newWebFrameProps);
+      if (this.webFrameCb) {
+        // currently webframe is a singleton, so we always pass the same id
+        const elementId = 'vcs-webframe';
+        this.webFrameCb(
+          elementId,
+          opts.newWebFrameProps,
+          // customOverlayBox is a container already set up so that the webFrame
+          // can be absolutely positioned inside it
+          this.customOverlayBox
+        );
+      }
     }
   }
 
