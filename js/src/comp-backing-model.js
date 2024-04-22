@@ -62,7 +62,10 @@ export class Composition {
 
     this.sourceMetadataCb = sourceMetadataCb;
 
-    this.currentWebframeProps = {};
+    this.currentWebFrameProps = {};
+    this.currentWebFrameNode = null;
+    this.lastWebFrameLayoutFrame = null;
+    this.lastWebFrameOpacity = 0;
     this.webFramePropsDidChange = false;
   }
 
@@ -89,6 +92,8 @@ export class Composition {
         break;
       case IntrinsicNodeType.WEBFRAME:
         node = new WebFrameNode();
+        this.currentWebFrameNode = node;
+        this.webFramePropsDidChange = true;
         break;
     }
 
@@ -108,6 +113,11 @@ export class Composition {
     this.nodes.splice(idx, 1);
 
     //console.log("deleted node at %d in array", idx)
+
+    if (node.constructor.nodeType === IntrinsicNodeType.WEBFRAME) {
+      this.currentWebFrameNode = null;
+      this.webFramePropsDidChange = true;
+    }
   }
 
   attachRootNode(rootNode) {
@@ -123,15 +133,15 @@ export class Composition {
     this.uncommitted = false;
   }
 
-  didUpdateWebframePropsInCommit(newProps) {
-    const oldProps = this.currentWebframeProps || {};
+  didUpdateWebFramePropsInCommit(newProps) {
+    const oldProps = this.currentWebFrameProps || {};
     if (
       oldProps.src !== newProps.src ||
       !isEqualViewportSize(oldProps.viewportSize, newProps.viewportSize) ||
       !isEqualWebFrameAction(oldProps.keyPressAction, newProps.keyPressAction)
     ) {
       this.webFramePropsDidChange = true;
-      this.currentWebframeProps = newProps;
+      this.currentWebFrameProps = newProps;
     }
   }
 
@@ -140,8 +150,37 @@ export class Composition {
 
     const opts = {};
 
-    if (this.webFramePropsDidChange) {
-      opts.newWebFrameProps = { ...this.currentWebframeProps };
+    // the webframe node is a singleton, so we can watch for its layout updates here
+    let webFrameLayoutUpdated = false;
+    if (this.currentWebFrameNode) {
+      const newFrame = this.currentWebFrameNode.layoutFrame;
+      if (!isEqualLayoutFrame(this.lastWebFrameLayoutFrame, newFrame)) {
+        this.lastWebFrameLayoutFrame = newFrame;
+        webFrameLayoutUpdated = true;
+      }
+      const newOpacity = this.currentWebFrameNode.blend?.opacity;
+      if (this.lastWebFrameOpacity !== newOpacity) {
+        this.lastWebFrameOpacity = newOpacity;
+        webFrameLayoutUpdated = true;
+      }
+    }
+
+    if (this.webFramePropsDidChange || webFrameLayoutUpdated) {
+      let inScene = false;
+      let frame = null;
+      let opacity = 1;
+      if (this.currentWebFrameNode) {
+        inScene = true;
+        frame = this.lastWebFrameLayoutFrame;
+        opacity = this.lastWebFrameOpacity;
+      }
+
+      opts.newWebFrameProps = {
+        ...this.currentWebFrameProps,
+        inScene,
+        frame,
+        opacity,
+      };
       this.webFramePropsDidChange = false;
     }
 
@@ -1040,7 +1079,7 @@ class WebFrameNode extends ImageNode {
   commit(container, oldProps, newProps) {
     super.commit(container, oldProps, newProps);
 
-    // webframe's intrinsic size is simply the size given by the user
+    // webFrame's intrinsic size is simply the size given by the user
     this.intrinsicSize = this.viewportSize;
 
     // do prop eq checks again so we can record the time when they're actually updated.
@@ -1060,7 +1099,7 @@ class WebFrameNode extends ImageNode {
       this.keyPressActionLastUpdateTs = Date.now() / 1000;
     }
 
-    container.didUpdateWebframePropsInCommit({
+    container.didUpdateWebFramePropsInCommit({
       src: this.src,
       viewportSize: this.viewportSize,
       keyPressAction: this.keyPressAction,
