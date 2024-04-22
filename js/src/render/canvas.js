@@ -118,22 +118,8 @@ function recurseBackground(ctx, comp, imageSources, videoLayers) {
   ctx.clip('evenodd');
 
   function bgDoneCb(recState, node) {
-    function recurseToTopLevelParent(n) {
-      const p = n.parent;
-      if (!p) return n;
-      if (p.constructor.nodeType === IntrinsicNodeType.ROOT) return n;
-
-      // check for typical construction where root has a single child
-      if (
-        p.parent?.constructor.nodeType === IntrinsicNodeType.ROOT &&
-        p.parent.children.length === 1
-      )
-        return n;
-
-      return recurseToTopLevelParent(p);
-    }
     recState.done = true;
-    recState.continueAtNode = recurseToTopLevelParent(node);
+    recState.continueAtNode = node;
   }
 
   const mode = CanvasRenderMode.BG_GRAPHICS_SUBTREE_ONLY;
@@ -188,6 +174,16 @@ function recurseRenderNode(
       recurseChildren = false;
     } else if (!isVideo && renderMode === CanvasRenderMode.VIDEO_PREVIEW) {
       writeContent = false;
+    }
+  }
+
+  let bypassedAlreadyWrittenContent = false;
+  if (recState?.continueAtNode && !recState.foundContinueNode) {
+    if (node === recState.continueAtNode) {
+      recState.foundContinueNode = true;
+    } else {
+      writeContent = false;
+      bypassedAlreadyWrittenContent = true;
     }
   }
 
@@ -517,21 +513,11 @@ function recurseRenderNode(
 
   if (
     recurseChildren &&
-    (renderMode === CanvasRenderMode.VIDEO_PREVIEW || writeContent)
+    (renderMode === CanvasRenderMode.VIDEO_PREVIEW ||
+      writeContent ||
+      bypassedAlreadyWrittenContent)
   ) {
-    let children = node.children;
-
-    if (recState?.continueAtNode && node === recState.continueAtNode.parent) {
-      // filter children so we omit top-level nodes that were already rendered in bg
-      children = [];
-      let found = false;
-      for (const c of node.children) {
-        if (c === recState.continueAtNode) found = true;
-        if (found) children.push(c);
-      }
-    }
-
-    for (const c of children) {
+    for (const c of node.children) {
       recurseRenderNode(ctx, renderMode, c, comp, imageSources, recState);
 
       if (recState?.done) break;
