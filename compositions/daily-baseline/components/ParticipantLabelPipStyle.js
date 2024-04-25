@@ -23,7 +23,13 @@ export function ParticipantLabelPipStyle({
   };
 
   const label = (
-    <Text style={labelStyle} layout={[layoutFuncs.offset, offsets]}>
+    <Text
+      style={labelStyle}
+      layout={[
+        layoutFuncs.pipStyleLabel,
+        { offsets, textH: labelStyle.fontSize_px },
+      ]}
+    >
       {labelStr || ''}
     </Text>
   );
