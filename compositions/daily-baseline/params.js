@@ -85,6 +85,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.filterForUnpausedMediaTypes',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
     id: 'videoSettings.showParticipantLabels',
     type: 'boolean',
     defaultValue: false,
@@ -111,6 +116,12 @@ export const compositionParams = [
     type: 'enum',
     defaultValue: 'fit',
     values: ['fill', 'fit'],
+  },
+  {
+    id: 'videoSettings.zoomFactorsList',
+    type: 'text',
+    defaultValue: '',
+    experimental: true,
   },
   {
     id: 'videoSettings.placeholder.bgColor',

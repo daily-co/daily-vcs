@@ -57,7 +57,7 @@ void SceneJsonSequence::load_() {
   for (auto const& path : sortedFiles) {
     auto filename = path.stem().string();
     auto fileId = filename.substr(fileRootWithoutId_.size(), 2);
-    std::cout << "JSON file: " << filename << ", " << fileId << std::endl;
+    //std::cout << "JSON file: " << filename << ", " << fileId << std::endl;
 
     const int frameIdx_i = std::stoi(filename.substr(filename.size() - numDigits_, numDigits_));
     if (frameIdx_i < 0) {
@@ -71,7 +71,7 @@ void SceneJsonSequence::load_() {
       continue;
     }
 
-    std::cout << "Reading " << fileId << " for frame " << frameIdx << std::endl;
+    //std::cout << "Reading " << fileId << " for frame " << frameIdx << std::endl;
 
     SceneJsonFrame* framePtr = nullptr;
     for (auto& frame : frames_) {
@@ -82,7 +82,7 @@ void SceneJsonSequence::load_() {
     }
     if (!framePtr) {
       framePtr = &(frames_.emplace_back(SceneJsonFrame{frameIdx, false, false}));
-      std::cout << "Created new frame, count now " << frames_.size() << std::endl;
+      //std::cout << "Created new frame, count now " << frames_.size() << std::endl;
     }
 
     if (fileId == "vl") {

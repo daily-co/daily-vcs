@@ -1819,6 +1819,43 @@ function getAssetUrlCb(name, namespace, type) {
   return name;
 }
 
+let g_webFrameEl = null;
+
+function webFrameCb(id, webFrameOpts, containerEl) {
+  const {inScene} = webFrameOpts;
+  const baseStyle = '';
+
+  if (inScene && !g_webFrameEl) {
+    // webframe has been added.
+    // the callback provides us with a container element where we can add
+    // whatever DOM element to represent the webframe content.
+    const el = document.createElement('iframe');
+    g_webFrameEl = el;
+    containerEl.appendChild(g_webFrameEl);
+  } else if (!inScene && g_webFrameEl) {
+    // webframe has been removed
+    containerEl.removeChild(g_webFrameEl);
+    g_webFrameEl = null;
+  }
+
+  if (g_webFrameEl && webFrameOpts.frame) {
+    const {frame, opacity} = webFrameOpts;
+    // the container is set up so that we can use absolute positioning
+    // with the layout frame coordinates to position the webframe correctly.
+    // refresh the style when we get an update.
+    let style = baseStyle;
+    style += 'position: absolute; ';
+    style += `top: ${frame.y}px; left: ${frame.x}px; `;
+    style += `width: ${frame.w}px; height: ${frame.h}px; `;
+    style += `opacity: ${opacity}; `;
+    g_webFrameEl.style = style;
+  }
+  
+  if (g_webFrameEl && webFrameOpts.src !== g_webFrameEl.src) {
+    g_webFrameEl.src = webFrameOpts.src;
+  }
+}
+
 async function recreateVCSCanvasOutput() {
   if (!g_vcsCompLib) return;
 
@@ -1839,6 +1876,7 @@ async function recreateVCSCanvasOutput() {
     { updateCb: compUpdatedCb,
       errorCb: vcsErrorCb,
       getAssetUrlCb,
+      webFrameCb,
       fps,
       scaleFactor: g_outputScale,
       enablePreload,
@@ -1862,6 +1900,8 @@ function stopVCS() {
   console.log("stopping existing VCS renderer");
 
   g_vcsApi.stop();
+
+  g_webFrameEl = null;
 }
 
 

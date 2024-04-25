@@ -91,9 +91,14 @@ function getBaseConfig() {
         '#vcs': path.resolve('./src'),
         '#vcs-react': path.resolve('./src/react'),
         '#vcs-stdlib': path.resolve('./src/stdlib'),
-        react: path.resolve('./node_modules/react'),
       },
       fallback: {
+        // libraries offered to VCS compositions.
+        // they are located in a sibling path from us, so they don't see our node_modules directly.
+        // this enforces limited library sharing between the SDK and compositions.
+        react: require.resolve('react'),
+        uuid: require.resolve('uuid'),
+        'random-seed': require.resolve('random-seed'),
         // following fallbacks are needed by textkit (from react-pdf)
         process: require.resolve('process/browser'),
         zlib: require.resolve('browserify-zlib'),
