@@ -22,6 +22,6 @@ export function Text(props) {
     transform: props.transform || {},
     clip: props.clip || false,
     blend: props.blend || {},
-    text: text,
+    text,
   });
 }

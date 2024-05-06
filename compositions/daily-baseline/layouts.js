@@ -70,13 +70,21 @@ export function placeText(parentFrame, params, layoutCtx) {
 }
 
 export function gridLabel(parentFrame, params) {
-  const { textH = 0, offsets = {} } = params;
-  let { x, y, w, h } = parentFrame;
+  const { textH = 20, offsets = {} } = params;
+  let { x, y, w, h } = offset(parentFrame, offsets);
 
-  y += h + Math.round(textH * 0.1);
+  y += parentFrame.h + Math.round(textH * 0.1);
 
-  if (Number.isFinite(offsets.x)) x += offsets.x;
-  if (Number.isFinite(offsets.y)) y += offsets.y;
+  h = Math.ceil(textH * 1.6); // enough room for one line of text
+
+  return { x, y, w, h };
+}
+
+export function pipStyleLabel(parentFrame, params) {
+  const { textH = 20, offsets = {} } = params;
+  let { x, y, w, h } = offset(parentFrame, offsets);
+
+  h = Math.ceil(textH * 1.6);
 
   return { x, y, w, h };
 }
