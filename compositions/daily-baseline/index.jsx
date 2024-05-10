@@ -258,9 +258,10 @@ export default function DailyBaselineVCS() {
               (pd) => pd.videoId === domVideoId
             )) >= 0
           ) {
+            videoProps.participantDescs = [...participantDescs];
             // move dominant video id to front of array
-            const pd = participantDescs.splice(idx, 1)[0];
-            participantDescs.splice(0, 0, pd);
+            const pd = videoProps.participantDescs.splice(idx, 1)[0];
+            videoProps.participantDescs.splice(0, 0, pd);
           }
         }
 

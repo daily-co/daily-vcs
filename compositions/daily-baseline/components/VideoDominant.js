@@ -83,7 +83,6 @@ export default function VideoDominant(props) {
       participant,
       props
     );
-
     return (
       <Box
         key={key}
@@ -120,7 +119,7 @@ export default function VideoDominant(props) {
     for (let i = 0; i < pArr.length; i++) {
       const participant = pArr[i];
       const { videoId, paused, displayName } = participant;
-      const key = 'videochiclet_' + participant.key;
+      const key = `videochiclet_${i}_${participant.key}`;
 
       const layout = [
         layoutFuncs.column,
@@ -146,7 +145,7 @@ export default function VideoDominant(props) {
       childItems.push(
         paused || videoId == null ? (
           <PausedPlaceholder
-            key={key + '_video'}
+            key={key + '_video_paused'}
             layout={customLayoutForVideo}
             {...{ placeholderStyle }}
           />
