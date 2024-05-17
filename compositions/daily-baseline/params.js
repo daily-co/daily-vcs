@@ -231,6 +231,11 @@ export const compositionParams = [
     defaultValue: true,
   },
   {
+    id: 'videoSettings.dominant.includeWebFrame',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.pip.position',
     type: 'enum',
     defaultValue: PositionCorner.TOP_RIGHT,
