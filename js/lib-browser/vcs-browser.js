@@ -69,7 +69,8 @@ class VCSBrowserOutput {
 
     // DOM state
     this.videoBox = null;
-    this.customOverlayBox = null;
+    this.webFrameOverlayBox = null;
+    this.webFrameOverlayInFg = true;
     this.fgCanvas = null;
     this.scaleFactor = scaleFactor || 1;
 
@@ -227,7 +228,7 @@ class VCSBrowserOutput {
     // as absolute coordinates
     const layoutContainerStyle = `position: absolute; width: 100%; height: 100%; transform: scale(${this.scaleFactor}); transform-origin: top left;`;
     this.videoBox.style = layoutContainerStyle;
-    this.customOverlayBox.style = layoutContainerStyle;
+    this.webFrameOverlayBox.style = layoutContainerStyle;
     this.fgCanvas.style = 'position: absolute; width: 100%; height: auto;';
   }
 
@@ -287,14 +288,14 @@ class VCSBrowserOutput {
 
     // create elements to contain rendering
     this.videoBox = document.createElement('div');
-    this.customOverlayBox = document.createElement('div');
-    this.customOverlayBox.id = 'vcs-custom-overlay-container';
+    this.webFrameOverlayBox = document.createElement('div');
+    this.webFrameOverlayBox.id = 'vcs-webframe-overlay-container';
     this.fgCanvas = document.createElement('canvas');
     this.fgCanvas.width = this.viewportSize.w;
     this.fgCanvas.height = this.viewportSize.h;
     innerRoot.appendChild(this.videoBox);
     innerRoot.appendChild(this.fgCanvas);
-    innerRoot.appendChild(this.customOverlayBox);
+    innerRoot.appendChild(this.webFrameOverlayBox);
 
     this.resetOutputScalingCSS();
 
@@ -375,12 +376,32 @@ class VCSBrowserOutput {
       if (this.webFrameCb) {
         // currently webframe is a singleton, so we always pass the same id
         const elementId = 'vcs-webframe';
+
+        // track if the webframe has moved to background or back
+        const { inBackground } = opts.newWebFrameProps;
+        const parentEl = this.webFrameOverlayBox.parentElement;
+        if (inBackground && this.webFrameOverlayInFg) {
+          // move to background before videoBox
+          parentEl.removeChild(this.webFrameOverlayBox);
+          this.videoBox.insertAdjacentElement(
+            'beforebegin',
+            this.webFrameOverlayBox
+          );
+
+          this.webFrameOverlayInFg = false;
+        } else if (!inBackground && !this.webFrameOverlayInFg) {
+          // move to foreground, i.e. at end of parent box
+          parentEl.removeChild(this.webFrameOverlayBox);
+          parentEl.appendChild(this.webFrameOverlayBox);
+
+          this.webFrameOverlayInFg = true;
+        }
+
         this.webFrameCb(
           elementId,
           opts.newWebFrameProps,
-          // customOverlayBox is a container already set up so that the webFrame
-          // can be absolutely positioned inside it
-          this.customOverlayBox
+          // a container already set up so that the webFrame can be absolutely positioned inside it
+          this.webFrameOverlayBox
         );
       }
     }
