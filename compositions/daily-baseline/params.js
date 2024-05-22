@@ -198,8 +198,8 @@ export const compositionParams = [
     values: Object.values(PositionEdge),
   },
   {
-    id: 'videoSettings.dominant.centerItems',
-    type: 'boolean',
+    id: "videoSettings.dominant.centerItems",
+    type: "boolean",
     defaultValue: false,
   },
   {
@@ -281,13 +281,13 @@ export const compositionParams = [
     defaultValue: true,
   },
   {
-    id: 'videoSettings.pip.includeWebFrame',
-    type: 'boolean',
+    id: "videoSettings.pip.includeWebFrame",
+    type: "boolean",
     defaultValue: false,
   },
   {
-    id: 'videoSettings.labels.fontFamily',
-    type: 'enum',
+    id: "videoSettings.labels.fontFamily",
+    type: "enum",
     defaultValue: fontFamilies_smallSizeFriendly[0],
     values: fontFamilies_smallSizeFriendly,
   },
