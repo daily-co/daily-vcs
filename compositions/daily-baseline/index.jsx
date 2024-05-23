@@ -126,6 +126,37 @@ export default function DailyBaselineVCS() {
     return includeOtherVideoIds ? pref.concat(arr) : pref;
   }, [participantDescs, preferredVideoIds, includeOtherVideoIds]);
 
+  let mode = params.mode;
+  if (
+    mode === 'grid' &&
+    params['videoSettings.grid.useDominantForSharing'] &&
+    hasScreenShare
+  ) {
+    mode = 'dominant';
+  }
+
+  // for some video layout modes, webframe can be included.
+  // this will override the default WebFrameOverlay setup.
+  const webFrameProps = {
+    src: params['webFrame.url'],
+    viewportWidth_px: params['webFrame.viewportWidth_px'],
+    viewportHeight_px: params['webFrame.viewportHeight_px'],
+    positionCorner: params['webFrame.position'],
+    fullScreen: params['webFrame.fullScreen'],
+    height_gu: params['webFrame.height_gu'],
+    margin_gu: params['webFrame.margin_gu'],
+    opacity: params['webFrame.opacity'],
+    enableFade: params['webFrame.enableFade'],
+    keyPressActionKey: params['webFrame.keyPress.key'],
+    keyPressActionName: params['webFrame.keyPress.keyName'],
+    keyPressModifiers: params['webFrame.keyPress.modifiers'],
+  };
+  const webFrameHasSrcUrl = webFrameProps.src?.length > 0;
+  const webFrameInVideoLayout =
+    webFrameHasSrcUrl &&
+    mode === 'dominant' &&
+    params['videoSettings.dominant.includeWebFrame'];
+
   // we can memoize the video layout root component because it doesn't call useVideoTime()
   // (i.e. doesn't render animations by explicitly modifying component props)
   const video = React.useMemo(() => {
@@ -163,15 +194,6 @@ export default function DailyBaselineVCS() {
         params['videoSettings.labels.offset_y'],
         10
       );
-    }
-
-    let mode = params.mode;
-    if (
-      mode === 'grid' &&
-      params['videoSettings.grid.useDominantForSharing'] &&
-      hasScreenShare
-    ) {
-      mode = 'dominant';
     }
 
     let video;
@@ -258,9 +280,10 @@ export default function DailyBaselineVCS() {
               (pd) => pd.videoId === domVideoId
             )) >= 0
           ) {
+            videoProps.participantDescs = [...participantDescs];
             // move dominant video id to front of array
-            const pd = participantDescs.splice(idx, 1)[0];
-            participantDescs.splice(0, 0, pd);
+            const pd = videoProps.participantDescs.splice(idx, 1)[0];
+            videoProps.participantDescs.splice(0, 0, pd);
           }
         }
 
@@ -277,6 +300,8 @@ export default function DailyBaselineVCS() {
             disableRoundedCornersOnMain={
               params['videoSettings.dominant.sharpCornersOnMain']
             }
+            includeWebFrame={webFrameInVideoLayout}
+            webFrameProps={webFrameProps}
           />
         );
         break;
@@ -408,7 +433,7 @@ export default function DailyBaselineVCS() {
     );
   }
 
-  {
+  if (!webFrameInVideoLayout) {
     // webframe overlay
     const arr =
       params['webFrame.zPosition'] === 'foreground' ? graphics : bgGraphics;
@@ -416,19 +441,8 @@ export default function DailyBaselineVCS() {
     arr.push(
       <WebFrameOverlay
         key="webFrameOverlay"
-        src={params['webFrame.url']}
-        viewportWidth_px={params['webFrame.viewportWidth_px']}
-        viewportHeight_px={params['webFrame.viewportHeight_px']}
-        positionCorner={params['webFrame.position']}
-        fullScreen={params['webFrame.fullScreen']}
-        height_gu={params['webFrame.height_gu']}
-        margin_gu={params['webFrame.margin_gu']}
-        opacity={params['webFrame.opacity']}
-        enableFade={params['webFrame.enableFade']}
         show={params.showWebFrameOverlay}
-        keyPressActionKey={params['webFrame.keyPress.key']}
-        keyPressActionName={params['webFrame.keyPress.keyName']}
-        keyPressModifiers={params['webFrame.keyPress.modifiers']}
+        {...webFrameProps}
       />
     );
   }

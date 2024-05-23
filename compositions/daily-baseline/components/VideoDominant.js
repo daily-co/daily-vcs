@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Video } from '#vcs-react/components';
+import { Box, Video, WebFrame } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PositionEdge } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
@@ -28,23 +28,35 @@ export default function VideoDominant(props) {
     outerPadding_gu = 0.5,
     splitMargin_gu = 0,
     disableRoundedCornersOnMain = false,
+    includeWebFrame = false,
+    webFrameProps = {},
   } = props;
 
   itemInterval_gu = Math.max(0, itemInterval_gu);
   outerPadding_gu = Math.max(0, outerPadding_gu);
 
-  const audioDominantParticipant = participantDescs.find(
-    (d) => d.isAudioOnly && d.dominant
-  );
+  let audioDominantParticipant;
 
-  if (
-    (!followDominantFlag || (!dominantVideoId && !audioDominantParticipant)) &&
-    participantDescs.length > 0
-  ) {
-    dominantVideoId = participantDescs[0].videoId;
+  if (includeWebFrame) {
+    // if WebFrame is included, it's always going to take the dominant layout position
+    dominantVideoId = null;
+  } else {
+    audioDominantParticipant = participantDescs.find(
+      (d) => d.isAudioOnly && d.dominant
+    );
+
+    if (
+      (!followDominantFlag ||
+        (!dominantVideoId && !audioDominantParticipant)) &&
+      participantDescs.length > 0
+    ) {
+      dominantVideoId = participantDescs[0].videoId;
+    }
   }
 
-  const single = participantDescs.length == 1;
+  const single =
+    (!includeWebFrame && participantDescs.length === 1) ||
+    (includeWebFrame && participantDescs.length === 0);
   const dominantFirst =
     positionEdge === PositionEdge.LEFT || positionEdge === PositionEdge.TOP;
   const isVerticalSplit =
@@ -66,42 +78,58 @@ export default function VideoDominant(props) {
   }
 
   function makeDominantItem(itemIdx) {
-    const key = 'videodominant_item' + itemIdx;
+    const domLayout = [
+      mainLayoutFn,
+      { index: itemIdx, pos: splitPos, margin_gu: splitMargin_gu },
+    ];
 
-    const participant =
-      audioDominantParticipant ||
-      participantDescs.find(
-        (d) => d.videoId != null && d.videoId == dominantVideoId
-      );
-
-    // override point #1 for custom decorations on the dominant item.
-    // we use a VideoSingle component to actually render these,
-    // so get the decoration here and pass it as an override to VideoSingle.
-    const overrideDecoration = decorateVideoDominantItem(
-      true,
-      0,
-      participant,
-      props
-    );
-
-    return (
-      <Box
-        key={key}
-        id={key}
-        layout={[
-          mainLayoutFn,
-          { index: itemIdx, pos: splitPos, margin_gu: splitMargin_gu },
-        ]}
-      >
-        <VideoSingle
-          enableParticipantOverride={true}
-          overrideParticipant={participant}
-          disableRoundedCorners={disableRoundedCornersOnMain}
-          overrideDecoration={overrideDecoration}
-          {...props}
+    if (includeWebFrame) {
+      return (
+        <WebFrame
+          key="videodominant_webframe"
+          src={webFrameProps.src}
+          viewportSize={{
+            w: webFrameProps.viewportWidth_px,
+            h: webFrameProps.viewportHeight_px,
+          }}
+          layout={domLayout}
+          keyPressAction={{
+            name: webFrameProps.keyPressActionName,
+            key: webFrameProps.keyPressActionKey,
+            modifiers: webFrameProps.keyPressModifiers,
+          }}
         />
-      </Box>
-    );
+      );
+    } else {
+      const key = 'videodominant_item' + itemIdx;
+
+      const participant =
+        audioDominantParticipant ||
+        participantDescs.find(
+          (d) => d.videoId != null && d.videoId == dominantVideoId
+        );
+
+      // override point #1 for custom decorations on the dominant item.
+      // we use a VideoSingle component to actually render these,
+      // so get the decoration here and pass it as an override to VideoSingle.
+      const overrideDecoration = decorateVideoDominantItem(
+        true,
+        0,
+        participant,
+        props
+      );
+      return (
+        <Box key={key} id={key} layout={domLayout}>
+          <VideoSingle
+            enableParticipantOverride={true}
+            overrideParticipant={participant}
+            disableRoundedCorners={disableRoundedCornersOnMain}
+            overrideDecoration={overrideDecoration}
+            {...props}
+          />
+        </Box>
+      );
+    }
   }
 
   function makeChiclets(itemIdx) {
@@ -120,7 +148,7 @@ export default function VideoDominant(props) {
     for (let i = 0; i < pArr.length; i++) {
       const participant = pArr[i];
       const { videoId, paused, displayName } = participant;
-      const key = 'videochiclet_' + participant.key;
+      const key = `videochiclet_${i}_${participant.key}`;
 
       const layout = [
         layoutFuncs.column,
@@ -146,7 +174,7 @@ export default function VideoDominant(props) {
       childItems.push(
         paused || videoId == null ? (
           <PausedPlaceholder
-            key={key + '_video'}
+            key={key + '_video_paused'}
             layout={customLayoutForVideo}
             {...{ placeholderStyle }}
           />

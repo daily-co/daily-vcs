@@ -4,7 +4,6 @@ import deepEqual from 'fast-deep-equal';
 import { CanvasDisplayListEncoder } from '../src/render/canvas-display-list.js';
 
 import {
-  encodeCanvasDisplayList_fg,
   encodeCanvasDisplayList_fg_vlClip,
   encodeCanvasDisplayList_videoLayersPreview,
 } from '../src/render/canvas.js';
@@ -66,7 +65,9 @@ export class Composition {
     this.currentWebFrameNode = null;
     this.lastWebFrameLayoutFrame = null;
     this.lastWebFrameOpacity = 0;
+    this.lastWebFrameInBg = false;
     this.webFramePropsDidChange = false;
+    this.webFrameOrderingDidChange = false;
   }
 
   createNode(type, props) {
@@ -93,7 +94,7 @@ export class Composition {
       case IntrinsicNodeType.WEBFRAME:
         node = new WebFrameNode();
         this.currentWebFrameNode = node;
-        this.webFramePropsDidChange = true;
+        this.webFrameOrderingDidChange = true;
         break;
     }
 
@@ -114,9 +115,9 @@ export class Composition {
 
     //console.log("deleted node at %d in array", idx)
 
-    if (node.constructor.nodeType === IntrinsicNodeType.WEBFRAME) {
+    if (node === this.currentWebFrameNode) {
       this.currentWebFrameNode = null;
-      this.webFramePropsDidChange = true;
+      this.webFrameOrderingDidChange = true;
     }
   }
 
@@ -165,12 +166,41 @@ export class Composition {
       }
     }
 
-    if (this.webFramePropsDidChange || webFrameLayoutUpdated) {
+    if (
+      this.webFramePropsDidChange ||
+      this.webFrameOrderingDidChange ||
+      webFrameLayoutUpdated
+    ) {
+      /*console.log(
+        'wf props did change %s, ordering did change %s, layout updated %s, node: ',
+        this.webFramePropsDidChange,
+        webFrameLayoutUpdated,
+        this.currentWebFrameNode
+      );*/
       let inScene = false;
+      let inBackground = false;
       let frame = null;
       let opacity = 1;
       if (this.currentWebFrameNode) {
+        if (this.webFrameOrderingDidChange) {
+          // detect if the webframe is behind or in front of video layers
+          let wfSeen = false;
+          let videoSeen = false;
+          this._recurseWithVisitor((node) => {
+            if (node.constructor.nodeType === IntrinsicNodeType.VIDEO) {
+              videoSeen = true;
+              return false;
+            }
+            if (node === this.currentWebFrameNode) {
+              wfSeen = true;
+            }
+            return true;
+          });
+          this.lastWebFrameInBg = wfSeen && videoSeen; // in background only if there's actually video layers too
+        }
+
         inScene = true;
+        inBackground = this.lastWebFrameInBg;
         frame = this.lastWebFrameLayoutFrame;
         opacity = this.lastWebFrameOpacity;
       }
@@ -178,15 +208,31 @@ export class Composition {
       opts.newWebFrameProps = {
         ...this.currentWebFrameProps,
         inScene,
+        inBackground,
         frame,
         opacity,
       };
       this.webFramePropsDidChange = false;
+      this.webFrameOrderingDidChange = false;
     }
 
     if (this.commitFinishedCb) {
       this.commitFinishedCb(this, opts);
     }
+  }
+
+  _recurseWithVisitor(visitFn, node) {
+    if (!node) {
+      node = this.rootNode;
+    } else {
+      if (!visitFn(node)) return false; // --
+    }
+    for (const c of node.children) {
+      if (!this._recurseWithVisitor(visitFn, c)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   _makeLayoutCtxHooks(node, deps, passIndex) {
