@@ -270,6 +270,11 @@ export const compositionParams = [
     defaultValue: true,
   },
   {
+    id: 'videoSettings.pip.includeWebFrame',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.labels.fontFamily',
     type: 'enum',
     defaultValue: fontFamilies_smallSizeFriendly[0],

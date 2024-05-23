@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Box, Video } from '#vcs-react/components';
+import { Box, Video, WebFrame } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PositionCorner } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
@@ -24,29 +24,41 @@ export default function VideoPip(props) {
     followDominantFlag,
     preferScreenshare,
     disableRoundedCornersOnMain = false,
+    includeWebFrame = false,
+    webFrameProps = {},
   } = props;
 
   let firstParticipant = participantDescs[0];
   let otherParticipants;
+
+  if (includeWebFrame) {
+    firstParticipant = null;
+  }
 
   if (followDominantFlag && dominantVideoId) {
     const participantWithDomFlag = participantDescs.find(
       (d) => d.videoId != null && d.videoId == dominantVideoId
     );
 
-    const hasDominantScreenshare =
-      preferScreenshare && firstParticipant && firstParticipant.isScreenshare;
-
-    if (
-      hasDominantScreenshare &&
-      participantWithDomFlag &&
-      !participantWithDomFlag.isScreenshare
-    ) {
-      // if we have a dominant screenshare, it takes precedence,
-      // so put the dominant-flagged video into the PiP instead
+    if (includeWebFrame) {
+      // if WebFrame is included, it's going to take precedence always.
+      // the dominant participant gets the PiP in this case
       otherParticipants = [participantWithDomFlag];
     } else {
-      firstParticipant = participantWithDomFlag;
+      const hasDominantScreenshare =
+        preferScreenshare && firstParticipant && firstParticipant.isScreenshare;
+
+      if (
+        hasDominantScreenshare &&
+        participantWithDomFlag &&
+        !participantWithDomFlag.isScreenshare
+      ) {
+        // if we have a dominant screenshare, it takes precedence,
+        // so put the dominant-flagged video into the PiP instead
+        otherParticipants = [participantWithDomFlag];
+      } else {
+        firstParticipant = participantWithDomFlag;
+      }
     }
   }
 
@@ -56,32 +68,50 @@ export default function VideoPip(props) {
     );
   }
 
-  const mainVideoSingleProps = {
-    ...props,
-    enableParticipantOverride: true,
-    overrideParticipant: firstParticipant,
-    disableRoundedCorners: disableRoundedCornersOnMain,
-  };
-
-  // override point #1 for custom decorations on pip videos.
-  // we use a VideoSingle component to actually render the main video.
-  // the shape of the object here is compatible with the override point
-  // in VideoSingle, so we just pass this object to the component from the outside.
-  const mainDecoration = decorateVideoPipItem(
-    0,
-    firstParticipant,
-    mainVideoSingleProps
-  );
-
   let items = [];
 
-  items.push(
-    <VideoSingle
-      key="pipbase"
-      overrideDecoration={mainDecoration}
-      {...mainVideoSingleProps}
-    />
-  );
+  if (includeWebFrame) {
+    items.push(
+      <WebFrame
+        key="videopip_webframe"
+        src={webFrameProps.src}
+        viewportSize={{
+          w: webFrameProps.viewportWidth_px,
+          h: webFrameProps.viewportHeight_px,
+        }}
+        keyPressAction={{
+          name: webFrameProps.keyPressActionName,
+          key: webFrameProps.keyPressActionKey,
+          modifiers: webFrameProps.keyPressModifiers,
+        }}
+      />
+    );
+  } else {
+    const mainVideoSingleProps = {
+      ...props,
+      enableParticipantOverride: true,
+      overrideParticipant: firstParticipant,
+      disableRoundedCorners: disableRoundedCornersOnMain,
+    };
+
+    // override point #1 for custom decorations on pip videos.
+    // we use a VideoSingle component to actually render the main video.
+    // the shape of the object here is compatible with the override point
+    // in VideoSingle, so we just pass this object to the component from the outside.
+    const mainDecoration = decorateVideoPipItem(
+      0,
+      firstParticipant,
+      mainVideoSingleProps
+    );
+
+    items.push(
+      <VideoSingle
+        key="pipbase"
+        overrideDecoration={mainDecoration}
+        {...mainVideoSingleProps}
+      />
+    );
+  }
 
   if (otherParticipants.length > 0) {
     // render second video inside PiP window
