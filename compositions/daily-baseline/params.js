@@ -18,7 +18,7 @@ export const compositionParams = [
     id: "currentLayout",
     type: "enum",
     defaultValue: "2x2",
-    values: ["2x2", "2x1"],
+    values: ["1x1", "2x2", "2x1", "1x1withPIP", "2x1withPIP"],
   },
   {
     id: "showTextOverlay",

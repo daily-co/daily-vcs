@@ -12,9 +12,17 @@ import { RoomContext } from "#vcs-react/contexts";
 
 const textSize_gu = 1;
 const headerH_gu = textSize_gu * 10;
-
 let primaryColor;
 let pauseBgColor;
+
+function header(parentFrame, params, layoutCtx) {
+  let { x, y, w, h } = parentFrame;
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+
+  h = headerH_gu * pxPerGu;
+
+  return { x, y, w, h };
+}
 
 function body(parentFrame, params, layoutCtx) {
   let { x, y, w, h } = parentFrame;
@@ -34,17 +42,19 @@ export default function AugmentedSplit(props) {
   const currentLayout = params["currentLayout"];
   primaryColor = params["voedaily.primary.color"];
   pauseBgColor = params["voedaily.pause.bgColor"];
+  const room = React.useContext(RoomContext);
 
   let baseVideo, pipOverlay, otherOverlays;
   let pipIdx;
   let bubbleIdx;
-  const room = React.useContext(RoomContext);
 
   switch (currentLayout) {
     case "1x1":
       pipIdx = null;
       bubbleIdx = 1;
-      baseVideo = <VideoSingleCustom {...props} />;
+      baseVideo = (
+        <VideoSingleCustom participantDescs={[participantDescs[0]]} />
+      );
       break;
     case "2x1":
       pipIdx = null;
@@ -54,7 +64,9 @@ export default function AugmentedSplit(props) {
     case "1x1withPIP":
       pipIdx = 1;
       bubbleIdx = 2;
-      baseVideo = <VideoSingleCustom {...props} />;
+      baseVideo = (
+        <VideoSingleCustom participantDescs={[participantDescs[0]]} />
+      );
       break;
     case "2x1withPIP":
       pipIdx = 2;
@@ -85,12 +97,17 @@ export default function AugmentedSplit(props) {
       {baseVideo && baseVideo}
       {pipOverlay && pipOverlay}
       {otherOverlays && otherOverlays}
+      <debug.MediaInputPrintout
+        layout={[header]}
+        bgOpacity={0.5}
+        renderEnv={room.renderingEnvironment}
+      />
       <debug.RoomPrintout
         layout={[body]}
         room={room}
         bgOpacity={0.5}
         headerTextColor="rgba(255, 255, 255, 0.68)"
-        textSize_gu={1}
+        textSize_gu={2}
       />
     </Box>
   );
@@ -121,7 +138,7 @@ function getInitials(name) {
 function SimplePip({ participant }) {
   const { videoId, displayName = "", paused } = participant;
   const pxPerGu = useGrid().pixelsPerGridUnit;
-  const pipSize_gu = 10;
+  const pipSize_gu = 6;
 
   const layoutProps = {
     positionCorner: PositionCorner.TOP_RIGHT,
@@ -136,14 +153,8 @@ function SimplePip({ participant }) {
     fontFamily: "DMSans",
     fontWeight: "700",
     textAlign: "center",
-    fontSize_px: 56,
+    fontSize_gu: 2,
   };
-
-  // const layoutPause = [centerText, { minH_gu: 5, minW_gu: 3 }];
-  const layoutPause = [
-    layoutFuncs.placeText,
-    { vAlign: "center", hAlign: "center" },
-  ];
 
   const videoStyle = {
     cornerRadius_px: (pipSize_gu / 2) * pxPerGu, // mask to circle
@@ -164,13 +175,18 @@ function SimplePip({ participant }) {
   if (paused || videoId == null) {
     // no video available, show a placeholder with the icon
     content = (
-      <Box id="pipOutline" style={fillStyle} layout={layout}>
+      <Box style={fillStyle} layout={layout}>
         {displayName ? (
-          <Box clip layout={[layoutFuncs.centerYIfNeeded, { minH_gu: 2 }]}>
-            <Text clip style={labelStyle} layout={layoutPause}>
-              {getInitials(displayName)}
-            </Text>
-          </Box>
+          <Text
+            clip
+            style={labelStyle}
+            layout={[
+              layoutFuncs.placeText,
+              { vAlign: "center", hAlign: "center", yOffset_gu: 0.45 },
+            ]}
+          >
+            {getInitials(displayName)}
+          </Text>
         ) : (
           <Image src="user_white_64.png" scaleMode="fill" />
         )}
@@ -178,7 +194,7 @@ function SimplePip({ participant }) {
     );
   } else {
     content = (
-      <Box id="pipOutline" style={outlineStyle} layout={layout}>
+      <Box style={outlineStyle} layout={layout}>
         <Video
           id="pipVideo"
           src={videoId}
@@ -207,7 +223,7 @@ function SimplePip({ participant }) {
 //
 function PipRow({ participantDescs }) {
   const pxPerGu = useGrid().pixelsPerGridUnit;
-  const pipSize_gu = 6;
+  const pipSize_gu = 4;
   const margin_gu = 2;
   const interval_gu = 1;
 
@@ -245,27 +261,29 @@ function PipRow({ participantDescs }) {
     fontFamily: "DMSans",
     fontWeight: "700",
     textAlign: "center",
-    fontSize_px: 40,
+    fontSize_gu: 2,
   };
 
   return participantDescs.map((pd, idx) => {
     const { videoId, paused, displayName = "" } = pd;
 
     return paused ? (
-      <Box id="pipOutline" style={fillStyle} layout={[rowLayoutFn, { idx }]}>
+      <Box
+        id={idx + "_pipAudience"}
+        style={fillStyle}
+        layout={[rowLayoutFn, { idx }]}
+      >
         {displayName ? (
-          <Box clip layout={[layoutFuncs.centerYIfNeeded, { minH_gu: 2 }]}>
-            <Text
-              clip
-              style={labelStyle}
-              layout={[
-                layoutFuncs.placeText,
-                { vAlign: "center", hAlign: "center", idx },
-              ]}
-            >
-              {getInitials(displayName)}
-            </Text>
-          </Box>
+          <Text
+            clip
+            style={labelStyle}
+            layout={[
+              layoutFuncs.placeText,
+              { vAlign: "center", hAlign: "center", yOffset_gu: 0.45 },
+            ]}
+          >
+            {getInitials(displayName)}
+          </Text>
         ) : (
           <Image src="user_white_64.png" scaleMode="fill" />
         )}
@@ -281,12 +299,7 @@ function PipRow({ participantDescs }) {
 // this is the original VideoSplit function from the baseline composition
 //
 function VideoSplit(props) {
-  const {
-    participantDescs = [],
-    margin_gu = 0,
-    splitDirection,
-    currentLayout,
-  } = props;
+  const { participantDescs = [], margin_gu = 0, splitDirection } = props;
   // Make sure we have exactly one or two boxes
   const totalItems = Math.max(1, Math.min(participantDescs.length, 2));
 
@@ -329,8 +342,8 @@ function VideoSplit(props) {
           enableParticipantOverride={true}
           overrideParticipant={participant}
           overrideDecoration={overrideDecoration}
-          placeholderStyle={fillStyle}
           {...props}
+          placeholderStyle={fillStyle}
         />
       </Box>
     );
