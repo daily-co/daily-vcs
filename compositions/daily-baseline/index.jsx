@@ -154,8 +154,9 @@ export default function DailyBaselineVCS() {
   const webFrameHasSrcUrl = webFrameProps.src?.length > 0;
   const webFrameInVideoLayout =
     webFrameHasSrcUrl &&
-    mode === 'dominant' &&
-    params['videoSettings.dominant.includeWebFrame'];
+    ((mode === 'dominant' &&
+      params['videoSettings.dominant.includeWebFrame']) ||
+      (mode === 'pip' && params['videoSettings.pip.includeWebFrame']));
 
   // we can memoize the video layout root component because it doesn't call useVideoTime()
   // (i.e. doesn't render animations by explicitly modifying component props)
@@ -253,6 +254,8 @@ export default function DailyBaselineVCS() {
             disableRoundedCornersOnMain={
               params['videoSettings.pip.sharpCornersOnMain']
             }
+            includeWebFrame={webFrameInVideoLayout}
+            webFrameProps={webFrameProps}
           />
         );
         break;
