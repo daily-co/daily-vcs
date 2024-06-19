@@ -409,6 +409,20 @@ table {
 #controls .roomInput .audioParticipantInputContainer {
   margin-left: 1em;
 }
+#controls .roomInput .audioParticipantControls {
+  position: relative;
+  top: -3px;
+  padding-left: 8px;
+  font-size: 0.85em;
+  height: 20px;
+}
+#controls .roomInput .audioParticipantControls button {
+  font-size: 1em;
+}
+#controls .roomInput .audioParticipantControls .audioParticipantInfo {
+  margin-left: 1em;
+  display: inline-block;
+}
 #controls .roomInput input {
   width: 4em;
   margin-top: -2px;
@@ -566,7 +580,11 @@ table {
                     <input type="number" value="0" step="1" />
                   </div>
                   <div class="audioParticipantControls">
-                    <button class="action" id="randomizeAudioOnlyParticipantBtn">Randomize one as dominant</button>
+                    <button class="action" id="attachScreenshareToAudioOnlyBtn">Attach to screenshare</button>
+                    <button class="action" id="randomizeAudioOnlyDominantBtn">Randomize dominant</button>
+                    <button class="action" id="clearAudioOnlyDominantBtn">Clear</button>
+                    <div class="audioParticipantInfo">
+                    </div>  
                   </div>
                 </div>
               </div>
@@ -675,6 +693,7 @@ let g_dominantIdx = -1;
 
 let g_audioOnlyDemoPeers = [];
 let g_currentRoomPeers = new Map();
+let g_attachScreenshareToAudioOnlyPeer = null;
 
 let g_running = false;
 
@@ -788,6 +807,34 @@ function setAudioDemoParticipants(ev) {
       });
     }
   }
+
+  const randomizeAudioOnlyDominantBtn = document.getElementById('randomizeAudioOnlyDominantBtn');
+  const clearAudioOnlyDominantBtn = document.getElementById('clearAudioOnlyDominantBtn');
+  const attachScreenshareToAudioOnlyBtn = document.getElementById('attachScreenshareToAudioOnlyBtn');
+  const audioOnlyBtns = [randomizeAudioOnlyDominantBtn, clearAudioOnlyDominantBtn, attachScreenshareToAudioOnlyBtn];
+  if (newCount > 0) {
+    for (const btn of audioOnlyBtns) {
+      btn.style = 'display: inline;';
+    }
+
+    // an audio peer might previously have had the dominant flag set;
+    // if there's nobody left with the flag, ensure we update the UI
+    const hasDominant = g_audioOnlyDemoPeers.find((p) => p.audio?.dominant) != null;
+    if (!hasDominant) {
+      clearAudioDemoParticipantAsDominant(false);
+    }
+
+    if (!g_audioOnlyDemoPeers.includes(g_attachScreenshareToAudioOnlyPeer)) {
+      clearAudioDemoParticipantScreenshareAttachment();
+    }
+  } else {
+    for (const btn of audioOnlyBtns) {
+      btn.style = 'display: none;';
+    }
+    clearAudioDemoParticipantAsDominant(false);
+    clearAudioDemoParticipantScreenshareAttachment();
+  }
+
   updateRoomPeers();
   sendRoomPeers();
 }
@@ -805,6 +852,12 @@ function randomizeAudioDemoParticipantAsDominant() {
 
   console.log("audio peer %d is dominant", idx);
 
+  const info = document.querySelector("#controls .roomInput .audioParticipantControls .audioParticipantInfo");
+  info.innerText = `Dominant audio-only participant: ${idx + 1}`;
+
+  const clearAudioOnlyDominantBtn = document.getElementById('clearAudioOnlyDominantBtn');
+  clearAudioOnlyDominantBtn.style = 'display: inline;';
+
   if (g_dominantIdx >= 0) {
     // clear out the dominant flag for video inputs
     g_dominantIdx = -1;
@@ -814,6 +867,65 @@ function randomizeAudioDemoParticipantAsDominant() {
 
   updateRoomPeers();
   sendRoomPeers();
+}
+
+function clearAudioDemoParticipantAsDominant(doUpdate = true) {
+  g_audioOnlyDemoPeers = g_audioOnlyDemoPeers.map((p, i) => {
+    p = {...p};
+    p.audio.dominant = false;
+    return p;
+  });
+
+  const info = document.querySelector("#controls .roomInput .audioParticipantControls .audioParticipantInfo");
+  info.innerText = "";
+
+  const clearAudioOnlyDominantBtn = document.getElementById('clearAudioOnlyDominantBtn');
+  clearAudioOnlyDominantBtn.style = 'display: none;';
+
+  if (doUpdate) {
+    updateRoomPeers();
+    sendRoomPeers();
+  }
+}
+
+function attachScreenshareToAudioDemoParticipant() {
+  if (g_attachScreenshareToAudioOnlyPeer) {
+    // perform clear action
+    clearAudioDemoParticipantScreenshareAttachment(true);
+    return; // --
+  }
+
+  if (g_audioOnlyDemoPeers.length < 1) return;
+  const peer = g_audioOnlyDemoPeers[0];
+
+  // find a screenshare to associate with the audio-only peer
+  let ssobj = g_activeVideoInputSlots.find((slot) => slot.active && slot.type === 'screenshare');
+  if (!ssobj) {
+    alert("For this function, there needs to be a screenshare present.\n\nMake one of the video inputs a screenshare and try again.")
+    return;
+  }
+
+  g_attachScreenshareToAudioOnlyPeer = peer;
+
+  const attachScreenshareToAudioOnlyBtn = document.getElementById('attachScreenshareToAudioOnlyBtn');
+  attachScreenshareToAudioOnlyBtn.innerText = 'Detach screenshare';
+
+  updateRoomPeers();
+  sendRoomPeers();
+}
+
+function clearAudioDemoParticipantScreenshareAttachment(doUpdate = true) {
+  if (g_attachScreenshareToAudioOnlyPeer) {
+    g_attachScreenshareToAudioOnlyPeer.screenshareVideo = {};
+    g_attachScreenshareToAudioOnlyPeer = null;
+  }
+  const attachScreenshareToAudioOnlyBtn = document.getElementById('attachScreenshareToAudioOnlyBtn');
+  attachScreenshareToAudioOnlyBtn.innerText = 'Attach to screenshare';
+
+  if (doUpdate) {
+    updateRoomPeers();
+    sendRoomPeers();
+  }
 }
 
 function randomizeParticipantName(ev) {
@@ -867,6 +979,8 @@ function dominantToggled(ev) {
   const idx = parseInt(btn.dataset.index, 10);
 
   g_dominantIdx = (idx === g_dominantIdx) ? -1 : idx;
+
+  clearAudioDemoParticipantAsDominant(false);
 
   updateRoomPeers();
 
@@ -1389,6 +1503,14 @@ createVideoInputsUI();
 const audioDemoParticipantsNumberField = document.querySelector("#controls .roomInput .audioParticipantInputContainer input");
 audioDemoParticipantsNumberField.addEventListener('change', setAudioDemoParticipants);
 
+const randomizeAudioOnlyDominantBtn = document.getElementById('randomizeAudioOnlyDominantBtn');
+randomizeAudioOnlyDominantBtn.addEventListener('click', randomizeAudioDemoParticipantAsDominant);
+
+const clearAudioOnlyDominantBtn = document.getElementById('clearAudioOnlyDominantBtn');
+clearAudioOnlyDominantBtn.addEventListener('click', clearAudioDemoParticipantAsDominant);
+
+const attachScreenshareToAudioOnlyBtn = document.getElementById('attachScreenshareToAudioOnlyBtn');
+attachScreenshareToAudioOnlyBtn.addEventListener('click', attachScreenshareToAudioDemoParticipant);
 
 // --- setup rendering ---
 
@@ -1494,17 +1616,6 @@ async function start() {
   const enabledSources = createStandardSourcesUI(compInterface);
 
   g_vcsApi.setEnabledStandardSources(enabledSources);
-
-  if (0) {
-    // show experimental UI for audio-only participant state.
-    // this is esoteric enough that it's not worth showing upfront.
-    // it should be moved into some kind of special menu probably.
-    const randomizeAudioOnlyParticipantBtn = document.getElementById('randomizeAudioOnlyParticipantBtn');
-    randomizeAudioOnlyParticipantBtn.style = 'display: inline';
-    randomizeAudioOnlyParticipantBtn.addEventListener('click', (ev) => {
-      randomizeAudioDemoParticipantAsDominant();
-    });
-  }
 }
 
 window.addEventListener('load', function(ev) {
@@ -2001,14 +2112,7 @@ function sendActiveVideoInputSlots() {
   sendRoomPeers();
 }
 
-function updateRoomPeers() {
-  // the list of simulated participants in the room is a combination of
-  // our video inputs and any audio-only demo participants.
-  const map = new Map();
-  for (const p of g_audioOnlyDemoPeers) {
-    map.set(p.id, p);
-  }
-  
+function updateRoomPeers() {  
   // for screenshares, we want to combine them with regular camera inputs;
   // this better simulates the real world situation of a video call where
   // screenshares are generally associated with a participant already present.
@@ -2018,6 +2122,25 @@ function updateRoomPeers() {
     if (obj.active && obj.type === 'screenshare') {
       screenshareIndexes.push(i);
     }
+  }
+
+  if (g_attachScreenshareToAudioOnlyPeer && screenshareIndexes.length > 0) {
+    // the first screenshare will be attached to an audio-only peer
+    const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];
+    screenshareIndexes.splice(0, 1);
+
+    g_attachScreenshareToAudioOnlyPeer.screenshareVideo = {
+      id: ssobj.id,
+      paused: ssobj.paused
+    }
+  };
+
+    // the list of simulated participants in the room is a combination of
+  // our video inputs and any audio-only demo participants.
+  const map = new Map();
+
+  for (const p of g_audioOnlyDemoPeers) {
+    map.set(p.id, p);
   }
 
   const kPeerPrefix = 'p';
