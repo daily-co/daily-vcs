@@ -264,6 +264,7 @@ export default function DailyBaselineVCS() {
         // If we prefer screenshare but are following dominant,
         // ensure the screenshare is bumped to the dominant position,
         // but also keep the one with the dominant flag as the next in line.
+        let allowAudioDominant = true;
         if (
           hasScreenShare &&
           params['videoSettings.dominant.followDomFlag'] &&
@@ -288,6 +289,7 @@ export default function DailyBaselineVCS() {
             const pd = videoProps.participantDescs.splice(idx, 1)[0];
             videoProps.participantDescs.splice(0, 0, pd);
           }
+          allowAudioDominant = false;
         }
 
         video = (
@@ -297,6 +299,7 @@ export default function DailyBaselineVCS() {
             splitPos={params['videoSettings.dominant.splitPos']}
             maxItems={params['videoSettings.dominant.numChiclets']}
             followDominantFlag={params['videoSettings.dominant.followDomFlag']}
+            allowAudioDominant={allowAudioDominant}
             itemInterval_gu={params['videoSettings.dominant.itemInterval_gu']}
             outerPadding_gu={params['videoSettings.dominant.outerPadding_gu']}
             splitMargin_gu={params['videoSettings.dominant.splitMargin_gu']}
