@@ -24,6 +24,7 @@ export default function VideoDominant(props) {
     participantDescs,
     dominantVideoId,
     followDominantFlag = true,
+    allowAudioDominant = true,
     itemInterval_gu = 0.7,
     outerPadding_gu = 0.5,
     splitMargin_gu = 0,
@@ -41,9 +42,11 @@ export default function VideoDominant(props) {
     // if WebFrame is included, it's always going to take the dominant layout position
     dominantVideoId = null;
   } else {
-    audioDominantParticipant = participantDescs.find(
-      (d) => d.isAudioOnly && d.dominant
-    );
+    if (allowAudioDominant) {
+      audioDominantParticipant = participantDescs.find(
+        (d) => d.isAudioOnly && d.dominant
+      );
+    }
 
     if (
       (!followDominantFlag ||
