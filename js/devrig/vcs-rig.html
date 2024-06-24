@@ -1009,15 +1009,19 @@ function makeCurrentImageSources() {
 
   // for any screenshares, replace the default source with a screenshare input
   const ssImageEls = [
-    document.getElementById('screenshare_standin'),
-    document.getElementById('screenshare_standin2')
+    { element: document.getElementById('screenshare_standin'),
+      frameSize: {w: 1600, h: 900}
+    },
+    { element: document.getElementById('screenshare_standin2'),
+      frameSize: {w: 1600, h: 1000}
+    },
   ];
   for (let i = 0; i < MAX_VIDEO_INPUTS; i++) {
     if (g_activeVideoInputSlots[i].type !== 'screenshare') continue;
 
     const obj = {
       id: getVideoInputIdForSlotIndex(i, true),
-      element: ssImageEls[i % 2]
+      ...ssImageEls[i % 2],
     };
     sources.videoSlots.splice(i, 1, obj);
   }
@@ -2079,6 +2083,8 @@ async function copySceneDescToClipboard(fgOnly) {
 function sendActiveVideoInputSlots() {
   if (!g_vcsApi) return;
 
+  const defaultVideoSlots = makeCurrentImageSources().videoSlots;
+
   const arr = [];
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     let obj = g_activeVideoInputSlots[i];
@@ -2092,17 +2098,20 @@ function sendActiveVideoInputSlots() {
       arr.push(false);
     }
 
-    const el = g_defaultSources.videoSlots[i]?.element;
-    if (el?.videoWidth) {
-      obj.frameSize = {
-        w: el.videoWidth,
-        h: el.videoHeight
-      };
-    } else if (el?.width) {
-      obj.frameSize = {
-        w: el.width,
-        h: el.height
-      };
+    obj.frameSize = defaultVideoSlots[i]?.frameSize;
+    if (!obj.frameSize) {
+      const el = defaultVideoSlots[i]?.element;
+      if (el?.videoWidth) {
+        obj.frameSize = {
+          w: el.videoWidth,
+          h: el.videoHeight
+        };
+      } else if (el?.width) {
+        obj.frameSize = {
+          w: el.width,
+          h: el.height
+        };
+      }
     }
   }
 

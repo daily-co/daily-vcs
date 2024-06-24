@@ -98,16 +98,30 @@ export default function VideoSingle(props) {
       />
     );
   } else {
+    const scaleMode = isScreenshare ? scaleModeForScreenshare : scaleMode;
     content = (
       <Video
         key="video"
         src={videoId}
         style={videoStyle}
-        scaleMode={isScreenshare ? scaleModeForScreenshare : scaleMode}
+        scaleMode={scaleMode}
         layout={customLayoutForVideo}
         zoom={zoomFactor}
       />
     );
+
+    if (!customLayoutForVideo && scaleMode === 'fit' && d?.frameSize?.h > 0) {
+      // if we're fitting the video inside the layout frame,
+      // use the content's aspect ratio to adjust the layout frame to fit snugly.
+      // this avoids black bars (i.e. letterboxing / pillarboxing) around the content
+      // which could occur if we let the underlying compositor do the fitting.
+      const contentAspectRatio = d.frameSize.w / d.frameSize.h;
+      content = (
+        <Box key="videofit" layout={[layoutFuncs.fit, { contentAspectRatio }]}>
+          {content}
+        </Box>
+      );
+    }
   }
 
   const arr = [content];
