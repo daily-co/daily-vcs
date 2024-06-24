@@ -101,7 +101,10 @@ export default function DailyBaselineVCS() {
   let { participantDescs, dominantVideoId, hasScreenShare } =
     useActiveVideoAndAudio({
       maxCamStreams: params['videoSettings.maxCamStreams'],
-      preferScreenshare: params['videoSettings.preferScreenshare'],
+      preferScreenshare:
+        params['videoSettings.preferScreenshare'] ||
+        (params['videoSettings.grid.useDominantForSharing'] &&
+          params.mode === 'grid'),
       omitPausedVideo,
       omitAudioOnly: params['videoSettings.omitAudioOnly'],
       omitExtraScreenshares: params['videoSettings.omitExtraScreenshares'],
@@ -127,12 +130,14 @@ export default function DailyBaselineVCS() {
   }, [participantDescs, preferredVideoIds, includeOtherVideoIds]);
 
   let mode = params.mode;
+  let preferScreenshare = params['videoSettings.preferScreenshare'];
   if (
     mode === 'grid' &&
     params['videoSettings.grid.useDominantForSharing'] &&
     hasScreenShare
   ) {
     mode = 'dominant';
+    preferScreenshare = true;
   }
 
   // for some video layout modes, webframe can be included.
@@ -167,7 +172,7 @@ export default function DailyBaselineVCS() {
       videoLabelStyle: styles.videoLabel,
       participantDescs,
       dominantVideoId,
-      preferScreenshare: params['videoSettings.preferScreenshare'],
+      preferScreenshare,
       showLabels: params['videoSettings.showParticipantLabels'],
       scaleMode: params['videoSettings.scaleMode'],
       scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
@@ -268,7 +273,7 @@ export default function DailyBaselineVCS() {
         if (
           hasScreenShare &&
           params['videoSettings.dominant.followDomFlag'] &&
-          params['videoSettings.preferScreenshare']
+          preferScreenshare
         ) {
           // we know the first video in the array will be the screenshare
           // because preferScreenshare was passed earlier
