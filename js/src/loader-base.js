@@ -100,21 +100,6 @@ export function makeVCSRootContainer(
 
       newState.time = newT;
 
-      if (newState.compositionData) {
-        // trim the standard sources arrays of latest messages.
-        // visual components can always internally retain more messages
-        // (similar to the Toast queue in baseline composition).
-        const maxItems = 20;
-        for (const key of Object.keys(
-          newState.compositionData.standardSources
-        )) {
-          const arr = newState.compositionData.standardSources[key].latest;
-          if (arr.length > maxItems) {
-            const newArr = arr.slice(arr.length - maxItems);
-            newState.compositionData.standardSources[key].latest = newArr;
-          }
-        }
-      }
       this.setState(newState);
     }
 
