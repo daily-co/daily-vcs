@@ -20,6 +20,7 @@ export default function VideoDominant(props) {
     positionEdge = PositionEdge.LEFT,
     splitPos = DOMINANT_SPLIT_DEFAULT,
     maxItems = DOMINANT_MAXITEMS_DEFAULT,
+    centerItems = false,
     labelsOffset_px,
     participantDescs,
     dominantVideoId,
@@ -147,8 +148,20 @@ export default function VideoDominant(props) {
       pArr = pArr.slice(0, maxItems);
     }
 
+    let itemAspectRatio;
+    if (centerItems) {
+      // to center the items, we need to specify an aspect ratio.
+      // look it up from the first participant or default to 16:9
+      if (pArr[0]?.frameSize?.h > 0) {
+        itemAspectRatio = pArr[0].frameSize.w / pArr[0].frameSize.h;
+      } else {
+        itemAspectRatio = 16 / 9;
+      }
+    }
+
     const items = [];
-    for (let i = 0; i < pArr.length; i++) {
+    const numItems = pArr.length;
+    for (let i = 0; i < numItems; i++) {
       const participant = pArr[i];
       const { videoId, paused, displayName } = participant;
       const key = `videochiclet_${i}_${participant.key}`;
@@ -157,10 +170,12 @@ export default function VideoDominant(props) {
         layoutFuncs.column,
         {
           index: i,
-          total: maxItems,
+          total: centerItems ? numItems : maxItems,
           makeRow: chicletsIsRow,
           innerMargin_gu: itemInterval_gu,
           outerMargin_gu: outerPadding_gu,
+          center: centerItems,
+          itemAspectRatio,
         },
       ];
 

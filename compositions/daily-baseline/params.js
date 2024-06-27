@@ -192,6 +192,11 @@ export const compositionParams = [
     values: Object.values(PositionEdge),
   },
   {
+    id: 'videoSettings.dominant.centerItems',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.dominant.splitPos',
     type: 'number',
     defaultValue: 0.8,

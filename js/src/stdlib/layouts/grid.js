@@ -3,6 +3,7 @@ export function column(parentFrame, params, layoutCtx) {
     index,
     total,
     makeRow = false,
+    center = false,
     itemAspectRatio = 0,
     innerMargin_gu = 0.7,
     outerMargin_gu = 0.5,
@@ -13,8 +14,8 @@ export function column(parentFrame, params, layoutCtx) {
     innerMargins = { x: 0, y: 0 };
   if (total > 1) {
     innerMargins.x = innerMargins.y = innerMargin_gu * pxPerGu;
-    outerMargins.x = outerMargins.y = outerMargin_gu * pxPerGu;
   }
+  outerMargins.x = outerMargins.y = outerMargin_gu * pxPerGu;
 
   const numCols = makeRow ? total : 1;
   const numRows = makeRow ? 1 : total;
@@ -33,6 +34,25 @@ export function column(parentFrame, params, layoutCtx) {
       ? (parentFrame.w - innerMargins.x * (total - 1)) / total / parentFrame.h
       : parentFrame.w /
         ((parentFrame.h - innerMargins.y * (total - 1)) / total);
+
+  if (center) {
+    // to center the items, we need the combined width/height of the row/column
+    const itemDim = makeRow
+      ? parentFrame.h * itemAspectRatio
+      : parentFrame.w / itemAspectRatio;
+
+    let totalDim = total * itemDim;
+    if (total > 1)
+      totalDim += (total - 1) * (makeRow ? innerMargins.x : innerMargins.y);
+
+    if (makeRow) {
+      parentFrame.x += (parentFrame.w - totalDim) / 2;
+      parentFrame.w = totalDim;
+    } else {
+      parentFrame.y += (parentFrame.h - totalDim) / 2;
+      parentFrame.h = totalDim;
+    }
+  }
 
   return computeGridItem({
     parentFrame,
