@@ -45,7 +45,7 @@ export default function VideoDominant(props) {
   } else {
     if (allowAudioDominant) {
       audioDominantParticipant = participantDescs.find(
-        (d) => d.isAudioOnly && d.dominant
+        (d) => d.isAudioOnly && d.highlighted
       );
     }
 
@@ -147,6 +147,12 @@ export default function VideoDominant(props) {
     if (pArr.length > maxItems) {
       pArr = pArr.slice(0, maxItems);
     }
+
+    pArr.sort((a, b) => {
+      if (a.highlighted && !b.highlighted) return -1;
+      if (b.highlighted && !a.highlighted) return 1;
+      return 0;
+    });
 
     let itemAspectRatio;
     if (centerItems) {
