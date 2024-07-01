@@ -100,9 +100,8 @@ export function useActiveVideoAndAudio({
             isScreenshare: false,
             videoId: null,
             displayName: peer.displayName || 'Audio participant',
-            highlighted: false,
+            highlighted: peer.audio.dominant,
             paused: peer.audio.paused,
-            dominant: peer.audio.dominant,
           };
         })
       );

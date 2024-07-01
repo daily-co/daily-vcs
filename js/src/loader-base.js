@@ -53,17 +53,32 @@ export function makeVCSRootContainer(
       // values are an object with sourceId + videoTime when message was received.
       // see note in addStandardSourceMessage() for details of how this is used.
       this.standardSourceMsgTimeAdded = new Map();
+
+      // ensure we don't flood too many error messages
+      this.errorMsgCount = 0;
+      this.maxErrorMsgsToPrint = 100;
     }
 
-    static getDerivedStateFromError(error) {
+    logError(msg) {
+      this.errorMsgCount++;
+      if (this.errorMsgCount > this.maxErrorMsgsToPrint) return;
+
+      if (this.errorMsgCount === this.maxErrorMsgsToPrint) {
+        msg =
+          '** Reached limit of error messages allowed from VCS RootContainer, no more will be printed from this instance after this.\n' +
+          msg;
+      }
+
+      console.error(msg);
+    }
+
+    static getDerivedStateFromError(_error) {
       return { hasError: true };
     }
 
     componentDidCatch(error, info) {
-      console.error(
-        '\n** An error occurred in a React component:\n  %s\n',
-        error.message,
-        info.componentStack
+      this.logError(
+        `\n** An error occurred in a React component:\n  ${error.message}${info.componentStack}`
       );
       if (errorCb) {
         errorCb(error, info);
@@ -85,21 +100,6 @@ export function makeVCSRootContainer(
 
       newState.time = newT;
 
-      if (newState.compositionData) {
-        // trim the standard sources arrays of latest messages.
-        // visual components can always internally retain more messages
-        // (similar to the Toast queue in baseline composition).
-        const maxItems = 20;
-        for (const key of Object.keys(
-          newState.compositionData.standardSources
-        )) {
-          const arr = newState.compositionData.standardSources[key].latest;
-          if (arr.length > maxItems) {
-            const newArr = arr.slice(arr.length - maxItems);
-            newState.compositionData.standardSources[key].latest = newArr;
-          }
-        }
-      }
       this.setState(newState);
     }
 
@@ -187,9 +187,8 @@ export function makeVCSRootContainer(
 
     addStandardSourceMessage(id, data) {
       if (!data?.key) {
-        console.error(
-          "** Standard source message must contain 'key' (source id %s)",
-          id
+        this.logError(
+          `** Standard source message must contain 'key' (source id ${id})`
         );
         return;
       }
@@ -204,7 +203,7 @@ export function makeVCSRootContainer(
 
       const srcObj = compositionData.standardSources[id];
       if (!srcObj) {
-        console.error("** Unknown id '%s' for addStandardSourceMessage", id);
+        this.logError(`** Unknown id '${id}' for addStandardSourceMessage`);
         return;
       }
 
@@ -250,9 +249,8 @@ export function makeVCSRootContainer(
 
           const srcObj = compositionData.standardSources[sourceId];
           if (!srcObj?.latest) {
-            console.error(
-              "** Unknown id '%s' for addStandardSourceMessage",
-              id
+            this.logError(
+              `** Unknown id '${sourceId}' for addStandardSourceMessage`
             );
             continue;
           }
@@ -266,11 +264,8 @@ export function makeVCSRootContainer(
 
             const idx = srcObj.latest.findIndex((it) => it.key === msgKey);
             if (idx < 0) {
-              console.error(
-                "** No item with key '%s' in standard source %s",
-                msgKey,
-                sourceId,
-                srcObj.latest
+              this.logError(
+                `** No item with key '${msgKey}' in standard source ${sourceId}`
               );
               continue;
             }
