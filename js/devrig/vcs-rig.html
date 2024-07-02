@@ -911,7 +911,7 @@ function attachScreenshareToAudioDemoParticipant() {
   attachScreenshareToAudioOnlyBtn.innerText = 'Detach screenshare';
 
   updateRoomPeers();
-  sendRoomPeers();
+  sendActiveVideoInputSlots();
 }
 
 function clearAudioDemoParticipantScreenshareAttachment(doUpdate = true) {
@@ -924,7 +924,7 @@ function clearAudioDemoParticipantScreenshareAttachment(doUpdate = true) {
 
   if (doUpdate) {
     updateRoomPeers();
-    sendRoomPeers();
+    sendActiveVideoInputSlots();
   }
 }
 
@@ -1036,6 +1036,10 @@ function screenshareToggled(ev) {
   const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
 
   setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
+
+  if (g_attachScreenshareToAudioOnlyPeer) {
+    updateRoomPeers();
+  }
 
   sendActiveVideoInputSlots();
 
@@ -2133,16 +2137,21 @@ function updateRoomPeers() {
     }
   }
 
-  if (g_attachScreenshareToAudioOnlyPeer && screenshareIndexes.length > 0) {
-    // the first screenshare will be attached to an audio-only peer
-    const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];
-    screenshareIndexes.splice(0, 1);
+  if (g_attachScreenshareToAudioOnlyPeer) {
+    if (screenshareIndexes.length > 0) {
+      // the first screenshare will be attached to an audio-only peer
+      const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];
+      screenshareIndexes.splice(0, 1);
 
-    g_attachScreenshareToAudioOnlyPeer.screenshareVideo = {
-      id: ssobj.id,
-      paused: ssobj.paused
+      g_attachScreenshareToAudioOnlyPeer.screenshareVideo = {
+        id: ssobj.id,
+        paused: ssobj.paused
+      };
+    } else {
+      // with no screenshares, clear out
+      g_attachScreenshareToAudioOnlyPeer.screenshareVideo = {};
     }
-  };
+  }
 
     // the list of simulated participants in the room is a combination of
   // our video inputs and any audio-only demo participants.
@@ -2202,6 +2211,11 @@ function updateRoomPeers() {
   for (let i = 0; i < g_activeVideoInputSlots.length; i++) {
     const obj = g_activeVideoInputSlots[i];
     if (obj.active && obj.type === 'screenshare') {
+      if (obj.id === g_attachScreenshareToAudioOnlyPeer?.screenshareVideo?.id) {
+        obj.displayName = "Screenshare for audio-only participant";
+        continue;
+      }
+
       try {
         const arr = Array.from(g_currentRoomPeers.values());
         const peer = arr.find((p) => p.screenshareVideo.id === obj.id);
