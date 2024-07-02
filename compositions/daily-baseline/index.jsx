@@ -301,6 +301,7 @@ export default function DailyBaselineVCS() {
           <VideoDominant
             {...videoProps}
             positionEdge={params['videoSettings.dominant.position']}
+            centerItems={params['videoSettings.dominant.centerItems']}
             splitPos={params['videoSettings.dominant.splitPos']}
             maxItems={params['videoSettings.dominant.numChiclets']}
             followDominantFlag={params['videoSettings.dominant.followDomFlag']}
