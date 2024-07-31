@@ -7,33 +7,8 @@ import { PausedPlaceholder } from "./PausedPlaceholder.js";
 import decorateVideoSplitItem from "./overrides/decorateVideoSplitItem.js";
 import { PositionCorner } from "../constants.js";
 
-import { debug } from "#vcs-stdlib/components";
-import { RoomContext } from "#vcs-react/contexts";
-
-const textSize_gu = 1;
-const headerH_gu = textSize_gu * 10;
 let primaryColor;
 let pauseBgColor;
-
-function header(parentFrame, params, layoutCtx) {
-  let { x, y, w, h } = parentFrame;
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-
-  h = headerH_gu * pxPerGu;
-
-  return { x, y, w, h };
-}
-
-function body(parentFrame, params, layoutCtx) {
-  let { x, y, w, h } = parentFrame;
-  const pxPerGu = layoutCtx.pixelsPerGridUnit;
-
-  const headerH_px = headerH_gu * pxPerGu;
-  y += headerH_px;
-  h -= headerH_px;
-
-  return { x, y, w, h };
-}
 
 export default function AugmentedSplit(props) {
   const { participantDescs = [] } = props;
@@ -42,7 +17,6 @@ export default function AugmentedSplit(props) {
   const currentLayout = params["currentLayout"];
   primaryColor = params["voedaily.primary.color"];
   pauseBgColor = params["voedaily.pause.bgColor"];
-  const room = React.useContext(RoomContext);
 
   let baseVideo, pipOverlay, otherOverlays;
   let pipIdx;
@@ -74,9 +48,11 @@ export default function AugmentedSplit(props) {
       baseVideo = <VideoSplit {...props} />;
       break;
     default:
-      pipIdx = null;
-      bubbleIdx = null;
-      baseVideo = <VideoSplit {...props} />;
+      pipIdx = 1;
+      bubbleIdx = 2;
+      baseVideo = (
+        <VideoSingleCustom participantDescs={[participantDescs[0]]} />
+      );
       break;
   }
   if (pipIdx) {
@@ -97,18 +73,6 @@ export default function AugmentedSplit(props) {
       {baseVideo && baseVideo}
       {pipOverlay && pipOverlay}
       {otherOverlays && otherOverlays}
-      <debug.MediaInputPrintout
-        layout={[header]}
-        bgOpacity={0.5}
-        renderEnv={room.renderingEnvironment}
-      />
-      <debug.RoomPrintout
-        layout={[body]}
-        room={room}
-        bgOpacity={0.5}
-        headerTextColor="rgba(255, 255, 255, 0.68)"
-        textSize_gu={2}
-      />
     </Box>
   );
 }
