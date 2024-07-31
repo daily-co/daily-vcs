@@ -87,7 +87,7 @@ function appendCssForFontDesc(fontDesc, appendPreloadToDOMFunc) {
   newStyle.appendChild(
     document.createTextNode(`
 @font-face {
-src: url('${fontDesc.src}');
+src: local('${fontDesc.family}'), url('${fontDesc.src}');
 font-family: "${fontDesc.family}";
 font-weight: ${weight};
 font-style: ${style};
