@@ -37,6 +37,21 @@ struct Yuv420PlanarBuf {
     ownsData = true;
   }
 
+  Yuv420PlanarBuf(uint32_t a_w, uint32_t a_h, uint8_t* a_data, uint32_t a_rowBytes_y, uint32_t a_rowBytes_ch)
+  : w(a_w), h(a_h), data(a_data), rowBytes_y(a_rowBytes_y), rowBytes_ch(a_rowBytes_ch) {
+    chromaH = (h + 1) / 2;
+    dataSize = calcDataSize();
+    ownsData = false;
+
+    /*std::cout << "DEBUG: clearing planarbuf with " << w << "*" << h << ", "
+      << rowBytes_y << ", " << rowBytes_ch
+      << std::endl;
+
+      memset(getCbData(), 127, rowBytes_ch * chromaH);
+      memset(getCrData(), 127, rowBytes_ch * chromaH);
+      */
+  }
+
   ~Yuv420PlanarBuf() {
     if (ownsData && data) delete [] data;
   }

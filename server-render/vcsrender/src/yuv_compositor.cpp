@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include "libyuv.h"
+#include "thumbs.h"
+#include "time_util.h"
 
 
 namespace vcsrender {
@@ -48,8 +50,8 @@ static void blendRGBAOverI420_inPlace(
 
     for (int x = 0; x < w; x++) {
       // fixed-point blend
-      const uint32_t yOver = srcBuf_y[x];
-      const uint32_t yBase = dstBuf_y[x];
+      const int yOver = srcBuf_y[x];
+      const int yBase = dstBuf_y[x];
 
       const uint32_t a = overBufBGRA[x] >> 24; // little-endian
       const uint32_t aInv = 255 - a;
@@ -57,7 +59,12 @@ static void blendRGBAOverI420_inPlace(
       // luma layers should be in video range [16, 235], and our top layer is premultiplied.
       // convert to [0, 219] range for blending and then back when writing out.
       // this intermediate result is in 255x fixed point.
-      const uint32_t yComp_fx = (std::max(0, (int)yOver - 16) * 255) + (std::max(0, (int)yBase - 16) * aInv);
+      int yOver_clamped = yOver - 16;
+      int yBase_clamped = yBase - 16;
+      yOver_clamped = (yOver_clamped > 0) ? yOver_clamped : 0;
+      yBase_clamped = (yBase_clamped > 0) ? yBase_clamped : 0;
+
+      const uint32_t yComp_fx = (yOver_clamped * 255) + (yBase_clamped * aInv);
 
       // 60945 is the maximum luma value for the fixed point result; anything above is white
       dstBuf_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
@@ -148,7 +155,8 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   //std::cout << "rendering frame " << frameIdx << " ... " << std::endl;
 
   if (pendingCanvexJSONUpdate_) {
-    CanvexRenderJSON_RGBA(
+    std::cout << "doing canvex update" << std::endl;
+    CanvexRenderResult err = CanvexRenderJSON_RGBA(
       canvexCtx_,
       pendingCanvexJSONUpdate_->c_str(),
       fgRGBABuf_,
@@ -157,7 +165,9 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
       fgRGBABufRowBytes_,
       CanvexAlphaMode::CANVEX_PREMULTIPLIED,
       nullptr /* execution stats */);
-
+    if (err != CanvexRenderSuccess) {
+      std::cerr << "** VCSRender canvex render failed, err code = " << err << std::endl;
+    }
     pendingCanvexJSONUpdate_ = std::nullopt;
   }
 
@@ -187,10 +197,23 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
     }
   }
 
+  ThumbCaptureSettings thumbSettings{};
+  auto thumbBeforeComp = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
+
   // composite RGBA foreground
   blendRGBAOverI420_inPlace(*compBuf_, fgRGBABuf_, fgRGBABufRowBytes_, *compTempBuf_);
 
   //std::cout << "frame finished." << std::endl;
+
+  auto thumbFinalOutput = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
+
+  if (thumbFinalOutput) {
+    std::cout << "\nThumb at " << frameIdx << ":\n" << *thumbFinalOutput << std::endl;
+  }
+  if (thumbBeforeComp && (!thumbFinalOutput || *thumbFinalOutput != *thumbBeforeComp)) {
+    std::cout << "Video layers only at " << frameIdx << ":\n" << *thumbBeforeComp << std::endl;
+  }
+  if (thumbFinalOutput || thumbBeforeComp) std::cout << std::endl;
 
   return compBuf_;
 }
@@ -291,6 +314,21 @@ void YuvCompositor::renderLayerInPlace_(
   if (scaleBufW != scaleW || scaleBufH != scaleH) {
     tempScaledBuf.clearWithBlack();
   }
+
+  /*std::cout
+    << "source dim " << srcW << " * " << srcH
+    << "  source rb " << srcRowBytes_y << ", " << srcRowBytes_ch
+    << ": dataOffY " << srcDataOffY << ", " << srcDataOffCh
+    << " - dst dim " << scaleW << " * " << scaleH
+    << " - orig buf size " << scaleBufW << " * " << scaleBufH
+    << "  scaledbuf dst rb " << tempScaledBuf.rowBytes_y << ", " << tempScaledBuf.rowBytes_ch
+    << ": dataOffY " << dstDataOffY << ", " << dstDataOffCh
+    << std::endl;
+  */
+  //memset(((Yuv420PlanarBuf)srcBuf).getCbData(), 127, srcBuf.rowBytes_ch * srcBuf.chromaH / 2);
+  //memset(((Yuv420PlanarBuf)srcBuf).getCrData(), 127, srcBuf.rowBytes_ch * srcBuf.chromaH / 2);
+
+  tempScaledBuf.clearWithBlack();
 
   libyuv::I420Scale(
         srcBuf.data + srcDataOffY, // source

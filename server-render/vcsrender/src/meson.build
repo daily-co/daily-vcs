@@ -4,6 +4,8 @@ vcsrender_base_sources = files(
   'file_util.cpp',
   'fileseq_util.cpp',
   'mask.cpp',
+  'vcsrender_c_api.cpp',
+  'thumbs.cpp',
 )
 
 vcsrender_demo_sources = files(

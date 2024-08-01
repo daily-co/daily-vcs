@@ -48,7 +48,8 @@ void CanvexContext::setFillStyle(const std::string& s) {
     return;
   }
   //std::cout << " fill style now: " << sf.fillColor[0] << ", " << sf.fillColor[1] << ", "
-  //  << sf.fillColor[2] << ", " << sf.fillColor[3] << std::endl;
+  //  << sf.fillColor[2] << ", " << sf.fillColor[3]
+  //  << " - from: " << s << std::endl;
 }
 
 void CanvexContext::setStrokeStyle(const std::string& s) {

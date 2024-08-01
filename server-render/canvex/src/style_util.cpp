@@ -1,6 +1,14 @@
+#define _GNU_SOURCE // for strtod_l 
 #include "style_util.h"
 #include <cmath>
 #include <cstring>
+
+#include <thread>
+#include <locale.h>
+#include <stdlib.h>
+
+thread_local locale_t *tl_locale_C = NULL;
+
 
 bool getRGBAColorFromCSSStyleString(const std::string& str, float* outColor) {
   if (!outColor) {
@@ -10,6 +18,11 @@ bool getRGBAColorFromCSSStyleString(const std::string& str, float* outColor) {
   const size_t len = str.length();
   if (len < 1) {
     return false;
+  }
+
+  if (!tl_locale_C) {
+    tl_locale_C = (locale_t *)malloc(sizeof(locale_t));
+    *tl_locale_C = newlocale(LC_ALL_MASK, "C", NULL);
   }
 
   double r = 0, g = 0, b = 0, a = 1;
@@ -55,7 +68,7 @@ bool getRGBAColorFromCSSStyleString(const std::string& str, float* outColor) {
         // finish component string and convert to double
         if (accLen > 0) {
           acc[accLen] = 0;
-          double f = strtod(acc, nullptr);
+          double f = strtod_l(acc, nullptr, *tl_locale_C);
           switch (compIdx) {
             case 0: r = f / 255.0; break;
             case 1: g = f / 255.0; break;
