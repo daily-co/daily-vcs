@@ -87,6 +87,11 @@ CanvexSkiaResourceContext::CanvexSkiaResourceContext() {
     { "SuezOne", {400}, false },
     { "Teko", {300, 400, 500, 600, 700}, false },
     { "NotoColorEmoji", {400}, false },
+    // -- added for Bolt Foundry --
+    { "BebasNeue", {700}, false },
+    { "Futura", {700}, false },
+    { "KCIllHand", {400}, false },
+    { "Lovelo", {700}, false, "", "otf" },
   };
 }
 

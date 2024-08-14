@@ -72,7 +72,10 @@ export function makeVCSRootContainer(
       console.error(msg);
     }
 
-    static getDerivedStateFromError(_error) {
+    static getDerivedStateFromError(error) {
+      if (errorCb) {
+        errorCb(error);
+      }
       return { hasError: true };
     }
 

@@ -262,7 +262,7 @@ function recurseRenderNode(
     let strokeW_px;
     let srcDrawable;
     let scaleMode = node.scaleMode;
-    let textContent = node.text;
+    let textContent = node.text || node.joinedSpansText;
     let textStyle = node.style;
 
     let warningOutText;
@@ -475,7 +475,7 @@ function recurseRenderNode(
       warningFrame.y += 2;
       const lines = warningOutText.split('\n');
       for (const line of lines) {
-        drawStyledText(ctx, line, warningStyle, warningFrame, comp);
+        drawStyledText(ctx, line, {}, warningStyle, warningFrame, comp);
         warningFrame.y += 20;
       }
     }
@@ -554,6 +554,10 @@ function drawStyledTextLayoutBlocks(
 ) {
   let { x, y } = frame;
 
+  let emojiOffset = Number.isFinite(fontMetrics?.baseline)
+    ? fontMetrics.baseline
+    : 0;
+
   for (const paragraphLinesArr of blocks) {
     for (const lineDesc of paragraphLinesArr) {
       const { box, string, runs } = lineDesc;
@@ -571,10 +575,20 @@ function drawStyledTextLayoutBlocks(
           h: box.height,
         };
 
+        const runStyle = {
+          ...style,
+        };
+        const attrs = run.attributes;
+        if (attrs.color) runStyle.textColor = attrs.color;
+        if (attrs.fontSize) {
+          runStyle.fontSize_gu = null;
+          runStyle.fontSize_vh = null;
+          runStyle.fontSize_px = attrs.fontSize;
+        }
+
         // unicode object substitution indicates emojis.
         // we assume it's at position 0 because embedEmojis() creates such runs
         if (chunk.indexOf(String.fromCharCode(0xfffc)) === 0) {
-          const attrs = run.attributes;
           const emoji = attrs?.attachment?.emoji;
           if (!emoji) {
             console.warn(
@@ -587,13 +601,13 @@ function drawStyledTextLayoutBlocks(
               ctx,
               emoji,
               Math.round(textFrame.x),
-              Math.round(textFrame.y + yOffset + (fontMetrics?.baseline || 0)),
+              Math.round(textFrame.y + yOffset + emojiOffset),
               width,
               height
             );
           }
         } else {
-          drawStyledText(ctx, chunk, fontMetrics, style, textFrame, comp);
+          drawStyledText(ctx, chunk, fontMetrics, runStyle, textFrame, comp);
         }
 
         //console.log('run %s - ', chunk, run);
@@ -663,7 +677,7 @@ function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
   }
 
   let fontBaseline = fontMetrics?.baseline;
-  if (fontBaseline == null) {
+  if (!Number.isFinite(fontBaseline)) {
     fontBaseline = fontSize_px * 0.8;
   }
 
@@ -682,7 +696,6 @@ function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
       ctx.strokeText(text, textX, textY);
     }
   }
-
   ctx.fillText(text, textX, textY);
 }
 

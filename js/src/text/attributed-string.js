@@ -54,7 +54,7 @@ function computeStyleAttributes(styledObj, viewport, pxPerGu) {
   let textAlign = styledObj.textAlign || 'left';
 
   let color, opacity, shadow;
-  color = Array.isArray(styledObj.color) ? styledObj.color : [];
+  color = styledObj.textColor;
   opacity = styledObj.opacity;
   shadow = styledObj.shadow || {};
 
@@ -74,7 +74,7 @@ function computeStyleAttributes(styledObj, viewport, pxPerGu) {
 // returned 'fragments' array is the pieces needed to construct a Fontkit AttributedString object.
 // we're returning also the font object, since our attributed strings are currently single-style
 // (no inline fonts in fragments, yet).
-export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
+export function makeAttributedStringDesc(spans, styledObj, viewport, pxPerGu) {
   let fragments = [];
 
   const {
@@ -84,6 +84,7 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
     fontWeight,
     fontStyle,
     textAlign,
+    color,
   } = computeStyleAttributes(styledObj, viewport, pxPerGu);
 
   let font;
@@ -108,6 +109,7 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
     fontSize: size_px,
     lineHeight: lineHeight_px,
     align: textAlign,
+    color,
   };
   /*
   other attributes available include:
@@ -115,10 +117,25 @@ export function makeAttributedStringDesc(string, styledObj, viewport, pxPerGu) {
     - indent
   */
 
-  fragments.push({
-    string,
-    attributes,
-  });
+  for (const span of spans) {
+    const { string, style: overrideStyle } = span;
+    let spanAttrs = attributes;
+    if (overrideStyle) {
+      const overrideAttrs = computeStyleAttributes(
+        { ...styledObj, ...overrideStyle },
+        viewport,
+        pxPerGu
+      );
+      spanAttrs = { ...attributes };
+      if (overrideAttrs.color) spanAttrs.color = overrideAttrs.color;
+      if (overrideAttrs.size_px) spanAttrs.fontSize = overrideAttrs.size_px;
+      // TODO: add more supported attributes
+    }
+    fragments.push({
+      string,
+      attributes: spanAttrs,
+    });
+  }
 
   fragments = embedEmojis(fragments);
 
@@ -149,9 +166,14 @@ function calculateBaseline(font, fontSize) {
   }
 
   const upm = font.head.unitsPerEm;
+
   const ascender = hheaTable.ascent; // this value seems more correct than 'os2Table.typoAscender'
   //const descender = os2Table.typoDescender;
-  const capHeight = os2Table.capHeight;
+
+  const capHeight = Number.isFinite(os2Table.capHeight)
+    ? os2Table.capHeight
+    : ascender * 0.8; // some old fonts may not have this value, so take a guess if we must
+
   const lineGap = hheaTable.lineGap || 0;
 
   const scale = fontSize / upm;
