@@ -264,6 +264,7 @@ function recurseRenderNode(
     let scaleMode = node.scaleMode;
     let textContent = node.text || node.joinedSpansText;
     let textStyle = node.style;
+    let viewportSize = node.viewportSize;
 
     let warningOutText;
 
@@ -368,23 +369,31 @@ function recurseRenderNode(
       }
     }
 
-    // apply scaling or crop, but only if we have a drawable from where to derive the content size.
+    // apply scaling or crop, but only if we have a drawable (or webframe viewport) from where to derive the content size
     let srcDrawableRegion;
-    if (srcDrawable) {
+    if (srcDrawable || viewportSize) {
       let contentW, contentH;
-      if (srcDrawable.domElement) {
-        const domEl = srcDrawable.domElement;
-        if (domEl.videoWidth) {
-          contentW = domEl.videoWidth;
-          contentH = domEl.videoHeight;
-        } else if (domEl.width) {
-          contentW = domEl.width;
-          contentH = domEl.height;
+      if (
+        Number.isFinite(viewportSize?.w) &&
+        Number.isFinite(viewportSize?.h)
+      ) {
+        contentW = viewportSize.w;
+        contentH = viewportSize.h;
+      } else if (srcDrawable) {
+        if (srcDrawable.domElement) {
+          const domEl = srcDrawable.domElement;
+          if (domEl.videoWidth) {
+            contentW = domEl.videoWidth;
+            contentH = domEl.videoHeight;
+          } else if (domEl.width) {
+            contentW = domEl.width;
+            contentH = domEl.height;
+          }
+        } else {
+          // with the display list encoder, image size may be provided in the drawable descriptor
+          contentW = srcDrawable.width;
+          contentH = srcDrawable.height;
         }
-      } else {
-        // with the display list encoder, image size may be provided in the drawable descriptor
-        contentW = srcDrawable.width;
-        contentH = srcDrawable.height;
       }
 
       if (contentW > 0 && contentH > 0) {
