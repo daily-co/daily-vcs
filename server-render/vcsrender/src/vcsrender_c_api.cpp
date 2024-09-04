@@ -142,8 +142,14 @@ VcsRenderResult VcsRenderYuv420Planar(
                           buf->rowbytes_y, buf->rowbytes_ch);
   }
 
-  std::cout << "VcsRenderCtx rendering frame " << frameIndex << std::endl;
-
+  /*std::cout << "VcsRenderCtx rendering frame " << frameIndex;
+  std::cout << " at " << outputBufArg->w << "*" << outputBufArg->h;
+  if (numInputBufsArg > 0) {
+    std::cout << " - first input size " << inputBufsArg[0].buffer.w << "*" << inputBufsArg[0].buffer.h
+              << ", rowbytes " << inputBufsArg[0].buffer.rowbytes_y << " / " << inputBufsArg[0].buffer.rowbytes_ch;
+  }
+  std::cout << std::endl;
+  */
   /*if (numInputBufsArg > 0) {
     auto id = inputBufsArg[0].input_id;
     auto& inBuf = inputBufs[id];
