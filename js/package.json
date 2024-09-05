@@ -1,6 +1,7 @@
 {
   "name": "@daily-co/vcs-core",
   "version": "0.2.7",
+  "packageManager": "yarn@1.22.22",
   "author": "Daily (https://daily.co)",
   "homepage": "https://docs.daily.co/reference/vcs",
   "repository": {
