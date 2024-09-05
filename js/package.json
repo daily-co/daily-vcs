@@ -55,6 +55,7 @@
     "#vcs-stdlib/components": "./src/stdlib/components/index.js",
     "#vcs-stdlib/layouts": "./src/stdlib/layouts/index.js"
   },
+  "packageManager": "yarn@4.4.1",
   "scripts": {
     "devrig": "wrap () { yarn webpack serve --env target=devrig --env compid=\"$*\" | cat; }; wrap",
     "open-browser-hello": "yarn webpack serve --open --env compid=example:hello",

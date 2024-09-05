@@ -3,5 +3,6 @@
   "version": "0.1.0",
   "author": "Daily.co",
   "license": "BSD-2-Clause",
+  "packageManager": "yarn@4.4.1",
   "type": "module"
 }
