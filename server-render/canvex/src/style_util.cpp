@@ -1,4 +1,7 @@
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE // for strtod_l 
+#endif
+
 #include "style_util.h"
 #include <cmath>
 #include <cstring>

@@ -2,6 +2,7 @@
 #include "canvex_c_api.h"
 #include <algorithm>
 #include <iostream>
+#include <cstring>
 
 
 namespace vcsrender {
@@ -27,7 +28,7 @@ std::shared_ptr<AlphaBuf> MaskCache::getCachedMask(uint32_t w, uint32_t h, uint3
   auto buf = std::make_shared<AlphaBuf>(w, h);
 
   // clear to black
-  std::memset(buf->data, 0, buf->rowBytes * buf->h);
+  memset(buf->data, 0, buf->rowBytes * buf->h);
 
   CanvexRenderRoundedRectMask_u8(
     buf->data,
