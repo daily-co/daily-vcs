@@ -3,6 +3,7 @@ vcsrender_base_sources = files(
   'yuv_compositor.cpp',
   'file_util.cpp',
   'fileseq_util.cpp',
+  'mask.cpp',
 )
 
 vcsrender_demo_sources = files(

@@ -2,6 +2,7 @@
 #include <optional>
 #include <unordered_map>
 #include "canvex_c_api.h"
+#include "mask.h"
 #include "yuvbuf.h"
 #include "parse/parse_scenedesc.h"
 
@@ -45,6 +46,8 @@ class YuvCompositor {
 
   uint8_t* layerTempBuf_;
   size_t layerTempBufSize_;
+
+  MaskCache maskCache_;
 
   std::optional<std::string> pendingCanvexJSONUpdate_ = std::nullopt;
   std::unique_ptr<VCSVideoLayerList> videoLayers_ = nullptr;
