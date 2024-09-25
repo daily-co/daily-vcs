@@ -105,6 +105,22 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
   CanvexExecutionStats* stats // optional stats
 );
 
+/*
+  Utility for rendering rounded corner masks.
+
+  Does NOT clear dstImageData to black.
+  This allows the call to be used to render multiple masks into one buffer.
+*/
+CanvexRenderResult CanvexRenderRoundedRectMask_u8(
+  uint8_t *dstImageData,
+  uint32_t dstImageW,
+  uint32_t dstImageH,
+  uint32_t dstImageRowBytes,
+  // coordinates and corner radii for the rounded rectangle
+  double x, double y, double w, double h,
+  double tl, double tr, double br, double bl
+);
+
 #ifdef __cplusplus
 }
 #endif

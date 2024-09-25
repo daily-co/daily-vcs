@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cmath>
 #include "libyuv.h"
+#include "thumbs.h"
+#include "time_util.h"
 
 
 namespace vcsrender {
@@ -48,8 +50,8 @@ static void blendRGBAOverI420_inPlace(
 
     for (int x = 0; x < w; x++) {
       // fixed-point blend
-      const uint32_t yOver = srcBuf_y[x];
-      const uint32_t yBase = dstBuf_y[x];
+      const int yOver = srcBuf_y[x];
+      const int yBase = dstBuf_y[x];
 
       const uint32_t a = overBufBGRA[x] >> 24; // little-endian
       const uint32_t aInv = 255 - a;
@@ -57,7 +59,12 @@ static void blendRGBAOverI420_inPlace(
       // luma layers should be in video range [16, 235], and our top layer is premultiplied.
       // convert to [0, 219] range for blending and then back when writing out.
       // this intermediate result is in 255x fixed point.
-      const uint32_t yComp_fx = (std::max(0, (int)yOver - 16) * 255) + (std::max(0, (int)yBase - 16) * aInv);
+      int yOver_clamped = yOver - 16;
+      int yBase_clamped = yBase - 16;
+      yOver_clamped = (yOver_clamped > 0) ? yOver_clamped : 0;
+      yBase_clamped = (yBase_clamped > 0) ? yBase_clamped : 0;
+
+      const uint32_t yComp_fx = (yOver_clamped * 255) + (yBase_clamped * aInv);
 
       // 60945 is the maximum luma value for the fixed point result; anything above is white
       dstBuf_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
@@ -148,7 +155,8 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   //std::cout << "rendering frame " << frameIdx << " ... " << std::endl;
 
   if (pendingCanvexJSONUpdate_) {
-    CanvexRenderJSON_RGBA(
+    std::cout << "doing canvex update" << std::endl;
+    CanvexRenderResult err = CanvexRenderJSON_RGBA(
       canvexCtx_,
       pendingCanvexJSONUpdate_->c_str(),
       fgRGBABuf_,
@@ -157,7 +165,9 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
       fgRGBABufRowBytes_,
       CanvexAlphaMode::CANVEX_PREMULTIPLIED,
       nullptr /* execution stats */);
-
+    if (err != CanvexRenderSuccess) {
+      std::cerr << "** VCSRender canvex render failed, err code = " << err << std::endl;
+    }
     pendingCanvexJSONUpdate_ = std::nullopt;
   }
 
@@ -187,10 +197,23 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
     }
   }
 
+  ThumbCaptureSettings thumbSettings{};
+  auto thumbBeforeComp = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
+
   // composite RGBA foreground
   blendRGBAOverI420_inPlace(*compBuf_, fgRGBABuf_, fgRGBABufRowBytes_, *compTempBuf_);
 
   //std::cout << "frame finished." << std::endl;
+
+  auto thumbFinalOutput = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
+
+  if (thumbFinalOutput) {
+    std::cout << "\nThumb at " << frameIdx << ":\n" << *thumbFinalOutput << std::endl;
+  }
+  if (thumbBeforeComp && (!thumbFinalOutput || *thumbFinalOutput != *thumbBeforeComp)) {
+    std::cout << "Video layers only at " << frameIdx << ":\n" << *thumbBeforeComp << std::endl;
+  }
+  if (thumbFinalOutput || thumbBeforeComp) std::cout << std::endl;
 
   return compBuf_;
 }
@@ -292,6 +315,21 @@ void YuvCompositor::renderLayerInPlace_(
     tempScaledBuf.clearWithBlack();
   }
 
+  /*std::cout
+    << "source dim " << srcW << " * " << srcH
+    << "  source rb " << srcRowBytes_y << ", " << srcRowBytes_ch
+    << ": dataOffY " << srcDataOffY << ", " << srcDataOffCh
+    << " - dst dim " << scaleW << " * " << scaleH
+    << " - orig buf size " << scaleBufW << " * " << scaleBufH
+    << "  scaledbuf dst rb " << tempScaledBuf.rowBytes_y << ", " << tempScaledBuf.rowBytes_ch
+    << ": dataOffY " << dstDataOffY << ", " << dstDataOffCh
+    << std::endl;
+  */
+  //memset(((Yuv420PlanarBuf)srcBuf).getCbData(), 127, srcBuf.rowBytes_ch * srcBuf.chromaH / 2);
+  //memset(((Yuv420PlanarBuf)srcBuf).getCrData(), 127, srcBuf.rowBytes_ch * srcBuf.chromaH / 2);
+
+  tempScaledBuf.clearWithBlack();
+
   libyuv::I420Scale(
         srcBuf.data + srcDataOffY, // source
         srcRowBytes_y,
@@ -311,9 +349,13 @@ void YuvCompositor::renderLayerInPlace_(
         scaleH,
         libyuv::kFilterBilinear);
 
-  // copy into destination.
-  // TODO: handle mask, i.e. rounded corners.
-  // render+cache as needed, then apply the mask here when copying
+  // copy into destination with mask if needed
+  const uint32_t cornerRadius = lround(layerDesc.attrs.cornerRadiusPx);
+  bool useMask = cornerRadius > 0;
+  std::shared_ptr<AlphaBuf> maskBuf;
+  if (useMask) {
+    maskBuf = maskCache_.getCachedMask(tempScaledBuf.w, tempScaledBuf.h, cornerRadius);
+  }
 
   const int outW = dstBuf.w;
   const int outH = dstBuf.h;
@@ -326,7 +368,7 @@ void YuvCompositor::renderLayerInPlace_(
   const int srcCopyXOffset = minDstX - dstXOffset;
 
   srcRowBytes_y = tempScaledBuf.rowBytes_y;
-  const int srcCopyLen_y = std::min(scaleBufW, std::max(0, maxDstX - minDstX));
+  const int srcCopyLen_y = std::min(scaleBufW, std::max(0, maxDstX - minDstX + 1));
 
   for (int y = minDstY; y <= maxDstY; y++) {
     const size_t dstOff = y * dstBuf.rowBytes_y + minDstX;
@@ -335,12 +377,45 @@ void YuvCompositor::renderLayerInPlace_(
     const size_t srcOff = (y - dstYOffset) * srcRowBytes_y + srcCopyXOffset;
     const uint8_t* src_y = tempScaledBuf.data + srcOff;
 
-    // TODO: if mask specified, apply it instead of memcpy here
-    memcpy(dst_y, src_y, srcCopyLen_y);
+    if (!useMask) {
+      memcpy(dst_y, src_y, srcCopyLen_y);
+    } else {
+      const size_t maskSrcOff = (y - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
+      const uint8_t* src_mask = maskBuf->data + maskSrcOff;
+      for (int x = 0; x < srcCopyLen_y; x++) {
+        const int maskV = src_mask[x];
+        if (maskV < 2) {
+          continue;
+        }
+        if (maskV >= 254) {
+          dst_y[x] = src_y[x];
+          continue;
+        }
+
+        // fixed-point blend
+        int yOver = src_y[x];
+        const int yBase = dst_y[x];
+        const uint32_t aInv = 255 - maskV;
+
+        // luma layers should be in video range [16, 235].
+        // convert to [0, 219] range for blending and then back when writing out.
+        // this intermediate result is in 255x fixed point.
+        int yOver_clamped = yOver - 16;
+        int yBase_clamped = yBase - 16;
+        yOver_clamped = (yOver_clamped > 0) ? yOver_clamped : 0;
+        yBase_clamped = (yBase_clamped > 0) ? yBase_clamped : 0;
+
+        const uint32_t yComp_fx = (yOver_clamped * maskV) + (yBase_clamped * aInv);
+
+        // 60945 is the maximum luma value for the fixed point result; anything above is white
+        dst_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
+
+      }
+    }
   }
 
   srcRowBytes_ch = tempScaledBuf.rowBytes_ch;
-  const int srcCopyLen_ch = std::min((int)tempScaledBuf.w / 2, std::max(0, (maxDstX - minDstX) / 2));
+  const int srcCopyLen_ch = std::min((int)tempScaledBuf.w / 2, std::max(0, (maxDstX - minDstX + 1) / 2));
 
   for (int yy = minDstY; yy < maxDstY; yy += 2) {
     const size_t dstOff = (yy / 2) * dstBuf.rowBytes_ch + minDstX / 2;
@@ -351,9 +426,24 @@ void YuvCompositor::renderLayerInPlace_(
     const uint8_t* src_Cb = tempScaledBuf.getCbData() + srcOff;
     const uint8_t* src_Cr = tempScaledBuf.getCrData() + srcOff;
 
-    // TODO: if mask specified, apply it instead of memcpy here
-    memcpy(dst_Cb, src_Cb, srcCopyLen_ch);
-    memcpy(dst_Cr, src_Cr, srcCopyLen_ch);
+    if (!useMask) {
+      memcpy(dst_Cb, src_Cb, srcCopyLen_ch);
+      memcpy(dst_Cr, src_Cr, srcCopyLen_ch);
+    } else {
+      const size_t maskSrcOff = (yy - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
+      const uint8_t* src_mask = maskBuf->data + maskSrcOff;
+      for (int xx = 0; xx < srcCopyLen_y; xx += 2) {
+        const int maskV = src_mask[xx];
+        if (maskV < 2) {
+          continue;
+        }
+
+        // chroma doesn't need to be blended for these small masks that we use
+        const int xx_half = xx / 2;
+        dst_Cb[xx_half] = src_Cb[xx_half];
+        dst_Cr[xx_half] = src_Cr[xx_half];
+      }
+    }
   }
 }
 

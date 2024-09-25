@@ -7,6 +7,8 @@
 #include "file_util.h"
 #include "time_util.h"
 
+#include "skia_includes.h"
+
 #include <iostream>
 #include <string.h>
 
@@ -130,3 +132,40 @@ CanvexRenderResult CanvexRenderJSON_BGRA(
       ctx_c, canvex::RenderFormat::Bgra, json, dstImageData, dstImageW, dstImageH, dstImageRowBytes, dstAlpha, stats
   );
 }
+
+
+CanvexRenderResult CanvexRenderRoundedRectMask_u8(
+  uint8_t *dstImageData,
+  uint32_t dstImageW,
+  uint32_t dstImageH,
+  uint32_t dstImageRowBytes,
+  // coordinates and corner radii for the rounded rectangle
+  double x, double y, double w, double h,
+  double tl, double tr, double br, double bl
+) {
+  auto dstInfo = SkImageInfo::MakeA8(SkISize::Make(dstImageW, dstImageH));
+  auto canvas = SkCanvas::MakeRasterDirect(dstInfo, dstImageData, dstImageRowBytes);
+  
+  // Skia roundrect API expects radius pairs (for each corner, x/y radius explicitly defined)
+  const SkScalar radii[8] = {
+    (SkScalar)tl, (SkScalar)tl,
+    (SkScalar)tr, (SkScalar)tr,
+    (SkScalar)br, (SkScalar)br,
+    (SkScalar)bl, (SkScalar)bl
+  };
+
+  SkPath path{};
+  path.addRoundRect(SkRect::MakeXYWH(x, y, w, h), radii);
+
+  SkPaint paint;
+  paint.setStyle(SkPaint::kFill_Style);
+  paint.setColor(SK_ColorWHITE);
+  paint.setAntiAlias(true);
+
+  canvas->drawPath(path, paint);
+
+  canvas->flush();
+
+  return CanvexRenderSuccess;
+}
+

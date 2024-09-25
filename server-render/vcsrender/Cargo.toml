@@ -1,0 +1,15 @@
+[package]
+name = "vcsrender-sys"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+canvex-sys = { path = "../canvex" }
+
+[build-dependencies]
+bindgen = "0.65.1"
+pkg-config = "0.3.16"
+cc = "1.0"
+
+[lib]
+name = "vcsrender"
