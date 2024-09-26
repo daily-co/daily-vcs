@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include "canvex_c_api.h"
 #include "mask.h"
+#include "thumbs.h"
 #include "yuvbuf.h"
 #include "parse/parse_scenedesc.h"
 
@@ -30,6 +31,12 @@ class YuvCompositor {
  // throws on error.
  // the returned buffer is not thread-safe and must be copied if the caller doesn't immediately process the data.
  std::shared_ptr<Yuv420PlanarBuf> renderFrame(uint64_t frameIdx, const VideoInputBufsById& inputBufsById);
+
+ std::shared_ptr<Yuv420PlanarBuf> renderFrame(
+            uint64_t frameIdx, const VideoInputBufsById& inputBufsById,
+            ThumbCaptureSettings& thumbSettings,
+            std::string* outThumbCaptureStr);
+
 
  // ---
  private:

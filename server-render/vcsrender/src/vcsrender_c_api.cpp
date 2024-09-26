@@ -2,6 +2,7 @@
 
 // internal C++ API
 #include "yuv_compositor.h"
+#include "thumbs.h"
 
 #include "libyuv.h"
 
@@ -21,6 +22,8 @@ struct RenderCtx {
   }
 
   YuvCompositor compositor;
+  ThumbCaptureSettings thumbSettings{};
+  std::string thumbCaptureOutputStr{};
 };
 
 } // namespace vcsrender::c_api_internal
@@ -51,6 +54,14 @@ VcsRenderCtx VcsRenderCtxCreate(
 void VcsRenderCtxDestroy(VcsRenderCtx ctx_c) {
   auto ctx = static_cast<vcsrender::c_api_internal::RenderCtx*>(ctx_c);
   delete ctx;
+}
+
+void VcsRenderCtxSetThumbCaptureIntervalFrames(
+  VcsRenderCtx ctx_c,
+  int32_t frameIntv
+) {
+  auto ctx = static_cast<vcsrender::c_api_internal::RenderCtx*>(ctx_c);
+  ctx->thumbSettings.captureIntervalInFrames = frameIntv;
 }
 
 VcsRenderResult VcsRenderCtxUpdateVideoLayersJSON(
@@ -117,7 +128,8 @@ VcsRenderResult VcsRenderYuv420Planar(
   uint64_t frameIndex,
   VcsBufferYuv420Planar *outputBufArg,
   const VcsVideoInputData *inputBufsArg,
-  size_t numInputBufsArg
+  size_t numInputBufsArg,
+  VcsRenderExecutionStats* stats // optional stats
 ) {
   if (!ctx_c || !outputBufArg || (numInputBufsArg > 0 && !inputBufsArg)) {
     return VcsRenderError_InvalidArgument_Render;
@@ -180,8 +192,9 @@ VcsRenderResult VcsRenderYuv420Planar(
     );
   }*/
 
+  ctx->thumbCaptureOutputStr.clear();
 
-  auto resultBuf = ctx->compositor.renderFrame(frameIndex, inputBufs);
+  auto resultBuf = ctx->compositor.renderFrame(frameIndex, inputBufs, ctx->thumbSettings, &ctx->thumbCaptureOutputStr);
 
   if (resultBuf->w != dstBuf->w ||
       resultBuf->h != dstBuf->h) {
@@ -209,6 +222,10 @@ VcsRenderResult VcsRenderYuv420Planar(
     dstBuf->w,
     dstBuf->h
   );
+
+  if (stats) {
+    stats->thumb_capture_str = ctx->thumbCaptureOutputStr.length() ? ctx->thumbCaptureOutputStr.c_str() : nullptr;
+  }
 
   return VcsRenderSuccess;
 }

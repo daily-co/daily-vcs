@@ -20,6 +20,21 @@ typedef enum {
 
 typedef void *VcsRenderCtx;
 
+typedef struct VcsRenderExecutionStats {
+  // -- high level operations --
+  int64_t render_total_us;
+
+  // -- debug output --
+
+  // this is enabled by setting the context's thumbCaptureIntervalFrames to >0.
+  // if capture interval is >1, this pointer will be null between frames to capture.
+  //
+  // the returned string is owned by the VcsRenderCtx and must not be freed.
+  // it's valid until the next call to the render function.
+  const char *thumb_capture_str;
+} VcsRenderExecutionStats;
+
+
 /*
   A render context must be created for any render operations.
   It should be reused between frames and only updated if the input arguments have changed.
@@ -30,6 +45,11 @@ VcsRenderCtx VcsRenderCtxCreate(
   const char *resourceDir
 );
 void VcsRenderCtxDestroy(VcsRenderCtx);
+
+void VcsRenderCtxSetThumbCaptureIntervalFrames(
+  VcsRenderCtx ctx,
+  int32_t frameIntv
+);
 
 VcsRenderResult VcsRenderCtxUpdateVideoLayersJSON(
   VcsRenderCtx ctx,
@@ -68,7 +88,8 @@ VcsRenderResult VcsRenderYuv420Planar(
   uint64_t frameIndex,
   VcsBufferYuv420Planar *dstBuf,
   const VcsVideoInputData *inputBufs,
-  size_t numInputBufs
+  size_t numInputBufs,
+  VcsRenderExecutionStats* stats // optional stats
 );
 
 

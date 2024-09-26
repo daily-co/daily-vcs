@@ -1,6 +1,7 @@
 #include "yuv_compositor.h"
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <cmath>
 #include "libyuv.h"
 #include "thumbs.h"
@@ -149,8 +150,19 @@ bool YuvCompositor::setFgDisplayListJSON(const std::string& jsonStr) {
 }
 
 std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
-  __attribute__((unused)) uint64_t frameIdx,
+  uint64_t frameIdx,
   const VideoInputBufsById& inputBufsById)
+{
+  ThumbCaptureSettings thumbSettings{};
+
+  renderFrame(frameIdx, inputBufsById, thumbSettings, nullptr);
+}
+
+ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
+  __attribute__((unused)) uint64_t frameIdx,
+  const VideoInputBufsById& inputBufsById,
+  ThumbCaptureSettings& thumbSettings,
+  std::string* outThumbCaptureStr)
 {
   //std::cout << "rendering frame " << frameIdx << " ... " << std::endl;
 
@@ -197,7 +209,6 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
     }
   }
 
-  ThumbCaptureSettings thumbSettings{};
   auto thumbBeforeComp = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
 
   // composite RGBA foreground
@@ -207,13 +218,21 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
 
   auto thumbFinalOutput = renderThumbAtFrame(thumbSettings, frameIdx, *compBuf_);
 
-  if (thumbFinalOutput) {
-    std::cout << "\nThumb at " << frameIdx << ":\n" << *thumbFinalOutput << std::endl;
+  if (thumbBeforeComp || thumbFinalOutput) {
+    std::stringstream thumbSs;
+    if (thumbFinalOutput) {
+      thumbSs << "\nThumb at " << frameIdx << ":\n" << *thumbFinalOutput << std::endl;
+    }
+    if (thumbBeforeComp && (!thumbFinalOutput || *thumbFinalOutput != *thumbBeforeComp)) {
+      thumbSs << "Video layers only at " << frameIdx << ":\n" << *thumbBeforeComp << std::endl;
+    }
+    
+    if (outThumbCaptureStr) {
+      outThumbCaptureStr->append(thumbSs.str());
+    } else {
+      std::cout << thumbSs.str() << std::endl;
+    }
   }
-  if (thumbBeforeComp && (!thumbFinalOutput || *thumbFinalOutput != *thumbBeforeComp)) {
-    std::cout << "Video layers only at " << frameIdx << ":\n" << *thumbBeforeComp << std::endl;
-  }
-  if (thumbFinalOutput || thumbBeforeComp) std::cout << std::endl;
 
   return compBuf_;
 }
