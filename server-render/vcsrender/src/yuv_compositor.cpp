@@ -251,6 +251,8 @@ void YuvCompositor::renderLayerInPlace_(
   int scaleBufH = scaleH;
   size_t dstDataOffY = 0, dstDataOffCh = 0;
 
+  Yuv420PlanarBuf tempScaledBuf(scaleBufW, scaleBufH, false);
+
   // cropping can change offset within source image
   size_t srcDataOffY = 0, srcDataOffCh = 0;
 
@@ -312,8 +314,8 @@ void YuvCompositor::renderLayerInPlace_(
       scaleH = lround(layerDesc.frame.w / origAsp);
 
       double yOff_px = ((double)scaleBufH - scaleH) / 2.0;
-      dstDataOffY = floor(yOff_px) * scaleBufW;
-      dstDataOffCh = floor(yOff_px / 2.0) * (scaleBufW / 2);
+      dstDataOffY = floor(yOff_px) * tempScaledBuf.rowBytes_y;
+      dstDataOffCh = floor(yOff_px / 2.0) * tempScaledBuf.rowBytes_ch;
 
     } else if (origAsp < dstAsp) {
       // narrow content, so pillarbox (X offset in destination)
@@ -327,8 +329,6 @@ void YuvCompositor::renderLayerInPlace_(
 
   const int dstXOffset = lround(layerDesc.frame.x);
   const int dstYOffset = lround(layerDesc.frame.y);
-
-  Yuv420PlanarBuf tempScaledBuf(scaleBufW, scaleBufH, false);
 
   if (scaleBufW != scaleW || scaleBufH != scaleH) {
     tempScaledBuf.clearWithBlack();
