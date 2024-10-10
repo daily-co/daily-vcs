@@ -861,6 +861,8 @@ class TextNode extends StyledNodeBase {
 
     if (oldProps.text !== newProps.text) return true;
 
+    if (!deepEqual(oldProps.spans, newProps.spans)) return true;
+
     return false;
   }
 
@@ -869,15 +871,21 @@ class TextNode extends StyledNodeBase {
 
     this.text = newProps.text || '';
 
-    if (this.text.length < 1) {
+    this.spans = Array.isArray(newProps.spans) ? newProps.spans : null;
+
+    if (this.text.length < 1 && !this.spans) {
       this.attrStringDesc = null;
     } else {
       if (!this.container) {
         console.error('** container missing for text node %s', this.uuid);
         return;
       }
+      if (this.spans) {
+        this.joinedSpansText = this.spans.map((span) => span.string).join(' ');
+      }
+
       this.attrStringDesc = makeAttributedStringDesc(
-        this.text,
+        this.spans || [{ string: this.text }],
         this.style || {},
         this.container.viewportSize,
         this.container.pixelsPerGridUnit

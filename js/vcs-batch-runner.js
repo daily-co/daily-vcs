@@ -1,5 +1,6 @@
 import * as Path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
 import minimist from 'minimist';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,6 +14,8 @@ import { prepareCompositionAtPath } from './lib-node/jsx-builder.js';
 import { logToHostInfo } from './lib-node/log.js';
 import { BatchState } from './lib-node/batch-util.js';
 import * as ViewContexts from './src/react/contexts/index.js';
+
+const __dirname = Path.dirname(fileURLToPath(import.meta.url));
 
 // CLI arguments
 const argmap = minimist(process.argv.slice(2));
@@ -96,6 +99,12 @@ if (!srcCompPath?.length) {
   process.exit(1);
 }
 
+const resDir = argmap['res_dir'] || Path.resolve(__dirname, '../res');
+let assetDir = Path.dirname(srcCompPath);
+
+const videoTimeOffset = eventsJson?.videoTimeOffset || 0;
+logToHostInfo('video time offset: ', videoTimeOffset);
+
 let fps;
 if (
   argmap['framesPerSecond'] != null &&
@@ -165,18 +174,79 @@ for (let i = 0; i < 16; i++) {
     vcsSourceId: i,
   });
 }
+
+// always provide a test image
 imageSources.assetImages['test_square.png'] = {
   vcsSourceType: 'defaultAsset',
   vcsSourceId: 'test_square_320px.png',
   width: 320,
   height: 320,
 };
-imageSources.assetImages['party-popper_1f389.png'] = {
-  vcsSourceType: 'defaultAsset',
-  vcsSourceId: 'party-popper_1f389.png',
-  width: 240,
-  height: 240,
-};
+
+if (assetDir) {
+  logToHostInfo('Looking for assets in: ', assetDir);
+
+  // map available image assets
+  const supportedImageTypes = ['.png'];
+
+  const imagesDir = Path.resolve(assetDir, 'images');
+  if (fs.existsSync(imagesDir)) {
+    for (const dirent of fs.readdirSync(imagesDir, {
+      withFileTypes: true,
+    })) {
+      if (dirent.isDirectory()) {
+        logToHostInfo(
+          'asset image subdirs are not supported (dirname %s)',
+          dirent.name
+        );
+        continue;
+      }
+      const ext = Path.extname(dirent.name).toLowerCase();
+      if (!supportedImageTypes.includes(ext)) continue;
+
+      const relPathInRes = Path.relative(
+        resDir,
+        Path.resolve(imagesDir, dirent.name)
+      );
+
+      const srcDesc = {
+        vcsSourceType: 'compositionAsset',
+        vcsSourceId: relPathInRes,
+      };
+
+      // if there's a metadata json file for this image, read it
+      const metadataFile = Path.resolve(imagesDir, dirent.name + '.json');
+      if (fs.existsSync(metadataFile)) {
+        try {
+          const json = fs.readFileSync(metadataFile, {
+            encoding: 'utf8',
+          });
+          const metadata = JSON.parse(json);
+          logToHostInfo(
+            'Parsed asset metadata at %s: ',
+            metadataFile,
+            metadata
+          );
+          if (
+            Number.isFinite(metadata.width) &&
+            Number.isFinite(metadata.height)
+          ) {
+            srcDesc.width = metadata.width;
+            srcDesc.height = metadata.height;
+          }
+        } catch (e) {
+          logToHostInfo(
+            '** Error reading asset metadata at %s: ',
+            metadataFile,
+            e
+          );
+        }
+      }
+      imageSources.assetImages[dirent.name] = srcDesc;
+    }
+  }
+  logToHostInfo('Loaded asset images: ', imageSources.assetImages);
+}
 
 let viewportSize = { w: 1280, h: 720 };
 if (
@@ -188,7 +258,7 @@ if (
   viewportSize = eventsJson.outputSize;
 }
 
-const batchState = new BatchState(fps, { webVttCues });
+const batchState = new BatchState(fps, { webVttCues, videoTimeOffset });
 
 main();
 
@@ -272,14 +342,19 @@ function compGetSourceMetadataCb(comp, type, src) {
   return ret;
 }
 
-function compErrorCb(error, info) {
-  const { componentStack } = info;
+let compHasError = false;
 
-  console.error(
-    '** VCS composition error during React render: %s - ',
-    error,
-    componentStack
-  );
+function compErrorCb(error, info) {
+  if (info) {
+    console.error(
+      '** VCS composition error during React render: %s - ',
+      error,
+      info.componentStack
+    );
+  } else {
+    console.error('** VCS composition error during React render: ', error);
+  }
+  compHasError = true;
 }
 
 let cachedOutputJson = {
@@ -288,6 +363,10 @@ let cachedOutputJson = {
 };
 
 function compUpdatedCb(comp) {
+  if (compHasError) {
+    console.error("** Can't continue after React error");
+    process.exit(9);
+  }
   if (!batchState.initialStateApplied) return;
 
   logToHostInfo(

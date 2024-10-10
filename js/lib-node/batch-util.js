@@ -5,6 +5,7 @@ import { setTimeout } from 'timers/promises';
 export class BatchState {
   constructor(fps, opts) {
     this.fps = fps || 30;
+    this.videoTimeOffset = opts?.videoTimeOffset || 0;
     this.currentFrame = 0;
     this.initialStateApplied = false;
 
@@ -20,7 +21,7 @@ export class BatchState {
   }
 
   getVideoTime() {
-    return this.currentFrame / this.fps;
+    return this.videoTimeOffset + this.currentFrame / this.fps;
   }
 
   applyNextWebVttCueIfNeeded() {

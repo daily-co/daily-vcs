@@ -67,9 +67,12 @@ if (!reelId || reelId.length < 1) {
   reelId = idx > 0 ? filename.substring(0, idx) : filename;
 }
 
+const compositionId = edl.compositionId || 'daily:baseline';
+
 console.log(
-  "reel id '%s', output size %d * %d, fps %f",
+  "reel id '%s', using composition '%s', output size %d * %d, fps %f",
   reelId,
+  compositionId,
   outputSize.w,
   outputSize.h,
   defaultFps
@@ -196,7 +199,7 @@ function writeVcsIntermediatesForClipSlates(renderedClips, outFilePrefix) {
   const fps = defaultFps;
 
   const vcsBatch = {
-    compositionId: 'daily:baseline',
+    compositionId,
     durationInFrames: 0, // will be filled out below
     framesPerSecond: fps,
     outputSize,
@@ -284,7 +287,10 @@ function writeVcsIntermediatesForCut(cut, renderedClips, outFilePrefix) {
   const fps = defaultFps;
 
   const vcsBatch = {
-    compositionId: 'daily:baseline',
+    compositionId,
+    videoTimeOffset: Number.isFinite(cut.videoTimeOffset)
+      ? cut.videoTimeOffset
+      : 0,
     durationInFrames: Math.floor(totalDuration * fps),
     framesPerSecond: fps,
     outputSize,

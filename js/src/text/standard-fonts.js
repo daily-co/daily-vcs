@@ -156,6 +156,18 @@ const Teko = [
 
 const NotoColorEmoji = [{ fileName: 'NotoColorEmoji-Regular.ttf' }];
 
+// -- fonts added for Bolt Foundry ---
+
+const BebasNeue = [{ fileName: 'BebasNeue-Bold.ttf', fontWeight: 700 }];
+
+const Futura = [{ fileName: 'Futura-Bold.ttf', fontWeight: 700 }];
+
+const KC = [{ fileName: 'KCIllHand-Regular.ttf', fontWeight: 400 }];
+
+const Lovelo = [{ fileName: 'Lovelo-Bold.otf', fontWeight: 700 }];
+
+// ---
+
 export const defaultFontFamilyName = 'Roboto';
 export const emojiFontFamilyName = 'NotoColorEmoji';
 
@@ -207,5 +219,22 @@ export const standardFontFamilies = [
   {
     family: emojiFontFamilyName,
     variants: NotoColorEmoji,
+  },
+  // --- added for Bolt Foundry ---
+  {
+    family: 'BebasNeue',
+    variants: BebasNeue,
+  },
+  {
+    family: 'Futura',
+    variants: Futura,
+  },
+  {
+    family: 'KCIllHand',
+    variants: KC,
+  },
+  {
+    family: 'Lovelo',
+    variants: Lovelo,
   },
 ];
