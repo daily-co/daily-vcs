@@ -148,11 +148,17 @@ export default function VideoDominant(props) {
       pArr = pArr.slice(0, maxItems);
     }
 
-    pArr.sort((a, b) => {
-      if (a.highlighted && !b.highlighted) return -1;
-      if (b.highlighted && !a.highlighted) return 1;
-      return 0;
-    });
+    if (followDominantFlag) {
+      // this applies to the situation where the dominant video
+      // ('highlighted' flag) is not shown in the main view;
+      // in practice if we have a screenshare or WebFrame occupying it,
+      // then we want the dominant video sorted at the top here
+      pArr.sort((a, b) => {
+        if (a.highlighted && !b.highlighted) return -1;
+        if (b.highlighted && !a.highlighted) return 1;
+        return 0;
+      });
+    }
 
     let itemAspectRatio;
     if (centerItems) {
