@@ -43,7 +43,7 @@ class InputTimingsJSONHandler {
       default: break;
 
       case top:
-        if (s == "durationInFrames") {
+        if (s == "durationInFrames" || s == "startFrame") {
           currKey_ = s;
           return true;
         }
@@ -150,6 +150,9 @@ class InputTimingsJSONHandler {
         if (currKey_ == "durationInFrames") {
           desc_.durationInFrames = u;
           return true;
+        } else if (currKey_ == "startFrame") {
+          desc_.startFrame = u;
+          return true;
         }
     }
     std::stringstream ss;
@@ -240,8 +243,10 @@ std::unique_ptr<VCSVideoInputTimingsDesc> ParseVCSVideoInputTimingsDescJSON(cons
     throw std::runtime_error(ss.str());
   }
 
-  std::cout << "Read input timings json with " << desc->playbackEvents.size() << " events, "
-      << "duration = " << desc->durationInFrames << std::endl;
+  std::cout << "Read input timings json with " << desc->playbackEvents.size() << " events"
+      << ", duration = " << desc->durationInFrames
+      << ", startFrame = " << desc->startFrame
+      << std::endl;
 
   return desc;
 }
