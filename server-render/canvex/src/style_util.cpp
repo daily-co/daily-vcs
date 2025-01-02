@@ -1,7 +1,10 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE // for strtod_l 
 #endif
-
+#ifdef __APPLE__
+#include <string.h>
+#include <xlocale.h>
+#endif
 #include "style_util.h"
 #include <cmath>
 #include <cstring>

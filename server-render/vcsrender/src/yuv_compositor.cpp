@@ -155,7 +155,7 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
 {
   ThumbCaptureSettings thumbSettings{};
 
-  renderFrame(frameIdx, inputBufsById, thumbSettings, nullptr);
+  return renderFrame(frameIdx, inputBufsById, thumbSettings, nullptr);
 }
 
  std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
