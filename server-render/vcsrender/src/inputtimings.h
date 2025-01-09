@@ -48,7 +48,8 @@ struct VideoInputPlaybackEvent {
 };
 
 struct VCSVideoInputTimingsDesc {
-  size_t durationInFrames;
+  size_t durationInFrames = 0;
+  size_t startFrame = 0;
   std::vector<VideoInputPlaybackEvent> playbackEvents;
 };
 

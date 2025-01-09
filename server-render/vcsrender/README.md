@@ -20,12 +20,12 @@ Vcsrender output is in the YUV sequence format. You can then use the script `con
 
 No audio processing is available. This is purely a video compositor. You could modify the `convert_yuvseq_to_movie.sh` script so it muxes back your original movie's audio to the new movie file.
 
-
 ## Building
 
 Notes before building:
-* If on macOS, see below for additional setup notes before building.
-* Some static libraries are included for x86 and ARM architectures. These may not be available for your OS+arch combo yet. See Dependencies section below.
+
+- If on macOS, see below for additional setup notes before building.
+- Some static libraries are included for x86 and ARM architectures. These may not be available for your OS+arch combo yet. See Dependencies section below.
 
 The build depends on the `canvex` subproject which provides 2D graphics rendering. Meson will build it automatically, but you must provide a symlink to it in the `subprojects` directory:
 `ln -s ../../canvex subprojects/canvex`
@@ -44,23 +44,21 @@ This should place the `vcsrender` binary in the `build` subdir.
 
 At runtime, vcsrender expects to find VCS resources such as fonts in a `res` directory two levels up from `vcsrender`. (I.e. `../../res`.) This matches the structure of the daily-vcs repo. This resource location isn't currently configurable, but will be eventually.
 
-
 ## macOS setup notes
 
-macOS doesn't have the "argp" argument parser library which is standard on Linux. The Mac build therefore needs it from homebrew:
+macOS doesn't have the "argp" argument parser library which is standard on Linux. The Mac build therefore needs it from homebrew,
+in addition to Meson:
 
-`brew install argp-standalone`
-
+`brew install meson argp-standalone`
 
 ## Dependencies
 
 Vcsrender uses two Google libraries, Skia and libyuv. The Google build chain is complex. To simplify things, we build these as static libraries which are included here.
 
-* Libyuv library binaries are in `libyuv/lib-static`.
-* Skia library binaries are under the canvex subproject.
+- Libyuv library binaries are in `libyuv/lib-static`.
+- Skia library binaries are under the canvex subproject.
 
 Check that there's a binary for your architecture (e.g. `libyuv/lib-static/mac-arm64`). If there isn't one, the library needs to be built before you can build vcsrender.
-
 
 ## Running an example
 
@@ -86,7 +84,7 @@ Now run vcsrender with the two inputs:
 build/vcsrender --oseq example-data/temp/testrender_yuv --duration_frames 300 --iw 1280 --ih 720 --iseq example-data/temp/bunny_yuv --iseq example-data/temp/webcam_yuv
 ```
 
-In this case, we are providing two input YUV sequences both sized 1280*720. If the size is different, you can add `--iw` and `--ih` arguments before an `--iseq` to specify. (For describing more complex inputs, see section "Rendering a cut" below.)
+In this case, we are providing two input YUV sequences both sized 1280\*720. If the size is different, you can add `--iw` and `--ih` arguments before an `--iseq` to specify. (For describing more complex inputs, see section "Rendering a cut" below.)
 
 Convert the output to a movie:
 
@@ -124,11 +122,10 @@ build/vcsrender --oseq example-data/temp/testrender_yuv \
 
 Note how the `--input-timings` argument replaces the `--iseq, --iw, --ih` arguments used in the simple example shown previously. The input timings JSON format describes the inputs completely.
 
-
 ## Bugs and limitations
 
-* Rounded corners on video are not yet supported.
+- Rounded corners on video are not yet supported.
 
-* YUV frame I/O happens only through file sequences currently. For some workflows it would be more convenient to support stdio so that you could just pipe output to/from ffmpeg.
+- YUV frame I/O happens only through file sequences currently. For some workflows it would be more convenient to support stdio so that you could just pipe output to/from ffmpeg.
 
-* Static library binaries are missing for some common platforms. (See "Dependencies" above).
+- Static library binaries are missing for some common platforms. (See "Dependencies" above).
