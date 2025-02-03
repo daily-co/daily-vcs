@@ -46,9 +46,21 @@ VcsRenderCtx VcsRenderCtxCreate(
 );
 void VcsRenderCtxDestroy(VcsRenderCtx);
 
+// debug utility
 void VcsRenderCtxSetThumbCaptureIntervalFrames(
   VcsRenderCtx ctx,
   int32_t frameIntv
+);
+
+/* 
+  Background color string must be in canvex-compatible format.
+  Examples:
+    #fff, #f0f0f0, rgba(240, 240, 240, 0.7)
+  Empty string clears to black.
+*/
+VcsRenderResult VcsRenderCtxSetBackgroundColorFromString(
+  VcsRenderCtx ctx_c,
+  const char *colorStr
 );
 
 VcsRenderResult VcsRenderCtxUpdateVideoLayersJSON(
