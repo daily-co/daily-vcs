@@ -37,6 +37,10 @@ class YuvCompositor {
             ThumbCaptureSettings& thumbSettings,
             std::string* outThumbCaptureStr);
 
+ // background color string must be in canvex-compatible format.
+ // accepted formats include #fff, #f0f0f0, and rgba(240, 240, 240, 0.7)
+ // empty string clears to black.
+ void renderBackground(const std::string& colorStr);
 
  // ---
  private:
@@ -47,6 +51,8 @@ class YuvCompositor {
 
   std::shared_ptr<Yuv420PlanarBuf> compBuf_;
   std::shared_ptr<Yuv420PlanarBuf> compTempBuf_;
+
+  std::shared_ptr<Yuv420PlanarBuf> bgBuf_;
 
   uint8_t* fgRGBABuf_;
   uint32_t fgRGBABufRowBytes_;

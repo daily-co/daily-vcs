@@ -1,4 +1,5 @@
 #pragma once
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -60,6 +61,38 @@ struct Yuv420PlanarBuf {
     memset(data, 0, rowBytes_y * h);
     memset(getCbData(), 127, rowBytes_ch * chromaH);
     memset(getCrData(), 127, rowBytes_ch * chromaH);
+  }
+
+  bool copyFrom(Yuv420PlanarBuf& src) {
+    if (src.w != w || src.h != h) {
+      return false;
+    }
+    if (src.rowBytes_y == rowBytes_y) {
+      memcpy(data, src.data, src.rowBytes_y * h);
+    } else {
+      auto rb = std::min(rowBytes_y, src.rowBytes_y);
+      for (uint32_t y = 0; y < h; y++) {
+        memcpy(data + y * rowBytes_y, src.data + y * src.rowBytes_y, rb);
+      }
+    }
+
+    if (src.rowBytes_ch == rowBytes_ch) {
+      memcpy(getCbData(), src.getConstCbData(), rowBytes_ch * chromaH);
+      memcpy(getCrData(), src.getConstCrData(), rowBytes_ch * chromaH);
+    } else {
+      auto rb = std::min(rowBytes_ch, src.rowBytes_ch);
+      uint8_t* dstBuf = getCbData();
+      const uint8_t* srcBuf = src.getConstCbData();
+      for (uint32_t y = 0; y < h; y++) {
+        memcpy(dstBuf + y * rowBytes_ch, srcBuf + y * src.rowBytes_ch, rb);
+      }
+      dstBuf = getCrData();
+      srcBuf = src.getConstCrData();
+      for (uint32_t y = 0; y < h; y++) {
+        memcpy(dstBuf + y * rowBytes_ch, srcBuf + y * src.rowBytes_ch, rb);
+      }
+    }
+    return true;
   }
 
   inline size_t calcDataSize() {

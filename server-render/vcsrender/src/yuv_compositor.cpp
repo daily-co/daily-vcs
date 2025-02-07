@@ -111,6 +111,10 @@ YuvCompositor::YuvCompositor(int32_t w, int32_t h, const std::string& canvexResD
   // retained temp buffer used for final composite
   compTempBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_);
 
+  // retained buffer for background
+  bgBuf_ = std::make_shared<Yuv420PlanarBuf>(w_, h_);
+  bgBuf_->clearWithBlack();
+
   // retained buffer for overlay graphics in RGBA format
   fgRGBABufRowBytes_ = w_ * 4;
   fgRGBABuf_ = (uint8_t *) malloc(fgRGBABufRowBytes_ * h_);
@@ -126,6 +130,58 @@ YuvCompositor::~YuvCompositor() {
   if (canvexCtx_) CanvexResourceCtxDestroy(canvexCtx_);
   if (fgRGBABuf_) free(fgRGBABuf_);
   if (layerTempBuf_) free(layerTempBuf_);
+}
+
+void YuvCompositor::renderBackground(const std::string& colorStr) {
+  if (colorStr.length() < 1) {
+    bgBuf_->clearWithBlack();
+    return;
+  }
+
+  // render the background color using canvex.
+  // this may seem too elaborate for just a color fill, but there's some good reasons:
+  //   1) ensures RGB->YUV color conversion matches foreground graphics
+  //   2) color name lookup matches what's available in canvex
+  //   3) can be extended later for images, gradients etc.
+  // 
+  // example JSON for background fill:
+  // { "width": 1280, "height": 720, "commands": [ ["fillStyle", "#f00"], ["fillRect", [0, 0, 1280, 720]] ] }
+  //
+  std::stringstream ss;
+  ss << "{ \"width\": " << w_ << ", \"height\": " << h_ << ",";
+  ss << " \"commands\": [ [\"fillStyle\", \"" << colorStr << "\"],";
+  ss << " [\"fillRect\", [0, 0, " << w_ << ", " << h_ << "]] ] }";
+  auto json = ss.str();
+
+  //std::cout << "doing canvex update for bg: " << json << std::endl;
+
+  CanvexRenderResult err = CanvexRenderJSON_RGBA(
+    canvexCtx_,
+    json.c_str(),
+    fgRGBABuf_,
+    w_,
+    h_,
+    fgRGBABufRowBytes_,
+    CanvexAlphaMode::CANVEX_PREMULTIPLIED,
+    nullptr /* execution stats */);
+  if (err != CanvexRenderSuccess) {
+    std::cerr << "** VCSRender canvex render for background layer failed, err code = " << err << std::endl;
+  }
+
+  libyuv::ARGBToI420(
+    fgRGBABuf_, // source
+    fgRGBABufRowBytes_,
+    bgBuf_->data, // destination
+    bgBuf_->rowBytes_y,
+    bgBuf_->getCbData(),
+    bgBuf_->rowBytes_ch,
+    bgBuf_->getCrData(),
+    bgBuf_->rowBytes_ch,
+    w_,
+    h_);
+
+  // clear the tempbuf
+  memset(fgRGBABuf_, 0, fgRGBABufRowBytes_ * h_);
 }
 
 bool YuvCompositor::setVideoLayersJSON(const std::string& jsonStr) {
@@ -167,7 +223,7 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   //std::cout << "rendering frame " << frameIdx << " ... " << std::endl;
 
   if (pendingCanvexJSONUpdate_) {
-    std::cout << "doing canvex update" << std::endl;
+    //std::cout << "doing canvex update" << std::endl;
     CanvexRenderResult err = CanvexRenderJSON_RGBA(
       canvexCtx_,
       pendingCanvexJSONUpdate_->c_str(),
@@ -183,9 +239,9 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
     pendingCanvexJSONUpdate_ = std::nullopt;
   }
 
-  // TODO: clear can be skipped if video layer frames cover entire viewport.
+  // TODO: background clear/copy could be skipped if video layer frames cover entire viewport.
   // in practice the common case would be layer #0 at full screen, and checking for that is easy.
-  compBuf_->clearWithBlack();
+  compBuf_->copyFrom(*bgBuf_);
 
   if (!videoLayers_ || videoLayers_->size() < 1) {
     //std::cout << " .. videoLayers is empty" << std::endl;

@@ -64,6 +64,18 @@ void VcsRenderCtxSetThumbCaptureIntervalFrames(
   ctx->thumbSettings.captureIntervalInFrames = frameIntv;
 }
 
+VcsRenderResult VcsRenderCtxSetBackgroundColorFromString(VcsRenderCtx ctx_c, const char *colorStr_c) {
+  if (!ctx_c || !colorStr_c) {
+    return VcsRenderError_GraphicsUnspecifiedError;
+  }
+  auto ctx = static_cast<vcsrender::c_api_internal::RenderCtx*>(ctx_c);
+  auto str = std::string{colorStr_c};
+
+  ctx->compositor.renderBackground(str);
+  
+  return VcsRenderSuccess;
+}
+
 VcsRenderResult VcsRenderCtxUpdateVideoLayersJSON(
   VcsRenderCtx ctx_c,
   const char *json_c
