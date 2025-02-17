@@ -42,6 +42,7 @@ export function useActiveVideoAndAudio({
     } = activeVideoObj;
 
     let filteredActiveIds = activeIds;
+    let filteredAudioOnlyPeers = omitAudioOnly ? [] : audioOnlyPeers;
 
     if (filterForUnpausedMediaTypes?.length > 0) {
       // when this filter is active, only allow video inputs to be included
@@ -67,12 +68,22 @@ export function useActiveVideoAndAudio({
         );
       });
 
-      if (!omitAudioOnly) {
+      if (filteredAudioOnlyPeers.length > 0) {
         // check if the filter allows audio-only participants
         const allowedTypes = filterForUnpausedMediaTypes
           .split(',')
           .map((s) => s.trim());
-        omitAudioOnly = !allowedTypes.includes('audio');
+        if (allowedTypes.includes('audio')) {
+          // the filter specifies that we should include unpaused audio-only participants,
+          // so do the same filtering as for videos above
+          filteredAudioOnlyPeers = audioOnlyPeers.filter(
+            (peer) =>
+              unpausedPeers.find((p2) => p2.audio?.id === peer.audio?.id) !==
+              undefined
+          );
+        } else {
+          filteredAudioOnlyPeers = [];
+        }
       }
     }
 
@@ -90,9 +101,9 @@ export function useActiveVideoAndAudio({
       };
     });
 
-    if (!omitAudioOnly && audioOnlyPeers.length > 0) {
+    if (filteredAudioOnlyPeers.length > 0) {
       items = items.concat(
-        audioOnlyPeers.map((peer, i) => {
+        filteredAudioOnlyPeers.map((peer, i) => {
           return {
             index: items.length + i,
             key: 'audioOnly_' + i,
