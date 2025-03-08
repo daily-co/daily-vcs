@@ -152,6 +152,11 @@ export const compositionParams = [
     values: ['auto-by-viewport', 'vertical', 'horizontal'],
   },
   {
+    id: 'videoSettings.split.scaleModeOverrides',
+    type: 'text',
+    defaultValue: '',
+  },
+  {
     id: 'videoSettings.grid.useDominantForSharing',
     type: 'boolean',
     defaultValue: false,
