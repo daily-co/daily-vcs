@@ -229,6 +229,9 @@ export default function DailyBaselineVCS() {
           <VideoSplit
             margin_gu={params['videoSettings.split.margin_gu']}
             splitDirection={params['videoSettings.split.direction']}
+            scaleModeOverrides={parseCommaSeparatedList(
+              params['videoSettings.split.scaleModeOverrides']
+            )}
             {...videoProps}
           />
         );

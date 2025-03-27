@@ -10,6 +10,7 @@ export default function VideoSplit(props) {
     margin_gu = 0,
     splitDirection,
     zoomFactors,
+    scaleModeOverrides,
   } = props;
   // Make sure we have exactly one or two boxes
   const totalItems = Math.max(1, Math.min(participantDescs.length, 2));
@@ -43,6 +44,13 @@ export default function VideoSplit(props) {
     const zoom =
       zoomFactors[itemIdx] != null ? parseFloat(zoomFactors[itemIdx]) : 1;
 
+    let videoProps = props;
+
+    if (scaleModeOverrides[itemIdx] != null) {
+      const scaleMode = scaleModeOverrides[itemIdx];
+      videoProps = { ...props, scaleMode, scaleModeForScreenshare: scaleMode };
+    }
+
     return (
       <Box
         key={key}
@@ -54,7 +62,7 @@ export default function VideoSplit(props) {
           overrideParticipant={participant}
           overrideDecoration={overrideDecoration}
           zoomFactor={zoom}
-          {...props}
+          {...videoProps}
         />
       </Box>
     );
