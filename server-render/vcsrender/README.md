@@ -27,13 +27,27 @@ Notes before building:
 - If on macOS, see below for additional setup notes before building.
 - Some static libraries are included for x86 and ARM architectures. These may not be available for your OS+arch combo yet. See Dependencies section below.
 
-The build depends on the `canvex` subproject which provides 2D graphics rendering. Meson will build it automatically, but you must provide a symlink to it in the `subprojects` directory:
-`ln -s ../../canvex subprojects/canvex`
+### Git submodule
+
+The build depends on the `canvex` subproject which provides 2D graphics rendering. Libraries used by canvex are in a git submodule. You need to run these commands once in the daily-vcs repo root directory:
+
+```
+git submodule init
+git submodule update
+```
+
+You should see this message if the init+update is successful:
+
+```
+Submodule path 'server-render/canvex/canvex-skia': checked out 'a28e971e1591922036c7745a5bec7a107964d11e'
+```
+
+### Building the tool
 
 Vcsrender is a C++ program set up to be built using Meson, a fairly modern multi-language build system which mostly just works. You need to install meson from your package manager (e.g. Homebrew on Mac).
 
 First initialize with:
-`meson build`
+`meson setup build`
 
 This creates build files in the `build` subdir. You only need to do this once (unless you change the global settings in meson.build files, or upgrade Meson).
 
@@ -46,21 +60,22 @@ At runtime, vcsrender expects to find VCS resources such as fonts in a `res` dir
 
 ## macOS setup notes
 
-macOS doesn't have the "argp" argument parser library which is standard on Linux. The Mac build therefore needs it from homebrew,
-in addition to Meson:
+macOS doesn't have the "argp" argument parser library which is standard on Linux. The Mac build therefore needs this dependency from homebrew, in addition to Meson. You can install both with:
 
 `brew install meson argp-standalone`
 
-## Dependencies
+## Binary dependencies
 
-Vcsrender uses two Google libraries, Skia and libyuv. The Google build chain is complex. To simplify things, we build these as static libraries which are included here.
+Vcsrender uses two Google libraries, Skia and libyuv. The Google build chain is complex. To simplify things, we provide these libraries as pre-built static libraries. They are in the git submodule discussed earlier.
 
 - Libyuv library binaries are in `libyuv/lib-static`.
 - Skia library binaries are under the canvex subproject.
 
-Check that there's a binary for your architecture (e.g. `libyuv/lib-static/mac-arm64`). If there isn't one, the library needs to be built before you can build vcsrender.
+If your platform is something else than Linux x86-64 or macOS ARM64, we probably don't have pre-built binaries. Sorry! The canvex subproject includes instructions for building Skia. The same instructions can be adapted to build libyuv which is much smaller.
 
 ## Running an example
+
+The steps in "Building the tool" above should have put a binary in the subdirectory `build/vcsrender`. Let's give it a try.
 
 Two example videos are provided in `example-data`. We can render a composite of these.
 
@@ -122,10 +137,8 @@ build/vcsrender --oseq example-data/temp/testrender_yuv \
 
 Note how the `--input-timings` argument replaces the `--iseq, --iw, --ih` arguments used in the simple example shown previously. The input timings JSON format describes the inputs completely.
 
-## Bugs and limitations
-
-- Rounded corners on video are not yet supported.
+## Known limitations
 
 - YUV frame I/O happens only through file sequences currently. For some workflows it would be more convenient to support stdio so that you could just pipe output to/from ffmpeg.
 
-- Static library binaries are missing for some common platforms. (See "Dependencies" above).
+- Static library binaries are only available on Linux x86-64 and macOS ARM64. (See "Dependencies" above.)
