@@ -284,8 +284,11 @@ function recurseRenderNode(
         if (node.src && node.src.length > 0) {
           srcDrawable = images ? images[node.src] : null;
           if (!srcDrawable) {
-            warningOutText = `Missing image:\n${node.src}`;
-            placeholderFillColor = 'rgba(0, 50, 200, 0.5)';
+            if (!isVCSDisplayListEncoder) {
+              // only display a warning on screen if we're not on server
+              warningOutText = `Missing image:\n${node.src}`;
+              placeholderFillColor = 'rgba(0, 50, 200, 0.5)';
+            }
             if (!s_missingAssetsNotified.has(node.src)) {
               console.error(
                 'Unable to find specified source image: ',
@@ -484,7 +487,7 @@ function recurseRenderNode(
       warningFrame.y += 2;
       const lines = warningOutText.split('\n');
       for (const line of lines) {
-        drawStyledText(ctx, line, warningStyle, warningFrame, comp);
+        drawStyledText(ctx, line, {}, warningStyle, warningFrame, comp);
         warningFrame.y += 20;
       }
     }
@@ -646,6 +649,9 @@ function drawEmoji(ctx, emoji, x, y, w, h, isInline = true) {
 }
 
 function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
+  // ensure we have coordinates
+  if (!frame?.x || !frame?.y) return;
+
   // when encoding a display list, prefer more easily parsed format
   const isVCSDisplayListEncoder =
     typeof ctx.drawImage_vcsDrawable === 'function';
