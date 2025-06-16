@@ -115,6 +115,29 @@ export function makeVCSRootContainer(
       this.pendingState.mediaInput = mediaInput;
     }
 
+    updateVideoSlotFrameSize(id, w, h) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const mediaInput = {
+        ...(this.pendingState.mediaInput
+          ? this.pendingState.mediaInput
+          : this.state.mediaInput),
+      };
+
+      mediaInput.activeVideoInputSlots = [...mediaInput.activeVideoInputSlots];
+
+      const inp = mediaInput.activeVideoInputSlots.find((it) => it.id === id);
+      if (!inp) {
+        console.error(
+          `Warning: updateVideoSlotFrameSize: no slot found with id ${id}`
+        );
+      } else {
+        inp.frameSize = { w, h };
+      }
+
+      this.pendingState.mediaInput = mediaInput;
+    }
+
     setRoomPeerDescriptionsById(map) {
       // the internal context state is an array, so convert
       const arr = [];
