@@ -57,6 +57,13 @@ export function makeVCSRootContainer(
       // ensure we don't flood too many error messages
       this.errorMsgCount = 0;
       this.maxErrorMsgsToPrint = 100;
+
+      // metadata for video inputs can be updated separately using updateVideoSlotFrameSize().
+      // these updates must take priority over the base media input state because they are
+      // directly from the rendering pipeline while base state can be from a higher-level system
+      // that has cached the original values without knowledge of what the rendering pipeline sees.
+      // map keys are video input ids.
+      this.videoSlotFrameSizeOverrides = new Map();
     }
 
     logError(msg) {
@@ -106,6 +113,8 @@ export function makeVCSRootContainer(
     setActiveVideoInputSlots(arr) {
       if (!this.pendingState) this.pendingState = {};
 
+      arr = this.applyOverridesToActiveVideoInputSlots(arr);
+
       const mediaInput = {
         ...(this.pendingState.mediaInput
           ? this.pendingState.mediaInput
@@ -113,6 +122,26 @@ export function makeVCSRootContainer(
         activeVideoInputSlots: arr,
       };
       this.pendingState.mediaInput = mediaInput;
+    }
+
+    applyOverridesToActiveVideoInputSlots(activeVideoInputSlots) {
+      if (this.videoSlotFrameSizeOverrides.size < 1)
+        return activeVideoInputSlots;
+
+      activeVideoInputSlots = [...activeVideoInputSlots];
+
+      for (const [id, frameSize] of this.videoSlotFrameSizeOverrides) {
+        const inp = activeVideoInputSlots.find((it) => it.id === id);
+        if (!inp) {
+          console.error(
+            `Warning: updateVideoSlotFrameSize: no slot found with id ${id}`
+          );
+        } else {
+          inp.frameSize = frameSize;
+        }
+      }
+
+      return activeVideoInputSlots;
     }
 
     updateVideoSlotFrameSize(id, w, h) {
@@ -124,16 +153,12 @@ export function makeVCSRootContainer(
           : this.state.mediaInput),
       };
 
-      mediaInput.activeVideoInputSlots = [...mediaInput.activeVideoInputSlots];
+      this.videoSlotFrameSizeOverrides.set(id, { w, h });
 
-      const inp = mediaInput.activeVideoInputSlots.find((it) => it.id === id);
-      if (!inp) {
-        console.error(
-          `Warning: updateVideoSlotFrameSize: no slot found with id ${id}`
+      mediaInput.activeVideoInputSlots =
+        this.applyOverridesToActiveVideoInputSlots(
+          mediaInput.activeVideoInputSlots
         );
-      } else {
-        inp.frameSize = { w, h };
-      }
 
       this.pendingState.mediaInput = mediaInput;
     }
