@@ -57,6 +57,13 @@ export function makeVCSRootContainer(
       // ensure we don't flood too many error messages
       this.errorMsgCount = 0;
       this.maxErrorMsgsToPrint = 100;
+
+      // metadata for video inputs can be updated separately using updateVideoSlotFrameSize().
+      // these updates must take priority over the base media input state because they are
+      // directly from the rendering pipeline while base state can be from a higher-level system
+      // that has cached the original values without knowledge of what the rendering pipeline sees.
+      // map keys are video input ids.
+      this.videoSlotFrameSizeOverrides = new Map();
     }
 
     logError(msg) {
@@ -106,12 +113,53 @@ export function makeVCSRootContainer(
     setActiveVideoInputSlots(arr) {
       if (!this.pendingState) this.pendingState = {};
 
+      arr = this.applyOverridesToActiveVideoInputSlots(arr);
+
       const mediaInput = {
         ...(this.pendingState.mediaInput
           ? this.pendingState.mediaInput
           : this.state.mediaInput),
         activeVideoInputSlots: arr,
       };
+      this.pendingState.mediaInput = mediaInput;
+    }
+
+    applyOverridesToActiveVideoInputSlots(activeVideoInputSlots) {
+      if (this.videoSlotFrameSizeOverrides.size < 1)
+        return activeVideoInputSlots;
+
+      activeVideoInputSlots = [...activeVideoInputSlots];
+
+      for (const [id, frameSize] of this.videoSlotFrameSizeOverrides) {
+        const inp = activeVideoInputSlots.find((it) => it.id === id);
+        if (!inp) {
+          console.error(
+            `Warning: updateVideoSlotFrameSize: no slot found with id ${id}`
+          );
+        } else {
+          inp.frameSize = frameSize;
+        }
+      }
+
+      return activeVideoInputSlots;
+    }
+
+    updateVideoSlotFrameSize(id, w, h) {
+      if (!this.pendingState) this.pendingState = {};
+
+      const mediaInput = {
+        ...(this.pendingState.mediaInput
+          ? this.pendingState.mediaInput
+          : this.state.mediaInput),
+      };
+
+      this.videoSlotFrameSizeOverrides.set(id, { w, h });
+
+      mediaInput.activeVideoInputSlots =
+        this.applyOverridesToActiveVideoInputSlots(
+          mediaInput.activeVideoInputSlots
+        );
+
       this.pendingState.mediaInput = mediaInput;
     }
 
