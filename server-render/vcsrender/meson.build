@@ -36,8 +36,13 @@ if system_mac
   endif
   message('Using libyuv libdir: {}', libyuv_libdir)
 else
-  message('Building for Linux x86_64')
-  libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/linux-x64'
+  if build_cpu == 'aarch64'
+    message('Building for Linux ARM')
+    libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/linux-arm64'
+  else
+    message('Building for Linux x86_64')
+    libyuv_libdir = meson.current_source_dir() + '/libyuv/lib-static/linux-x64'
+  endif
   
   libyuv_lib = cpp.find_library('yuv_internal', static : true, dirs : libyuv_libdir)
   libyuv_libs = [
