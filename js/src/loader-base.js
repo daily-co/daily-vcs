@@ -133,9 +133,9 @@ export function makeVCSRootContainer(
       for (const [id, frameSize] of this.videoSlotFrameSizeOverrides) {
         const inp = activeVideoInputSlots.find((it) => it.id === id);
         if (!inp) {
-          console.error(
-            `Warning: updateVideoSlotFrameSize: no slot found with id ${id}`
-          );
+          // not an error.
+          // this can happen when a track is removed and the frame size update
+          // message happens to come in after the input slots update.
         } else {
           inp.frameSize = frameSize;
         }
