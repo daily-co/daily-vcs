@@ -24,6 +24,7 @@ export function useActiveVideo(opts) {
   const preferScreenshare = opts?.preferScreenshare || false;
   const omitPaused = opts?.omitPaused || false;
   const omitExtraScreenshares = opts?.omitExtraScreenshares || false;
+  const omitPausedNotScreensharing = opts?.omitPausedNotScreensharing || false;
 
   const memo = React.useMemo(() => {
     let numCamStreams = 0;
@@ -41,6 +42,8 @@ export function useActiveVideo(opts) {
 
       const videoId = slot.id !== undefined ? slot.id : i;
       const paused = !!slot.paused;
+
+
 
       if (!omitPaused || !paused) {
         if (slot.type === 'screenshare') {
@@ -65,6 +68,7 @@ export function useActiveVideo(opts) {
           dominantId = videoId;
         }
       }
+
       displayNamesById[videoId] = slot.displayName;
       pausedById[videoId] = paused;
       frameSizesById[videoId] = slot.frameSize || { w: 0, h: 0 };
