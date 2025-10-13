@@ -114,19 +114,24 @@ export default function AugmentedSplit(props) {
       // }
       const pxPerGu = useGrid().pixelsPerGridUnit;
 
-      function fixedWidthLayout(parentFrame, params) {
-        const pipSize_gu = 4;
-        const margin_gu = 2;
-        const interval_gu = 1;
-        const visibleCount = 12;
-        const w =
-          visibleCount * (pipSize_gu * pxPerGu + interval_gu * pxPerGu) +
-          2 * margin_gu * pxPerGu;
-        const h = parentFrame.h;
-        const x = parentFrame.x;
-        const y = parentFrame.y;
-        return { x, y, w, h };
-      }
+      // Memoize the layout function to avoid recreation
+      const fixedWidthLayout = React.useCallback(
+        (parentFrame, params) => {
+          const pipSize_gu = 4;
+          const margin_gu = 2;
+          const interval_gu = 1;
+          const visibleCount = 12;
+          const w =
+            visibleCount * (pipSize_gu * pxPerGu + interval_gu * pxPerGu) +
+            2 * margin_gu * pxPerGu;
+          const h = parentFrame.h;
+          const x = parentFrame.x;
+          const y = parentFrame.y;
+          return { x, y, w, h };
+        },
+        [pxPerGu]
+      );
+
       if (allAudiences.length > 0 && !isHideAudienceStream) {
         otherOverlays = (
           <Box
@@ -269,40 +274,6 @@ function SimplePip({ participant, prodId }) {
   );
 }
 
-function updateAnim(prev, t) {
-  const dT = t - prev.t;
-  // const speed = ANIM_SPEED;
-  // const pos = {
-  //   x: prev.pos.x + prev.dir.x * speed * dT,
-  //   y: prev.pos.y + prev.dir.y * speed * dT,
-  // };
-  // const dir = { ...prev.dir };
-  // if (pos.x >= 1 || pos.x <= 0) {
-  //   pos.x = Math.min(1, Math.max(0, pos.x));
-  //   dir.x *= -1;
-  // }
-  // if (pos.y >= 1 || pos.y <= 0) {
-  //   pos.y = Math.min(1, Math.max(0, pos.y));
-  //   dir.y *= -1;
-  // }
-  // Move horizontally, loop back to 0 when reaching 1
-  // Always move left, wrap to right when reaching the start
-  // const dT = t - prev.t;
-  const speed = ANIM_SPEED;
-  // Always move left, wrap to right when reaching the start
-  let x = prev.pos.x - speed * dT;
-  if (x < 0) x = 1;
-  const pos = {
-    x,
-    y: prev.pos.y, // keep y constant
-  };
-  return {
-    t,
-    pos,
-    dir: { x: -1, y: 0 }, // always move left
-  };
-}
-
 // a row of picture-in-picture videos, using an inline layout function
 //
 function PipRow({
@@ -321,6 +292,7 @@ function PipRow({
 
   const itemWidthPx = pipSize_gu * pxPerGu + interval_gu * pxPerGu;
   const total = participantDescs.length;
+  const rowWidthPx = total * itemWidthPx;
 
   // Animation state - use ref to persist across renders
   const animRef = React.useRef({
@@ -336,7 +308,6 @@ function PipRow({
   if (frame !== animRef.current.frame) {
     const dT = t - animRef.current.t;
     const speed = ANIM_SPEED * 0.05; // Slow pace
-    const rowWidthPx = total * itemWidthPx;
 
     // Update offset position
     let newOffset = animRef.current.offset - speed * dT * itemWidthPx * total;
@@ -351,32 +322,59 @@ function PipRow({
     };
   }
 
-  function rowLayoutFn(parentFrame, params) {
-    const { xPx } = params;
-    let { x, y, w, h } = parentFrame;
-    const margin = margin_gu * pxPerGu;
+  // Memoize layout function to avoid recreation on every render
+  const rowLayoutFn = React.useCallback(
+    (parentFrame, params) => {
+      const { xPx } = params;
+      let { x, y, w, h } = parentFrame;
+      const margin = margin_gu * pxPerGu;
 
-    w = h = pipSize_gu * pxPerGu;
+      w = h = pipSize_gu * pxPerGu;
 
-    // Position item horizontally, wrap for infinite loop
-    x += margin + xPx;
-    y += parentFrame.h - margin - h;
+      // Position item horizontally, wrap for infinite loop
+      x += margin + xPx;
+      y += parentFrame.h - margin - h;
 
-    return { x, y, w, h };
-  }
-  const videoStyle = {
-    cornerRadius_px: (pipSize_gu / 2) * pxPerGu, // mask to circle
-  };
-  const labelStyle = {
-    textColor: primaryColor,
-    fontFamily: "DMSans",
-    fontWeight: "700",
-    textAlign: "center",
-    fontSize_gu: 2,
-  };
+      return { x, y, w, h };
+    },
+    [pxPerGu, margin_gu, pipSize_gu]
+  );
 
-  // Calculate the total width of the scrolling row
-  const rowWidthPx = total * itemWidthPx;
+  // Memoize styles to avoid recreation on every render
+  const videoStyle = React.useMemo(
+    () => ({
+      cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
+    }),
+    [pipSize_gu, pxPerGu]
+  );
+
+  const labelStyle = React.useMemo(
+    () => ({
+      textColor: primaryColor,
+      fontFamily: "DMSans",
+      fontWeight: "700",
+      textAlign: "center",
+      fontSize_gu: 2,
+    }),
+    [primaryColor]
+  );
+
+  const boxStyle = React.useMemo(
+    () => ({
+      cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
+      strokeWidth_px: 2,
+      strokeColor: primaryColor,
+    }),
+    [pipSize_gu, pxPerGu, primaryColor]
+  );
+
+  const pausedBoxStyle = React.useMemo(
+    () => ({
+      ...boxStyle,
+      fillColor: pauseBgColor,
+    }),
+    [boxStyle, pauseBgColor]
+  );
 
   return participantDescs.map((pd, idx) => {
     const { videoId, paused, displayName = "" } = pd;
@@ -393,12 +391,8 @@ function PipRow({
         isHideMutedVideos ? (
           <Box
             id={idx + "hide_audience"}
-            style={{
-              cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
-              strokeWidth_px: 2,
-              strokeColor: primaryColor,
-              fillColor: pauseBgColor,
-            }}
+            key={idx + "hide_audience"}
+            style={pausedBoxStyle}
             layout={[rowLayoutFn, { xPx }]}
           >
             <Text
@@ -415,12 +409,8 @@ function PipRow({
         ) : (
           <Box
             id={idx + "_pipAudience"}
-            style={{
-              cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
-              strokeWidth_px: 2,
-              strokeColor: primaryColor,
-              fillColor: pauseBgColor,
-            }}
+            key={idx + "_pipAudience"}
+            style={pausedBoxStyle}
             layout={[rowLayoutFn, { xPx }]}
           >
             {displayName ? (
@@ -440,15 +430,7 @@ function PipRow({
           </Box>
         )
       ) : (
-        <Box
-          key={idx}
-          style={{
-            cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
-            strokeWidth_px: 2,
-            strokeColor: primaryColor,
-          }}
-          layout={[rowLayoutFn, { xPx }]}
-        >
+        <Box key={idx} style={boxStyle} layout={[rowLayoutFn, { xPx }]}>
           <Video src={videoId} scaleMode="fill" style={videoStyle} />
         </Box>
       )
