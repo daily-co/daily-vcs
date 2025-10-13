@@ -318,10 +318,38 @@ function PipRow({
   const interval_gu = 1;
   const visibleCount = 13;
   const t = useVideoTime();
-  const speed = ANIM_SPEED * 0.05; // Slow pace
 
   const itemWidthPx = pipSize_gu * pxPerGu + interval_gu * pxPerGu;
   const total = participantDescs.length;
+
+  // Animation state - use ref to persist across renders
+  const animRef = React.useRef({
+    t: -1,
+    frame: -1,
+    offset: 0,
+  });
+
+  // Update animation state only when frame changes
+  const FPS = 1 / 30; // 30 fps animation update rate
+  const frame = Math.floor(t / FPS);
+
+  if (frame !== animRef.current.frame) {
+    const dT = t - animRef.current.t;
+    const speed = ANIM_SPEED * 0.05; // Slow pace
+    const rowWidthPx = total * itemWidthPx;
+
+    // Update offset position
+    let newOffset = animRef.current.offset - speed * dT * itemWidthPx * total;
+    if (newOffset < -rowWidthPx) {
+      newOffset += rowWidthPx;
+    }
+
+    animRef.current = {
+      t,
+      frame,
+      offset: newOffset,
+    };
+  }
 
   function rowLayoutFn(parentFrame, params) {
     const { xPx } = params;
@@ -353,9 +381,8 @@ function PipRow({
   return participantDescs.map((pd, idx) => {
     const { videoId, paused, displayName = "" } = pd;
 
-    // Animate x position from right to left, wrap for infinite loop
-    let xPx =
-      (idx * itemWidthPx - speed * t * itemWidthPx * total) % rowWidthPx;
+    // Calculate x position using the memoized animation state
+    let xPx = (idx * itemWidthPx + animRef.current.offset) % rowWidthPx;
     if (xPx < 0) xPx += rowWidthPx;
 
     // Only render items that are within the visible area
