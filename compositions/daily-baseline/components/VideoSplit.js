@@ -114,7 +114,7 @@ export default function AugmentedSplit(props) {
       // }
       const pxPerGu = useGrid().pixelsPerGridUnit;
 
-      // Memoize the layout function to avoid recreation
+      // Memoize layout function since it's invoked during layout calculation
       const fixedWidthLayout = React.useCallback(
         (parentFrame, params) => {
           const pipSize_gu = 4;
@@ -322,7 +322,7 @@ function PipRow({
     };
   }
 
-  // Memoize layout function to avoid recreation on every render
+  // Memoize layout function since it's invoked during layout calculation
   const rowLayoutFn = React.useCallback(
     (parentFrame, params) => {
       const { xPx } = params;
@@ -340,41 +340,28 @@ function PipRow({
     [pxPerGu, margin_gu, pipSize_gu]
   );
 
-  // Memoize styles to avoid recreation on every render
-  const videoStyle = React.useMemo(
-    () => ({
-      cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
-    }),
-    [pipSize_gu, pxPerGu]
-  );
+  const videoStyle = {
+    cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
+  };
 
-  const labelStyle = React.useMemo(
-    () => ({
-      textColor: primaryColor,
-      fontFamily: "DMSans",
-      fontWeight: "700",
-      textAlign: "center",
-      fontSize_gu: 2,
-    }),
-    [primaryColor]
-  );
+  const labelStyle = {
+    textColor: primaryColor,
+    fontFamily: "DMSans",
+    fontWeight: "700",
+    textAlign: "center",
+    fontSize_gu: 2,
+  };
 
-  const boxStyle = React.useMemo(
-    () => ({
-      cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
-      strokeWidth_px: 2,
-      strokeColor: primaryColor,
-    }),
-    [pipSize_gu, pxPerGu, primaryColor]
-  );
+  const boxStyle = {
+    cornerRadius_px: (pipSize_gu / 2) * pxPerGu,
+    strokeWidth_px: 2,
+    strokeColor: primaryColor,
+  };
 
-  const pausedBoxStyle = React.useMemo(
-    () => ({
-      ...boxStyle,
-      fillColor: pauseBgColor,
-    }),
-    [boxStyle, pauseBgColor]
-  );
+  const pausedBoxStyle = {
+    ...boxStyle,
+    fillColor: pauseBgColor,
+  };
 
   return participantDescs.map((pd, idx) => {
     const { videoId, paused, displayName = "" } = pd;
