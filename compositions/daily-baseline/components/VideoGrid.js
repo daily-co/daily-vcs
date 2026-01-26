@@ -20,6 +20,7 @@ export default function VideoGrid(gridProps) {
     outerPadding_gu = -1,
     preserveItemAspectRatio = true,
     fullScreenHighlightItemIndex = -1,
+    enableLayoutAnims = false,
   } = gridProps;
 
   const totalNumItems = participantDescs.length;
@@ -161,6 +162,7 @@ export default function VideoGrid(gridProps) {
       <Box
         key={key}
         id={key}
+        animationId={enableLayoutAnims ? 'grid-item' : undefined}
         layout={itemLayout}
         style={containerStyle}
         clip={clipItem}

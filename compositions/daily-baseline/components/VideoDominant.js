@@ -32,6 +32,7 @@ export default function VideoDominant(props) {
     disableRoundedCornersOnMain = false,
     includeWebFrame = false,
     webFrameProps = {},
+    enableLayoutAnims = false,
   } = props;
 
   itemInterval_gu = Math.max(0, itemInterval_gu);
@@ -237,7 +238,13 @@ export default function VideoDominant(props) {
         : null;
 
       items.push(
-        <Box key={key} clip={clipItem} layout={layout} style={containerStyle}>
+        <Box
+          key={key}
+          animationId={enableLayoutAnims ? 'chiclet' : undefined}
+          clip={clipItem}
+          layout={layout}
+          style={containerStyle}
+        >
           {childItems}
         </Box>
       );

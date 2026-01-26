@@ -49,6 +49,24 @@ export const compositionInterface = {
   params: compositionParams,
 };
 
+// -- animations that will be handled automatically by the layout engine --
+export const layoutAnimations = [
+  {
+    animationId: 'grid-item',
+    properties: ['x', 'y', 'w', 'h'],
+    predicate: 'frame-change-non-zero',
+    function: 'ease-out',
+    duration: 0.3,
+  },
+  {
+    animationId: 'chiclet',
+    properties: ['x', 'y', 'w', 'h'],
+    predicate: 'frame-change-non-zero',
+    function: 'ease-out',
+    duration: 0.3,
+  },
+];
+
 // -- the root component of this composition --
 export default function DailyBaselineVCS() {
   const params = useParams();
@@ -221,6 +239,7 @@ export default function DailyBaselineVCS() {
             fullScreenHighlightItemIndex={
               params['videoSettings.grid.fullScreenHighlightItemIndex']
             }
+            enableLayoutAnims={params['enableLayoutAnims']}
           />
         );
         break;
@@ -317,6 +336,7 @@ export default function DailyBaselineVCS() {
             }
             includeWebFrame={webFrameInVideoLayout}
             webFrameProps={webFrameProps}
+            enableLayoutAnims={params['enableLayoutAnims']}
           />
         );
         break;

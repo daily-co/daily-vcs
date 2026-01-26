@@ -17,6 +17,15 @@ import {
 } from './text/text-layout.js';
 import { getFirstEmoji } from './text/emoji.js';
 
+import {
+  VcsAnimator,
+  AnimatorFunctionType,
+  AnimationPredicateType,
+  evaluatePredicate,
+  isFrameNonZero,
+  areFramesEqual,
+} from './animation/index.js';
+
 // these are the intrinsic elements that our React components are ultimately composed of.
 // (think similar to 'div', 'img' etc. in React-DOM)
 export const IntrinsicNodeType = {
@@ -68,6 +77,13 @@ export class Composition {
     this.lastWebFrameInBg = false;
     this.webFramePropsDidChange = false;
     this.webFrameOrderingDidChange = false;
+
+    // animation system state
+    this.animator = new VcsAnimator();
+    this.activeAnimations = [];
+    this.prevLayoutNodes = null; // previous frame's node state for predicates
+    this.layoutAnimationsMap = null; // Map<animationId, descriptor[]> for O(1) lookup
+    this.videoTime = 0; // current video time in seconds (set by runtime before render)
   }
 
   createNode(type, props) {
@@ -268,6 +284,11 @@ export class Composition {
   _performLayout() {
     if (!this.rootNode) return;
 
+    this._cleanUpFinishedAnimations();
+
+    // save previous layout state for animation predicate evaluation
+    this.prevLayoutNodes = this._captureNodeStates();
+
     let passIndex = 0;
     let usedDeps = new Set();
     const makeLayoutCtxHooks = this._makeLayoutCtxHooks;
@@ -275,6 +296,10 @@ export class Composition {
       viewport: { x: 0, y: 0, w: this.viewportSize.w, h: this.viewportSize.h },
       pixelsPerGridUnit: this.pixelsPerGridUnit,
     };
+
+    const self = this;
+    const videoTime = this.videoTime;
+    let activateNewAnimations = false; // only activate on final pass
 
     function recurseLayout(node, parentFrame, childFrames) {
       let frame = { ...parentFrame };
@@ -307,6 +332,36 @@ export class Composition {
           // 1) this layout node wants the content size after the first pass, or
           // 2) this node applies a container transform.
           thisNodeChildFrames = [];
+        }
+      }
+
+      // capture the computed destination frame before animation
+      const animatableFrame = {
+        x: frame.x,
+        y: frame.y,
+        w: frame.w,
+        h: frame.h,
+      };
+      node.animatableFrame = animatableFrame;
+
+      // Process animations for this node only on the final pass (activateNewAnimations==true) to ensure:
+      // 1. Predicates compare true destination frames (not frames polluted by in-progress animations)
+      // 2. Content size measurement in first pass uses destination frames, not animated frames
+      if (self.layoutAnimationsMap && activateNewAnimations) {
+        const animationId = node.animationId || node.userGivenId;
+        if (animationId) {
+          const animations = self.layoutAnimationsMap.get(animationId);
+
+          if (Array.isArray(animations)) {
+            for (const adesc of animations) {
+              if (self._isAnimPredicateTriggered(adesc.predicates, node)) {
+                self._activateAnimation(adesc, node, videoTime);
+              }
+            }
+          }
+
+          // apply existing animations so children follow animated parents
+          frame = self._applyActiveAnimations(node, frame, videoTime);
         }
       }
 
@@ -413,16 +468,24 @@ export class Composition {
       }
     }
 
-    // first pass
+    // first pass - don't activate new animations yet (frames may be incomplete)
+    activateNewAnimations = false;
     recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
 
     // do second pass only if any node uses the content size hooks
-    if (
+    const needsSecondPass =
       usedDeps.has('contentSize') ||
       usedDeps.has('childSizes') ||
-      usedDeps.has('childStacking')
-    ) {
+      usedDeps.has('childStacking');
+
+    if (needsSecondPass) {
       passIndex = 1;
+      activateNewAnimations = true; // final pass - activate animations
+      recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+    } else {
+      // only one pass needed, so check for animations now.
+      // we re-traverse but layout is already computed, so this just handles animations.
+      activateNewAnimations = true;
       recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
     }
   }
@@ -567,6 +630,248 @@ export class Composition {
     if (!ret || !isFinite(ret.w) || !isFinite(ret.h)) return { w: 0, h: 0 };
     return ret;
   }
+
+  // --- Animation system methods ---
+
+  /**
+   * Called by VCS runtime at setup if composition exports layoutAnimations.
+   * Builds a Map for O(1) lookup by animationId.
+   * @param {Array} animations - Array of animation descriptors with animationId
+   */
+  setLayoutAnimations(animations) {
+    if (!Array.isArray(animations) || animations.length === 0) {
+      this.layoutAnimationsMap = null;
+      return;
+    }
+
+    this.layoutAnimationsMap = new Map();
+    for (const anim of animations) {
+      const id = anim.animationId;
+      if (!id) continue;
+
+      // Build descriptor in the format expected by _activateAnimation
+      const desc = {
+        properties: anim.properties || [],
+        function: anim.function || 'ease',
+        duration: anim.duration ?? 0.3,
+        delay: anim.delay ?? 0,
+        repeat: anim.repeat ?? false,
+        loopBackwards: anim.loopBackwards ?? false,
+        // Build predicate - default to CHANGED_FRAME_ONLY_NONZERO on current node
+        predicates: [
+          {
+            queryPath: '.',
+            propertyType:
+              anim.predicate || AnimationPredicateType.CHANGED_FRAME_ONLY_NONZERO,
+          },
+        ],
+      };
+
+      // Group by animationId (multiple descriptors can share an id)
+      if (!this.layoutAnimationsMap.has(id)) {
+        this.layoutAnimationsMap.set(id, []);
+      }
+      this.layoutAnimationsMap.get(id).push(desc);
+    }
+  }
+
+  /**
+   * Cleans up finished animations.
+   * Called at the start of each layout pass.
+   */
+  _cleanUpFinishedAnimations() {
+    const t = this.videoTime;
+    this.activeAnimations = this.activeAnimations.filter(
+      (anim) => t < anim.inT + anim.duration
+    );
+  }
+
+  /**
+   * Captures current node states for animation predicate comparison.
+   * @returns {Array} Array of node state snapshots
+   */
+  _captureNodeStates() {
+    const states = [];
+    this._recurseWithVisitor((node) => {
+      states.push({
+        uuid: node.uuid,
+        userGivenId: node.userGivenId,
+        animationId: node.animationId,
+        animatableFrame: node.animatableFrame
+          ? { ...node.animatableFrame }
+          : null,
+      });
+      return true;
+    });
+    return states;
+  }
+
+  /**
+   * Finds the previous frame's state for a node by UUID.
+   * @param {string} uuid - Node UUID
+   * @returns {Object|null} Previous node state or null
+   */
+  _findPrevNodeState(uuid) {
+    if (!this.prevLayoutNodes) return null;
+    return this.prevLayoutNodes.find((s) => s.uuid === uuid);
+  }
+
+  /**
+   * Finds nodes matching a query path.
+   * @param {string} queryPath - Query path ('.' for current, '*' for all, etc.)
+   * @param {Object} curNode - Current node context
+   * @returns {Array} Array of matching nodes
+   */
+  _findNodesByQuery(queryPath, curNode) {
+    switch (queryPath) {
+      case '.':
+        // Current node
+        return [curNode];
+
+      case '/':
+        // Root node
+        return this.rootNode ? [this.rootNode] : [];
+
+      case '<':
+        // Immediate parent
+        return curNode.parent ? [curNode.parent] : [];
+
+      case '*': {
+        // All nodes
+        const allNodes = [];
+        this._recurseWithVisitor((node) => {
+          allNodes.push(node);
+          return true;
+        });
+        return allNodes;
+      }
+
+      default:
+        // Check for '*/id' format (node by id anywhere in tree)
+        if (queryPath.startsWith('*/')) {
+          const targetId = queryPath.substring(2);
+          const found = [];
+          this._recurseWithVisitor((node) => {
+            if (
+              node.userGivenId === targetId ||
+              node.animationId === targetId
+            ) {
+              found.push(node);
+            }
+            return true;
+          });
+          return found;
+        }
+        return [];
+    }
+  }
+
+  /**
+   * Checks if any predicate in the list is triggered for a node.
+   * @param {Array} predicates - Array of predicate descriptors
+   * @param {Object} curNode - Current node to check
+   * @returns {boolean} True if any predicate is triggered
+   */
+  _isAnimPredicateTriggered(predicates, curNode) {
+    if (!Array.isArray(predicates) || predicates.length === 0) return false;
+
+    for (const pred of predicates) {
+      const { queryPath, propertyType } = pred;
+
+      // Find target nodes for this query
+      const targetNodes = this._findNodesByQuery(queryPath, curNode);
+      if (targetNodes.length === 0) continue;
+
+      for (const targetNode of targetNodes) {
+        const prevState = this._findPrevNodeState(targetNode.uuid);
+
+        const currentFrame = targetNode.animatableFrame;
+        const prevFrame = prevState?.animatableFrame || null;
+        const isPresent = !!targetNode;
+        const wasPresent = !!prevState;
+
+        if (
+          evaluatePredicate(
+            propertyType,
+            currentFrame,
+            prevFrame,
+            isPresent,
+            wasPresent
+          )
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Creates and stores animation instances for a node.
+   * @param {Object} adesc - Animation descriptor from layoutAnimations
+   * @param {Object} node - Target node
+   * @param {number} videoTime - Current video time
+   */
+  _activateAnimation(adesc, node, videoTime) {
+    const props = adesc.properties || (adesc.property ? [adesc.property] : []);
+    if (!Array.isArray(props) || props.length === 0) return;
+    if (!this.prevLayoutNodes) return;
+
+    const prevState = this._findPrevNodeState(node.uuid);
+    if (!prevState?.animatableFrame) return;
+
+    const srcFrame = prevState.animatableFrame;
+    const dstFrame = node.animatableFrame;
+
+    const duration = Number.isFinite(adesc.duration) ? adesc.duration : 0.3;
+    const delay = Number.isFinite(adesc.delay) ? adesc.delay : 0;
+
+    for (const propName of props) {
+      const startWith = srcFrame[propName];
+      const endWith = dstFrame[propName];
+
+      if (startWith === endWith) continue; // no change to animate
+
+      const newAnim = this.animator.forLayoutProperty(propName, {
+        inT: videoTime + delay,
+        duration,
+        function: adesc.function || AnimatorFunctionType.EASE,
+        startWith,
+        endWith,
+      });
+      newAnim.nodeUuid = node.uuid;
+
+      this.activeAnimations.push(newAnim);
+    }
+  }
+
+  /**
+   * Applies all active animations for a node to modify its frame.
+   * @param {Object} node - Target node
+   * @param {Object} frame - Current computed frame
+   * @param {number} videoTime - Current video time
+   * @returns {Object} Modified frame (or original if no animations)
+   */
+  _applyActiveAnimations(node, frame, videoTime) {
+    let modified = false;
+
+    for (const anim of this.activeAnimations) {
+      if (anim.nodeUuid !== node.uuid) continue;
+
+      const outT = anim.inT + anim.duration;
+      if (videoTime > outT) continue; // animation finished
+
+      if (!modified) {
+        frame = { ...frame }; // copy on first modification
+        modified = true;
+      }
+
+      const v = anim.at(videoTime);
+      frame[anim.propName] = v;
+    }
+
+    return frame;
+  }
 }
 
 // NaN messes up params value comparison, remove it early
@@ -710,6 +1015,7 @@ class NodeBase {
   constructor() {
     this.uuid = uuidv4();
     this.userGivenId = '';
+    this.animationId = null; // optional animation identifier for layout animations
 
     this.parent = null;
     this.children = [];
@@ -720,6 +1026,8 @@ class NodeBase {
     this.layoutFuncDeps = []; // hooks used by the layout function
 
     this.clip = false;
+
+    this.animatableFrame = null; // {x, y, w, h} captured during layout for animations
   }
 
   shouldUpdate(container, oldProps, newProps) {
@@ -753,6 +1061,8 @@ class NodeBase {
 
     if (!isEqualBlend(oldProps.blend, newProps.blend)) return true;
 
+    if (oldProps.animationId !== newProps.animationId) return true;
+
     return false;
   }
 
@@ -764,6 +1074,9 @@ class NodeBase {
     //console.log('commit %s, %s: ', this.uuid, this.constructor.nodeType, newProps);
 
     if (newProps.id) this.userGivenId = newProps.id;
+
+    // animationId for layout animations (falls back to id if not specified)
+    this.animationId = newProps.animationId || null;
 
     if (Array.isArray(newProps.layout)) {
       const params = newProps.layout[1];

@@ -311,6 +311,10 @@ class VCSBrowserOutput {
       this.compGetSourceMetadata.bind(this)
     );
 
+    if (VCSComp.layoutAnimations) {
+      this.comp.setLayoutAnimations(VCSComp.layoutAnimations);
+    }
+
     await textPromise;
 
     // set default values for params
@@ -432,6 +436,17 @@ class VCSBrowserOutput {
       const videoT = t - this.startT;
 
       const playbackState = this.inPostRoll ? 'postroll' : 'playing'; // type defined in TimeContext.js
+
+      // update composition's video time for layout animations
+      this.comp.videoTime = videoT;
+
+      // if there are active animations, force a layout update and render.
+      // this is needed because React only commits when component output changes,
+      // but animations need continuous updates even when props haven't changed.
+      if (this.comp.activeAnimations?.length > 0) {
+        this.comp._performLayout();
+        this.compUpdated(this.comp);
+      }
 
       this.rootContainerRef.current.setVideoTime(videoT, playbackState);
 
