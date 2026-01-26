@@ -185,9 +185,19 @@ async function main() {
       applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
     }
 
-    rootContainerRef.current.setVideoTime(getVideoTime());
+    const videoTime = getVideoTime();
+
+    // Update composition's video time for layout animations
+    composition.videoTime = videoTime;
+
+    rootContainerRef.current.setVideoTime(videoTime);
 
     await setTimeout(1);
+
+    // If there are active animations, force a layout update
+    if (composition.activeAnimations && composition.activeAnimations.length > 0) {
+      composition._performLayout();
+    }
 
     if (g_lastCompUpdateFrame < g_currentFrame) {
       compUpdatedCb(composition);
