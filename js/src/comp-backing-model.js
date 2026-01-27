@@ -83,6 +83,8 @@ export class Composition {
     this.activeAnimations = [];
     this.prevLayoutNodes = null; // previous frame's node state for predicates
     this.layoutAnimationsMap = null; // Map<animationId, descriptor[]> for O(1) lookup
+    this.opacityAnimationsMap = null; // Map<animationId, {appear, disappear}> for opacity transitions
+    this.exitingNodes = []; // nodes being animated out before removal
     this.videoTime = 0; // current video time in seconds (set by runtime before render)
   }
 
@@ -301,11 +303,57 @@ export class Composition {
     const videoTime = this.videoTime;
     let activateNewAnimations = false; // only activate on final pass
 
-    function recurseLayout(node, parentFrame, childFrames) {
+    function recurseLayout(node, parentFrame, childFrames, inheritedOpacity) {
       let frame = { ...parentFrame };
 
       const thisNodeDeps = new Set();
       let thisNodeChildFrames;
+      let opacityForChildren = inheritedOpacity; // pass through by default
+
+      // Handle exiting nodes - use their last frame instead of computing new layout
+      if (node.isExiting) {
+        const exitInfo = self.exitingNodes.find((e) => e.node === node);
+        if (exitInfo?.lastFrame) {
+          frame = { ...exitInfo.lastFrame };
+        }
+        // Skip layout computation for exiting nodes, go straight to setting frame
+        node.animatableFrame = {
+          x: frame.x,
+          y: frame.y,
+          w: frame.w,
+          h: frame.h,
+        };
+        node.setLayoutFrame(frame);
+
+        // Apply exit opacity animation
+        let animatedOpacity = inheritedOpacity;
+        if (activateNewAnimations && exitInfo) {
+          const elapsed = videoTime - exitInfo.startTime;
+          const progress = Math.min(
+            1,
+            Math.max(0, elapsed / exitInfo.duration)
+          );
+          const easedProgress = self._applyEasing(progress, exitInfo.easingFn);
+          animatedOpacity =
+            exitInfo.fromOpacity +
+            (exitInfo.toOpacity - exitInfo.fromOpacity) * easedProgress;
+          // Multiply with inherited opacity if present
+          if (inheritedOpacity !== undefined) {
+            animatedOpacity *= inheritedOpacity;
+          }
+        }
+
+        // Apply animated opacity to this node
+        if (animatedOpacity !== undefined) {
+          node.blend = { ...(node.blend || {}), opacity: animatedOpacity };
+        }
+
+        // Still recurse to children (they follow the exiting parent, inherit opacity)
+        for (const c of node.children) {
+          recurseLayout(c, frame, childFrames, animatedOpacity);
+        }
+        return;
+      }
 
       if (node.layoutFunc) {
         frame = node.layoutFunc(frame, node.layoutParams, {
@@ -362,7 +410,55 @@ export class Composition {
 
           // apply existing animations so children follow animated parents
           frame = self._applyActiveAnimations(node, frame, videoTime);
+
+          // Apply appear animation if node just appeared
+          const appearConfig = self._getAppearAnimation(node);
+          if (appearConfig) {
+            // Check if this is a genuinely new node or just an animationId change
+            // on an already-visible node
+            if (node.appearStartTime === null) {
+              const prevState = self._findPrevNodeState(node.uuid);
+              const wasVisibleBefore =
+                prevState && isFrameNonZero(prevState.animatableFrame);
+
+              if (wasVisibleBefore) {
+                // Node was already visible - mark as "already appeared" (skip animation)
+                node.appearStartTime = -Infinity;
+              } else {
+                // Genuinely new node - start appear animation
+                node.appearStartTime = videoTime;
+              }
+            }
+
+            const elapsed = videoTime - node.appearStartTime;
+            if (elapsed < appearConfig.duration) {
+              const progress = Math.min(
+                1,
+                Math.max(0, elapsed / appearConfig.duration)
+              );
+              const easedProgress = self._applyEasing(
+                progress,
+                appearConfig.function
+              );
+              let opacity =
+                appearConfig.from +
+                (appearConfig.to - appearConfig.from) * easedProgress;
+              // Multiply with inherited opacity if present
+              if (inheritedOpacity !== undefined) {
+                opacity *= inheritedOpacity;
+              }
+              opacityForChildren = opacity;
+            } else {
+              // Animation completed - mark it so exit animation knows
+              node.appearAnimationCompleted = true;
+            }
+          }
         }
+      }
+
+      // Apply inherited/animated opacity to this node
+      if (opacityForChildren !== undefined) {
+        node.blend = { ...(node.blend || {}), opacity: opacityForChildren };
       }
 
       node.setLayoutFrame(frame);
@@ -399,7 +495,12 @@ export class Composition {
           }
         }
 
-        recurseLayout(c, childStartFrame, thisNodeChildFrames || childFrames);
+        recurseLayout(
+          c,
+          childStartFrame,
+          thisNodeChildFrames || childFrames,
+          opacityForChildren
+        );
       }
 
       if (thisNodeChildFrames) {
@@ -470,7 +571,7 @@ export class Composition {
 
     // first pass - don't activate new animations yet (frames may be incomplete)
     activateNewAnimations = false;
-    recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+    recurseLayout(this.rootNode, layoutCtxBase.viewport, null, undefined);
 
     // do second pass only if any node uses the content size hooks
     const needsSecondPass =
@@ -481,12 +582,12 @@ export class Composition {
     if (needsSecondPass) {
       passIndex = 1;
       activateNewAnimations = true; // final pass - activate animations
-      recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+      recurseLayout(this.rootNode, layoutCtxBase.viewport, null, undefined);
     } else {
       // only one pass needed, so check for animations now.
       // we re-traverse but layout is already computed, so this just handles animations.
       activateNewAnimations = true;
-      recurseLayout(this.rootNode, layoutCtxBase.viewport, null);
+      recurseLayout(this.rootNode, layoutCtxBase.viewport, null, undefined);
     }
   }
 
@@ -641,38 +742,190 @@ export class Composition {
   setLayoutAnimations(animations) {
     if (!Array.isArray(animations) || animations.length === 0) {
       this.layoutAnimationsMap = null;
+      this.opacityAnimationsMap = null;
       return;
     }
 
     this.layoutAnimationsMap = new Map();
+    this.opacityAnimationsMap = new Map();
+
     for (const anim of animations) {
       const id = anim.animationId;
       if (!id) continue;
 
-      // Build descriptor in the format expected by _activateAnimation
-      const desc = {
-        properties: anim.properties || [],
-        function: anim.function || 'ease',
-        duration: anim.duration ?? 0.3,
-        delay: anim.delay ?? 0,
-        repeat: anim.repeat ?? false,
-        loopBackwards: anim.loopBackwards ?? false,
-        // Build predicate - default to CHANGED_FRAME_ONLY_NONZERO on current node
-        predicates: [
-          {
-            queryPath: '.',
-            propertyType:
-              anim.predicate || AnimationPredicateType.CHANGED_FRAME_ONLY_NONZERO,
-          },
-        ],
-      };
+      // check if there's an opacity animation config.
+      // this is a special format that allows for separate appear/disappear (aka enter/exit) timings.
+      // exit is special in the engine because it means the node needs to be kept in the tree after React has removed it.
+      if (anim.opacity) {
+        const opacityConfig = {
+          appear: null,
+          disappear: null,
+        };
 
-      // Group by animationId (multiple descriptors can share an id)
-      if (!this.layoutAnimationsMap.has(id)) {
-        this.layoutAnimationsMap.set(id, []);
+        if (anim.opacity.appear) {
+          opacityConfig.appear = {
+            from: anim.opacity.appear.from ?? 0,
+            to: anim.opacity.appear.to ?? 1,
+            duration: anim.opacity.appear.duration ?? 0.3,
+            function:
+              anim.opacity.appear.function || anim.function || 'ease-out',
+          };
+        }
+
+        if (anim.opacity.disappear) {
+          opacityConfig.disappear = {
+            from: anim.opacity.disappear.from ?? 1,
+            to: anim.opacity.disappear.to ?? 0,
+            duration: anim.opacity.disappear.duration ?? 0.3,
+            function:
+              anim.opacity.disappear.function || anim.function || 'ease-out',
+          };
+        }
+
+        if (opacityConfig.appear || opacityConfig.disappear) {
+          this.opacityAnimationsMap.set(id, opacityConfig);
+        }
       }
-      this.layoutAnimationsMap.get(id).push(desc);
+
+      // build layout animation descriptor (for frame properties)
+      if (anim.properties && anim.properties.length > 0) {
+        const desc = {
+          properties: anim.properties,
+          function: anim.function || 'ease',
+          duration: anim.duration ?? 0.3,
+          delay: anim.delay ?? 0,
+          repeat: anim.repeat ?? false,
+          loopBackwards: anim.loopBackwards ?? false,
+          // Build predicate - default to CHANGED_FRAME_ONLY_NONZERO on current node
+          predicates: [
+            {
+              queryPath: '.',
+              propertyType:
+                anim.predicate || AnimationPredicateType.CHANGED_FRAME_ONLY_NONZERO,
+            },
+          ],
+        };
+
+        // group by animationId (multiple descriptors can share an id)
+        if (!this.layoutAnimationsMap.has(id)) {
+          this.layoutAnimationsMap.set(id, []);
+        }
+        this.layoutAnimationsMap.get(id).push(desc);
+      }
     }
+  }
+
+  /**
+   * Checks if a node has a disappear animation configured.
+   * Called by reconciler before removing a node.
+   * @param {Object} node - The node being removed
+   * @returns {boolean} True if node has disappear animation
+   */
+  hasDisappearAnimation(node) {
+    if (!this.opacityAnimationsMap) {
+      return false;
+    }
+    const animationId = node.animationId || node.userGivenId;
+    if (!animationId) return false;
+    const config = this.opacityAnimationsMap.get(animationId);
+    return config?.disappear != null;
+  }
+
+  /**
+   * Starts exit animation for a node.
+   * Called by reconciler when a node with disappear animation is removed.
+   * @param {Object} node - The node being removed
+   * @param {Object} parent - The node's parent
+   */
+  startExitAnimation(node, parent) {
+    const animationId = node.animationId || node.userGivenId;
+    const config = this.opacityAnimationsMap.get(animationId);
+    if (!config?.disappear) return;
+
+    // Mark the node as exiting
+    node.isExiting = true;
+    node.exitStartTime = this.videoTime;
+
+    // Determine the starting opacity for the exit animation.
+    // If the node was still in its appear animation (or never even started one),
+    // use its current opacity instead of the default disappear.from (which is typically 1).
+    let fromOpacity = config.disappear.from;
+    const appearConfig = config.appear;
+
+    // Case 1: Node was created but never had a layout pass yet (appearStartTime is null).
+    // This means it was never visible - skip exit animation entirely.
+    if (appearConfig && node.appearStartTime === null) {
+      // Remove node immediately instead of animating
+      node.isExiting = false;
+      const idx = parent.children.indexOf(node);
+      if (idx >= 0) {
+        parent.children.splice(idx, 1);
+      }
+      node.delete();
+      return;
+    }
+
+    // Case 2: Node had an appear animation but it never completed
+    // (the node was removed from React before the animation could progress)
+    if (
+      appearConfig &&
+      node.appearStartTime !== null &&
+      node.appearStartTime !== -Infinity &&
+      !node.appearAnimationCompleted
+    ) {
+      // The appear animation started but never completed.
+      // Calculate what opacity the node WOULD have been at, based on elapsed time.
+      // But since the node was removed from React, it never actually reached that opacity.
+      // We need to figure out what opacity the node was actually at when it was last rendered.
+
+      // The node only got rendered once (at the start of the appear animation),
+      // so its actual opacity is whatever it was at elapsed=0, which is appearConfig.from (typically 0).
+      const actualOpacity = appearConfig.from;
+
+      // If the node was barely visible (less than 10% opacity), skip the exit
+      // animation entirely - there's nothing visible to fade out
+      if (actualOpacity < 0.1) {
+        // Remove node immediately instead of animating
+        node.isExiting = false;
+        const idx = parent.children.indexOf(node);
+        if (idx >= 0) {
+          parent.children.splice(idx, 1);
+        }
+        node.delete();
+        return;
+      }
+
+      fromOpacity = actualOpacity;
+    }
+
+    const exitInfo = {
+      node,
+      parent,
+      startTime: this.videoTime,
+      duration: config.disappear.duration,
+      fromOpacity,
+      toOpacity: config.disappear.to,
+      easingFn: config.disappear.function,
+      // Store the last known frame so we can keep rendering at that position
+      lastFrame: node.layoutFrame ? { ...node.layoutFrame } : null,
+    };
+
+    this.exitingNodes.push(exitInfo);
+  }
+
+  /**
+   * Gets the appear animation config for a node (if any).
+   * @param {Object} node - The node to check
+   * @returns {Object|null} Appear animation config or null
+   */
+  _getAppearAnimation(node) {
+    if (!this.opacityAnimationsMap) {
+      return null;
+    }
+    const animationId = node.animationId || node.userGivenId;
+    if (!animationId) return null;
+    const config = this.opacityAnimationsMap.get(animationId);
+    return config?.appear || null;
   }
 
   /**
@@ -684,6 +937,64 @@ export class Composition {
     this.activeAnimations = this.activeAnimations.filter(
       (anim) => t < anim.inT + anim.duration
     );
+
+    // Clean up finished exit animations and actually remove the nodes
+    const finishedExits = [];
+    this.exitingNodes = this.exitingNodes.filter((exitInfo) => {
+      const elapsed = t - exitInfo.startTime;
+      if (elapsed >= exitInfo.duration) {
+        finishedExits.push(exitInfo);
+        return false; // remove from exitingNodes
+      }
+      return true; // keep in exitingNodes
+    });
+
+    // Now actually delete the nodes that finished their exit animations
+    for (const exitInfo of finishedExits) {
+      const { node, parent } = exitInfo;
+      // Remove from parent's children if still there
+      const idx = parent.children.indexOf(node);
+      if (idx >= 0) {
+        parent.children.splice(idx, 1);
+      }
+      // Call node's delete method to clean up
+      node.delete();
+    }
+  }
+
+  /**
+   * Checks if there are any active animations that require continuous layout passes.
+   * This includes frame property animations (x, y, w, h) and opacity animations (appear/exit).
+   * Used by runtimes to determine if layout passes need to continue
+   * even when React hasn't committed any changes.
+   * @returns {boolean} True if layout passes are needed for animations
+   */
+  needsLayoutForAnimation() {
+    // Check for active frame property animations
+    if (this.activeAnimations.length > 0) {
+      return true;
+    }
+
+    // Check for active exit animations
+    if (this.exitingNodes.length > 0) {
+      return true;
+    }
+
+    // Check for active appear animations by traversing the tree
+    let hasAppear = false;
+    this._recurseWithVisitor((node) => {
+      if (
+        node.appearStartTime !== null &&
+        node.appearStartTime !== -Infinity &&
+        !node.appearAnimationCompleted
+      ) {
+        hasAppear = true;
+        return false; // stop recursion, we found one
+      }
+      return true;
+    });
+
+    return hasAppear;
   }
 
   /**
@@ -872,6 +1183,67 @@ export class Composition {
 
     return frame;
   }
+
+  /**
+   * Applies easing function to a progress value (0-1).
+   * @param {number} t - Progress value (0-1)
+   * @param {string|Array} easingFn - Easing function name or cubic bezier array
+   * @returns {number} Eased progress value
+   */
+  _applyEasing(t, easingFn) {
+    // Clamp t to 0-1
+    t = Math.max(0, Math.min(1, t));
+
+    if (!easingFn || easingFn === 'linear') {
+      return t;
+    }
+
+    // CSS standard easing functions as cubic bezier control points
+    const easings = {
+      ease: [0.25, 0.1, 0.25, 1],
+      'ease-in': [0.42, 0, 1, 1],
+      'ease-out': [0, 0, 0.58, 1],
+      'ease-in-out': [0.42, 0, 0.58, 1],
+    };
+
+    let bezierPoints;
+    if (typeof easingFn === 'string') {
+      if (easingFn === 'hold') {
+        return t < 1 ? 0 : 1;
+      }
+      bezierPoints = easings[easingFn];
+      if (!bezierPoints) {
+        return t; // Unknown easing, fall back to linear
+      }
+    } else if (Array.isArray(easingFn) && easingFn[0] === 'cubic') {
+      bezierPoints = easingFn.slice(1);
+    } else {
+      return t;
+    }
+
+    // Simple cubic bezier approximation
+    // For better accuracy, could use the full bezier-easing implementation
+    const [x1, y1, x2, y2] = bezierPoints;
+    // Approximate using cubic formula (not exact but good enough for UI animations)
+    const cx = 3 * x1;
+    const bx = 3 * (x2 - x1) - cx;
+    const ax = 1 - cx - bx;
+    const cy = 3 * y1;
+    const by = 3 * (y2 - y1) - cy;
+    const ay = 1 - cy - by;
+
+    // Newton-Raphson iteration to find t for given x
+    let guess = t;
+    for (let i = 0; i < 5; i++) {
+      const xGuess = ((ax * guess + bx) * guess + cx) * guess;
+      const xSlope = (3 * ax * guess + 2 * bx) * guess + cx;
+      if (Math.abs(xSlope) < 1e-6) break;
+      guess -= (xGuess - t) / xSlope;
+    }
+
+    // Calculate y for the found t
+    return ((ay * guess + by) * guess + cy) * guess;
+  }
 }
 
 // NaN messes up params value comparison, remove it early
@@ -1028,6 +1400,12 @@ class NodeBase {
     this.clip = false;
 
     this.animatableFrame = null; // {x, y, w, h} captured during layout for animations
+
+    // Opacity animation state
+    this.isExiting = false; // true when node is animating out before removal
+    this.exitStartTime = null; // video time when exit animation started
+    this.appearStartTime = null; // video time when node first appeared (for appear animation)
+    this.appearAnimationCompleted = false; // true when appear animation finished (node reached full opacity)
   }
 
   shouldUpdate(container, oldProps, newProps) {

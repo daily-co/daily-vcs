@@ -146,6 +146,17 @@ function removeChild(parent, child) {
     parent.constructor.nodeType,
     parent.userGivenId
   );*/
+
+  // check if this node has a disappear animation specified.
+  // if so, don't remove yet. we'll start the exit animation and keep the node in tree.
+  // it will be actually removed when the animation completes (in _cleanUpFinishedAnimations)
+  const container = child.container;
+  if (container && container.hasDisappearAnimation(child)) {
+    container.startExitAnimation(child, parent);
+    return;
+  }
+
+  // no exit animation - remove immediately
   const idx = parent.children.indexOf(child);
   parent.children.splice(idx, 1);
 

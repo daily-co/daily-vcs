@@ -65,7 +65,7 @@ describe('VcsAnimator', () => {
     const pred = animator.predicate('.', animator.property.CHANGED_FRAME_ONLY_NONZERO);
 
     assert.strictEqual(pred.queryPath, '.');
-    assert.strictEqual(pred.propertyType, 'frameChangeNonZero');
+    assert.strictEqual(pred.propertyType, 'frame-change-non-zero');
   });
 
   test('forLayoutProperty() creates animator', () => {

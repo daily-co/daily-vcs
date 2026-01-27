@@ -57,6 +57,10 @@ export const layoutAnimations = [
     predicate: 'frame-change-non-zero',
     function: 'ease-out',
     duration: 0.3,
+    opacity: {
+      appear: { duration: 0.3 },
+      disappear: { duration: 0.15 },
+    },
   },
   {
     animationId: 'chiclet',
@@ -64,6 +68,10 @@ export const layoutAnimations = [
     predicate: 'frame-change-non-zero',
     function: 'ease-out',
     duration: 0.3,
+    opacity: {
+      appear: { duration: 0.3 },
+      disappear: { duration: 0.15 },
+    },
   },
 ];
 
@@ -144,7 +152,8 @@ export default function DailyBaselineVCS() {
         arr.splice(idx, 1);
       }
     }
-    return includeOtherVideoIds ? pref.concat(arr) : pref;
+    const result = includeOtherVideoIds ? pref.concat(arr) : pref;
+    return result;
   }, [participantDescs, preferredVideoIds, includeOtherVideoIds]);
 
   let mode = params.mode;

@@ -195,7 +195,7 @@ async function main() {
     await setTimeout(1);
 
     // If there are active animations, force a layout update
-    if (composition.activeAnimations && composition.activeAnimations.length > 0) {
+    if (composition.needsLayoutForAnimation()) {
       composition._performLayout();
     }
 

@@ -1,11 +1,16 @@
 /**
- * VCS Layout Animation System
+ * VCS Animation System
  *
- * Provides declarative layout animations for VCS compositions.
+ * Provides two types of animations for VCS compositions:
  *
- * Usage:
- * 1. Export a layoutAnimations array from your composition
- * 2. Use animationId prop on elements to link them to animation definitions
+ * 1. Layout animations (automatic, predicate-triggered):
+ *    - Animate frame properties (x, y, w, h) when layout changes
+ *    - Export a layoutAnimations array from your composition
+ *    - Use animationId prop on elements to link them to animation definitions
+ *
+ * 2. Style animations (manual, time-based):
+ *    - Animate style properties (opacity, fillColor, etc.)
+ *    - Create with animator.forStyle() and call .at(time) in components
  *
  * Example:
  * ```
@@ -30,6 +35,8 @@
  * Available easing functions:
  * - 'linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out', 'hold'
  * - ['cubic', x1, y1, x2, y2] for custom bezier curves
+ *
+ * See ANIMATIONS.md for full documentation.
  */
 
 export { default as makeBezierEasing } from './bezier-easing.js';

@@ -1,8 +1,9 @@
 /**
- * VCS Layout Animation System - Animator module
+ * VCS Animation System - Animator module
  *
- * Provides the VcsAnimator factory class and LayoutPropertyAnimator
- * for animating layout frame properties (x, y, w, h).
+ * Provides the VcsAnimator factory class with:
+ * - LayoutPropertyAnimator for animating layout frame properties (x, y, w, h)
+ * - StylePropertyAnimator for animating style properties (opacity, fillColor, etc.)
  */
 
 import makeBezierEasing from './bezier-easing.js';
@@ -185,13 +186,100 @@ class LayoutPropertyAnimator {
 }
 
 /**
- * Main animator factory class for VCS layout animations.
+ * Animator for a style property (opacity, fillColor, etc.).
+ * Unlike layout animations which are triggered by predicates,
+ * style animations are manually controlled by calling .at(time).
+ */
+class StylePropertyAnimator {
+  /**
+   * @param {string} propName - Style property name (e.g., 'opacity', 'fillColor')
+   * @param {Object} opts - Animation options
+   * @param {number} [opts.inT=0] - Start time in seconds
+   * @param {number} opts.duration - Duration in seconds
+   * @param {string|Array} opts.function - Easing function type
+   * @param {number|Array} opts.startWith - Start value (number or RGBA array)
+   * @param {number|Array} opts.endWith - End value (number or RGBA array)
+   * @param {boolean} [opts.repeat] - Whether to loop
+   * @param {boolean} [opts.loopBackwards] - Use pingpong loop
+   * @param {Object} [baseStyle] - Optional base style to merge with animated property
+   */
+  constructor(propName, opts, baseStyle) {
+    this.propName = propName;
+    this.baseStyle = baseStyle || null;
+
+    this.inT = opts.inT || 0;
+    this.duration = opts.duration > 0 ? opts.duration : 0;
+
+    const delay = Number.isFinite(opts.delay) ? opts.delay : 0;
+    this.inT += delay;
+
+    this.startWith = opts.startWith;
+    this.endWith = opts.endWith;
+
+    // Determine if we're animating an array (e.g., color) or scalar
+    this.isArray = Array.isArray(opts.startWith) && Array.isArray(opts.endWith);
+
+    this.easingFn = easingFuncForType(opts.function);
+
+    this.loopType = opts.repeat
+      ? opts.loopBackwards
+        ? AnimatorLoopType.PINGPONG
+        : AnimatorLoopType.REPEAT
+      : AnimatorLoopType.ONCE;
+  }
+
+  /**
+   * Returns a style object with the interpolated value at time t.
+   * @param {number} t - Current time in seconds
+   * @returns {Object} Style object, e.g., {opacity: 0.5} or {fillColor: [255, 0, 0, 1]}
+   */
+  at(t) {
+    const inT = this.inT;
+    const outT = this.inT + this.duration;
+
+    let value;
+    if (this.isArray) {
+      // Interpolate each component of the array (e.g., RGBA color)
+      value = this.startWith.map((startV, i) => {
+        const endV = this.endWith[i];
+        if (!Number.isFinite(startV) || !Number.isFinite(endV)) {
+          return endV;
+        }
+        return lerp(t, inT, startV, outT, endV, this.easingFn, this.loopType);
+      });
+    } else {
+      // Scalar interpolation
+      if (!Number.isFinite(this.startWith) || !Number.isFinite(this.endWith)) {
+        value = this.endWith;
+      } else {
+        value = lerp(
+          t,
+          inT,
+          this.startWith,
+          outT,
+          this.endWith,
+          this.easingFn,
+          this.loopType
+        );
+      }
+    }
+
+    // Build result style object
+    const result = this.baseStyle ? { ...this.baseStyle } : {};
+    result[this.propName] = value;
+    return result;
+  }
+}
+
+/**
+ * Main animator factory class for VCS animations.
  *
- * Usage in layoutAnimationFactory:
+ * Provides two types of animations:
+ *
+ * 1. Layout animations (automatic, predicate-triggered):
  * ```
  * function layoutAnimationFactory(composition, animationId, constants) {
  *   const anim = composition.animator;
- *
  *   if (animationId === 'my-element') {
  *     return [{
  *       properties: ['x', 'y'],
@@ -202,6 +290,18 @@ class LayoutPropertyAnimator {
  *   }
  *   return [];
  * }
+ * ```
+ *
+ * 2. Style animations (manual, time-based):
+ * ```
+ * const fadeIn = animator.forStyle('opacity', {
+ *   inT: 0,
+ *   duration: 0.5,
+ *   startWith: 0,
+ *   endWith: 1,
+ *   function: animator.function.EASE_OUT,
+ * });
+ * // In component: style={fadeIn.at(videoTime)}
  * ```
  */
 export class VcsAnimator {
@@ -232,5 +332,45 @@ export class VcsAnimator {
    */
   forLayoutProperty(propName, opts) {
     return new LayoutPropertyAnimator(propName, opts);
+  }
+
+  /**
+   * Creates a style property animator for manual time-based animation.
+   *
+   * @param {string} propName - Style property name (e.g., 'opacity', 'fillColor')
+   * @param {Object} opts - Animation options
+   * @param {number} [opts.inT=0] - Start time in seconds
+   * @param {number} opts.duration - Duration in seconds
+   * @param {string|Array} opts.function - Easing function type
+   * @param {number|Array} opts.startWith - Start value (number or RGBA array)
+   * @param {number|Array} opts.endWith - End value (number or RGBA array)
+   * @param {boolean} [opts.repeat] - Whether to loop
+   * @param {boolean} [opts.loopBackwards] - Use pingpong loop (requires repeat)
+   * @param {Object} [baseStyle] - Optional base style to merge with animated property
+   * @returns {StylePropertyAnimator}
+   *
+   * @example
+   * // Opacity animation
+   * const fadeIn = animator.forStyle('opacity', {
+   *   duration: 0.5,
+   *   startWith: 0,
+   *   endWith: 1,
+   *   function: animator.function.EASE_OUT,
+   * });
+   * // Use in component: style={fadeIn.at(videoTime)}
+   *
+   * @example
+   * // Color animation with base style
+   * const colorPulse = animator.forStyle('fillColor', {
+   *   duration: 1.0,
+   *   startWith: [255, 0, 0, 1],   // red
+   *   endWith: [0, 0, 255, 1],     // blue
+   *   function: animator.function.EASE_IN_OUT,
+   *   repeat: true,
+   *   loopBackwards: true,  // ping-pong
+   * }, { cornerRadius_px: 10 });
+   */
+  forStyle(propName, opts, baseStyle) {
+    return new StylePropertyAnimator(propName, opts, baseStyle);
   }
 }

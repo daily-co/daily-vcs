@@ -443,7 +443,7 @@ class VCSBrowserOutput {
       // if there are active animations, force a layout update and render.
       // this is needed because React only commits when component output changes,
       // but animations need continuous updates even when props haven't changed.
-      if (this.comp.activeAnimations?.length > 0) {
+      if (this.comp.needsLayoutForAnimation()) {
         this.comp._performLayout();
         this.compUpdated(this.comp);
       }
