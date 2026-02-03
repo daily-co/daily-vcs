@@ -18,16 +18,20 @@
   * `clipItem`: if true, the custom component graphics are clipped inside
                 the video item's frame.
   * `customLayoutForVideo`: a layout applied to the item's video element.
-  
+
   If you return a custom component, it gets rendered last,
   on top of the default labels + highlight.
 */
 
+import { MicStatusIndicator } from '../MicStatusIndicator.js';
+
 export default function decorateVideoGridItem(itemIndex, itemProps, gridProps) {
+  const { audioPaused } = itemProps;
+
   return {
     enableDefaultLabels: true,
     enableDefaultHighlight: true,
-    customComponent: null,
+    customComponent: <MicStatusIndicator audioPaused={audioPaused} />,
     clipItem: false,
     customLayoutForVideo: null,
   };
