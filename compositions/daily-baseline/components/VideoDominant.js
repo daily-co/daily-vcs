@@ -4,6 +4,7 @@ import * as layoutFuncs from '../layouts.js';
 import { PositionEdge } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import VideoSingle from './VideoSingle.js';
 import decorateVideoDominantItem from './overrides/decorateVideoDominantItem.js';
 
@@ -13,6 +14,7 @@ const DOMINANT_MAXITEMS_DEFAULT = 5;
 export default function VideoDominant(props) {
   let {
     showLabels,
+    showMicStatus,
     scaleMode,
     videoStyle,
     videoLabelStyle,
@@ -175,7 +177,7 @@ export default function VideoDominant(props) {
     const numItems = pArr.length;
     for (let i = 0; i < numItems; i++) {
       const participant = pArr[i];
-      const { videoId, paused, displayName } = participant;
+      const { videoId, paused, displayName, audioPaused } = participant;
       const key = `videochiclet_${i}_${participant.key}`;
 
       const layout = [
@@ -228,6 +230,7 @@ export default function VideoDominant(props) {
           />
         );
       }
+      if (showMicStatus) childItems.push(<MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />);
       if (customDecoratorComponent) childItems.push(customDecoratorComponent);
 
       const containerStyle = clipItem

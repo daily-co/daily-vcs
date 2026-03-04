@@ -95,6 +95,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.showMicStatus',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.roundedCorners',
     type: 'boolean',
     defaultValue: false,
