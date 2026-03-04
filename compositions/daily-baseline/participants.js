@@ -4,6 +4,7 @@ import {
   useAudioOnlyPeers,
   useUnpausedPeers,
 } from '#vcs-react/hooks';
+import { RoomContext } from '#vcs-react/contexts';
 
 // a utility hook that builds the list of participants to be displayed.
 // it first includes the video input slots, then any audio-only participants
@@ -30,6 +31,7 @@ export function useActiveVideoAndAudio({
 
   const audioOnlyPeers = useAudioOnlyPeers();
   const unpausedPeers = useUnpausedPeers(filterForUnpausedMediaTypes);
+  const { availablePeers } = React.useContext(RoomContext);
 
   return React.useMemo(() => {
     const {
@@ -88,6 +90,11 @@ export function useActiveVideoAndAudio({
     }
 
     let items = filteredActiveIds.map((videoId, i) => {
+      // Find the peer with matching video.id or screenshareVideo.id
+      const peer = availablePeers.find(
+        (p) => p.video?.id === videoId || p.screenshareVideo?.id === videoId
+      );
+
       return {
         index: i,
         key: 'video_' + i,
@@ -98,6 +105,7 @@ export function useActiveVideoAndAudio({
         highlighted: videoId === dominantId,
         paused: pausedById[videoId],
         frameSize: frameSizesById[videoId] || { w: 0, h: 0 },
+        audioPaused: peer?.audio?.paused ?? false,
       };
     });
 
@@ -113,6 +121,7 @@ export function useActiveVideoAndAudio({
             displayName: peer.displayName || 'Audio participant',
             highlighted: peer.audio.dominant,
             paused: peer.audio.paused,
+            audioPaused: peer.audio?.paused ?? false,
           };
         })
       );
@@ -123,5 +132,11 @@ export function useActiveVideoAndAudio({
       dominantVideoId: dominantId,
       hasScreenShare: activeScreenshareIds.length > 0,
     };
-  }, [activeVideoObj, audioOnlyPeers, unpausedPeers, omitAudioOnly]);
+  }, [
+    activeVideoObj,
+    audioOnlyPeers,
+    unpausedPeers,
+    omitAudioOnly,
+    availablePeers,
+  ]);
 }
