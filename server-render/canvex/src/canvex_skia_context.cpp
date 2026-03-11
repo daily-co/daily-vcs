@@ -154,21 +154,31 @@ void CanvexContext::drawEmojiWithPaint_(const std::string& text, double x, doubl
     } else {
       // FIXME: hardcoded subpath expects to find all fonts in one dir
       auto fontPath = resPath_ / "fonts" / fontFileName;
-      //std::cerr << "Loading font at: " << fontPath << std::endl;
+      std::cerr << "Loading emoji font at: " << fontPath << std::endl;
       typeface = SkTypeface::MakeFromFile(fontPath.c_str());
       if (!typeface) {
-        std::cerr << "** Unable to load font at: " << fontPath << std::endl;
+        std::cerr << "** Unable to load emoji font at: " << fontPath << std::endl;
       } else {
+        std::cerr << "Emoji font loaded successfully" << std::endl;
         skiaResCtx_.typefaceCache[fontFileName] = typeface;
       }
     }
   }
-  
+
   // on macOS, the Apple font is available via lookup:
   //auto typeface = SkTypeface::MakeFromName("Apple Color Emoji", {200, SkFontStyle::kNormal_Width, SkFontStyle::kUpright_Slant});
 
+  if (!typeface) {
+    std::cerr << "** Skipping emoji render, no typeface available for: " << text << std::endl;
+    return;
+  }
+
   SkFont font(typeface, h);
   auto textBlob = SkTextBlob::MakeFromString(text.c_str(), font);
+  if (!textBlob) {
+    std::cerr << "** Failed to create text blob for emoji: " << text << std::endl;
+    return;
+  }
 
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }
@@ -192,7 +202,6 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
     } else {
       // FIXME: hardcoded subpath expects to find all fonts in one dir
       auto fontPath = resPath_ / "fonts" / fontFileName;
-      //std::cout << "Loading font at: " << fontPath << std::endl;
       typeface = SkTypeface::MakeFromFile(fontPath.c_str());
       if (!typeface) {
         std::cerr << "** Unable to load font at: " << fontPath << std::endl;
@@ -209,8 +218,17 @@ void CanvexContext::drawTextWithPaint_(const std::string& text, double x, double
     */
   }
 
+  if (!typeface) {
+    std::cerr << "** Skipping text render, no typeface available for: " << fontFamily << std::endl;
+    return;
+  }
+
   SkFont font(typeface, sf.fontSize);
   auto textBlob = SkTextBlob::MakeFromString(text.c_str(), font);
+  if (!textBlob) {
+    std::cerr << "** Failed to create text blob for text: " << text << std::endl;
+    return;
+  }
 
   canvas_->drawTextBlob(textBlob, x, y, paint);
 }

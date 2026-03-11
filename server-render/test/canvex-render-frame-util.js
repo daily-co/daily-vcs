@@ -31,7 +31,8 @@ if (!w || !h || w < 1 || h < 1) {
   process.exit(2);
 }
 
-const binPath = Path.resolve(canvexPath, 'build', 'canvex_render_frame');
+const buildDir = process.env.CANVEX_BUILD || 'build';
+const binPath = Path.resolve(canvexPath, buildDir, 'canvex_render_frame');
 
 execFileSync(
   binPath,
