@@ -657,7 +657,7 @@ function drawEmoji(ctx, emoji, x, y, w, h, isInline = true) {
 
 function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
   // ensure we have coordinates
-  if (!frame?.x || !frame?.y) return;
+  if (frame?.x == null || frame?.y == null) return;
 
   // when encoding a display list, prefer more easily parsed format
   const isVCSDisplayListEncoder =
