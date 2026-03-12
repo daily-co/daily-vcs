@@ -500,25 +500,32 @@ function recurseRenderNode(
 
     if (inShapeClip) ctx.restore();
 
-    // stroke needs to be rendered after clip
+    // stroke needs to be rendered after clip.
+    // inset by half stroke width so the entire stroke is drawn inside the frame.
     if (strokeColor && Number.isFinite(strokeW_px) && strokeW_px > 0) {
       ctx.strokeStyle = ensureCssColor(strokeColor);
       ctx.lineWidth = strokeW_px;
+
+      const halfStroke = strokeW_px / 2;
+      const sx = frame.x + halfStroke;
+      const sy = frame.y + halfStroke;
+      const sw = frame.w - strokeW_px;
+      const sh = frame.h - strokeW_px;
 
       if (hasCornerRadius) {
         ctx.save();
         roundRect(
           ctx,
-          frame.x,
-          frame.y,
-          frame.w,
-          frame.h,
+          sx,
+          sy,
+          sw,
+          sh,
           node.style.cornerRadius_px
         );
         ctx.stroke();
         ctx.restore();
       } else {
-        ctx.strokeRect(frame.x, frame.y, frame.w, frame.h);
+        ctx.strokeRect(sx, sy, sw, sh);
       }
     }
   } // end if (writeContent)
@@ -650,7 +657,7 @@ function drawEmoji(ctx, emoji, x, y, w, h, isInline = true) {
 
 function drawStyledText(ctx, text, fontMetrics, style, frame, comp) {
   // ensure we have coordinates
-  if (!frame?.x || !frame?.y) return;
+  if (frame?.x == null || frame?.y == null) return;
 
   // when encoding a display list, prefer more easily parsed format
   const isVCSDisplayListEncoder =
