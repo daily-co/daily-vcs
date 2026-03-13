@@ -28,6 +28,16 @@ export const compositionInterface = {
   ],
 };
 
+export const layoutAnimations = [
+  {
+    animationId: 'stretchBox',
+    properties: ['x', 'y', 'w', 'h'],
+    predicate: 'frame-change-non-zero',
+    function: 'ease-out',
+    duration: 0.3,
+  },
+];
+
 export default function StretchBoxComposition() {
   const { activeIds } = useActiveVideo();
   const params = useParams();
@@ -64,6 +74,7 @@ function AdaptiveTextAndIcon({ content, maxWidth_gu, iconSize_gu }) {
   return (
     <Box
       id="stretchBox"
+      animationId="stretchBox"
       style={bgStyle}
       layout={[layoutFuncs.demoBox, { maxWidth_gu }]}
     >

@@ -23,6 +23,7 @@ export function WebFrame(props) {
   // can't use JSX in VCS core because it needs to run on Node without transpiling
   return React.createElement('webframe', {
     id: props.id,
+    animationId: props.animationId,
     layout: props.layout,
     style: props.style || {},
     transform: props.transform || {},

@@ -10,6 +10,79 @@ import decorateVideoDominantItem from './overrides/decorateVideoDominantItem.js'
 const DOMINANT_SPLIT_DEFAULT = 0.8;
 const DOMINANT_MAXITEMS_DEFAULT = 5;
 
+function DominantChiclet({
+  index,
+  participant,
+  layout,
+  showLabels,
+  scaleMode,
+  videoStyle,
+  videoLabelStyle,
+  placeholderStyle,
+  labelsOffset_px,
+  enableLayoutAnims,
+  dominantProps,
+}) {
+  const { videoId, paused, displayName } = participant;
+  const key = `videochiclet_${index}_${participant.key}`;
+
+  // override point for custom decorations on chiclet items
+  const {
+    enableDefaultLabels = true,
+    customComponent: customDecoratorComponent,
+    clipItem = false,
+    customLayoutForVideo,
+  } = decorateVideoDominantItem(false, index, participant, dominantProps);
+
+  const childItems = [];
+
+  childItems.push(
+    paused || videoId == null ? (
+      <PausedPlaceholder
+        key={key + '_video_paused'}
+        layout={customLayoutForVideo}
+        {...{ placeholderStyle }}
+      />
+    ) : (
+      <Video
+        key={key + '_video'}
+        src={videoId}
+        style={videoStyle}
+        scaleMode={scaleMode}
+        layout={customLayoutForVideo}
+      />
+    )
+  );
+  if (enableDefaultLabels && showLabels) {
+    childItems.push(
+      <ParticipantLabelPipStyle
+        key={key + '_label'}
+        label={displayName}
+        labelStyle={videoLabelStyle}
+        labelsOffset_px={labelsOffset_px}
+      />
+    );
+  }
+  if (customDecoratorComponent) childItems.push(customDecoratorComponent);
+
+  const containerStyle = clipItem
+    ? {
+        cornerRadius_px: videoStyle.cornerRadius_px,
+      }
+    : null;
+
+  return (
+    <Box
+      animationId={enableLayoutAnims ? 'chiclet' : undefined}
+      clip={clipItem}
+      layout={layout}
+      style={containerStyle}
+    >
+      {childItems}
+    </Box>
+  );
+}
+
 export default function VideoDominant(props) {
   let {
     showLabels,
@@ -32,6 +105,7 @@ export default function VideoDominant(props) {
     disableRoundedCornersOnMain = false,
     includeWebFrame = false,
     webFrameProps = {},
+    enableLayoutAnims = false,
   } = props;
 
   itemInterval_gu = Math.max(0, itemInterval_gu);
@@ -144,6 +218,7 @@ export default function VideoDominant(props) {
         d !== audioDominantParticipant &&
         (d.videoId == null || d.videoId !== dominantVideoId)
     );
+
     if (pArr.length > maxItems) {
       pArr = pArr.slice(0, maxItems);
     }
@@ -175,7 +250,6 @@ export default function VideoDominant(props) {
     const numItems = pArr.length;
     for (let i = 0; i < numItems; i++) {
       const participant = pArr[i];
-      const { videoId, paused, displayName } = participant;
       const key = `videochiclet_${i}_${participant.key}`;
 
       const layout = [
@@ -191,55 +265,21 @@ export default function VideoDominant(props) {
         },
       ];
 
-      // override point #2 for custom decorations on chiclet items
-      const {
-        enableDefaultLabels = true,
-        customComponent: customDecoratorComponent,
-        clipItem = false,
-        customLayoutForVideo,
-      } = decorateVideoDominantItem(false, i, participant, props);
-
-      const childItems = [];
-
-      childItems.push(
-        paused || videoId == null ? (
-          <PausedPlaceholder
-            key={key + '_video_paused'}
-            layout={customLayoutForVideo}
-            {...{ placeholderStyle }}
-          />
-        ) : (
-          <Video
-            key={key + '_video'}
-            src={videoId}
-            style={videoStyle}
-            scaleMode={scaleMode}
-            layout={customLayoutForVideo}
-          />
-        )
-      );
-      if (enableDefaultLabels && showLabels) {
-        childItems.push(
-          <ParticipantLabelPipStyle
-            key={key + '_label'}
-            label={displayName}
-            labelStyle={videoLabelStyle}
-            labelsOffset_px={labelsOffset_px}
-          />
-        );
-      }
-      if (customDecoratorComponent) childItems.push(customDecoratorComponent);
-
-      const containerStyle = clipItem
-        ? {
-            cornerRadius_px: videoStyle.cornerRadius_px,
-          }
-        : null;
-
       items.push(
-        <Box key={key} clip={clipItem} layout={layout} style={containerStyle}>
-          {childItems}
-        </Box>
+        <DominantChiclet
+          key={key}
+          index={i}
+          participant={participant}
+          layout={layout}
+          showLabels={showLabels}
+          scaleMode={scaleMode}
+          videoStyle={videoStyle}
+          videoLabelStyle={videoLabelStyle}
+          placeholderStyle={placeholderStyle}
+          labelsOffset_px={labelsOffset_px}
+          enableLayoutAnims={enableLayoutAnims}
+          dominantProps={props}
+        />
       );
     } // end of participants loop
 

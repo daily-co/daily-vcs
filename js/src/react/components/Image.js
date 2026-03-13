@@ -11,6 +11,7 @@ export function Image(props) {
   // can't use JSX in VCS core because it needs to run on Node without transpiling
   return React.createElement('image', {
     id: props.id,
+    animationId: props.animationId,
     layout: props.layout,
     style: props.style || {},
     transform: props.transform || {},

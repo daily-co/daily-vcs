@@ -73,8 +73,11 @@ srcCompPath = await prepareCompositionAtPath(
 
 console.log('Composition prepared, will be loaded from: ', srcCompPath);
 
-const { compositionInterface: compInterface, default: ContentRoot } =
-  await import(srcCompPath);
+const {
+  compositionInterface: compInterface,
+  layoutAnimations,
+  default: ContentRoot,
+} = await import(srcCompPath);
 
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
@@ -133,6 +136,10 @@ async function main() {
     compGetSourceMetadataCb
   );
 
+  if (layoutAnimations) {
+    composition.setLayoutAnimations(layoutAnimations);
+  }
+
   // set param defaults based on comp's published interface.
   // if we got param values as args, use those.
   const paramValues = {};
@@ -178,9 +185,19 @@ async function main() {
       applyScenarioState(scenario.frameWillRenderCb(g_currentFrame));
     }
 
-    rootContainerRef.current.setVideoTime(getVideoTime());
+    const videoTime = getVideoTime();
+
+    // Update composition's video time for layout animations
+    composition.videoTime = videoTime;
+
+    rootContainerRef.current.setVideoTime(videoTime);
 
     await setTimeout(1);
+
+    // If there are active animations, force a layout update
+    if (composition.needsLayoutForAnimation()) {
+      composition._performLayout();
+    }
 
     if (g_lastCompUpdateFrame < g_currentFrame) {
       compUpdatedCb(composition);

@@ -51,6 +51,14 @@ export const compositionParams = [
     shortHelpText:
       'Shown immediately when stream starts. Goes away automatically.\nTo preview this slate, click Stop, then Restart.',
   },
+  // -- layout animation --
+  {
+    id: 'enableLayoutAnims',
+    type: 'boolean',
+    defaultValue: false,
+    shortHelpText:
+      'Enables smooth animations when video layout changes (e.g. participant count changes).',
+  },
   // -- video layout params --
   {
     id: 'videoSettings.maxCamStreams',

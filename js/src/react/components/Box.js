@@ -6,6 +6,7 @@ export function Box(props) {
     'box',
     {
       id: props.id,
+      animationId: props.animationId,
       layout: props.layout,
       style: props.style || {},
       transform: props.transform || {},
