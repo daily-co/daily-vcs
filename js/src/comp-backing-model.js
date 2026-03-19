@@ -412,7 +412,9 @@ export class Composition {
           frame = self._applyActiveAnimations(node, frame, videoTime);
 
           // Apply appear animation if node just appeared
-          const appearConfig = self._getAppearAnimation(node);
+          const appearConfig = !node.appearAnimationCompleted
+            ? self._getAppearAnimation(node)
+            : null;
           if (appearConfig) {
             // Check if this is a genuinely new node or just an animationId change
             // on an already-visible node
@@ -449,8 +451,15 @@ export class Composition {
               }
               opacityForChildren = opacity;
             } else {
-              // Animation completed - mark it so exit animation knows
+              // Animation completed — snap to final opacity value.
+              // Without this, the node retains the penultimate eased value
+              // (~0.979) from the prior frame indefinitely.
               node.appearAnimationCompleted = true;
+              let finalOpacity = appearConfig.to;
+              if (inheritedOpacity !== undefined) {
+                finalOpacity *= inheritedOpacity;
+              }
+              opacityForChildren = finalOpacity;
             }
           }
         }

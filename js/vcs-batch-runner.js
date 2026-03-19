@@ -152,8 +152,11 @@ srcCompPath = await prepareCompositionAtPath(
 
 logToHostInfo('Composition prepared, will be loaded from: ', srcCompPath);
 
-const { compositionInterface: compInterface, default: ContentRoot } =
-  await import(srcCompPath);
+const {
+  compositionInterface: compInterface,
+  layoutAnimations,
+  default: ContentRoot,
+} = await import(srcCompPath);
 
 // mock objects to represent image sources.
 // this is passed in when writing the composition into a flat scene description,
@@ -176,6 +179,12 @@ imageSources.assetImages['party-popper_1f389.png'] = {
   vcsSourceId: 'party-popper_1f389.png',
   width: 240,
   height: 240,
+};
+imageSources.assetImages['user_white_64.png'] = {
+  vcsSourceType: 'defaultAsset',
+  vcsSourceId: 'user_white_64.png',
+  width: 64,
+  height: 64,
 };
 
 let viewportSize = { w: 1280, h: 720 };
@@ -213,6 +222,10 @@ async function main() {
     compGetSourceMetadataCb
   );
 
+  if (layoutAnimations) {
+    composition.setLayoutAnimations(layoutAnimations);
+  }
+
   // set param defaults based on comp's published interface.
   const paramValues = {};
   if (params) {
@@ -242,6 +255,10 @@ async function main() {
     ),
     composition
   );
+
+  // Provide composition reference for layout animation support
+  batchState.composition = composition;
+  batchState.compUpdatedCb = compUpdatedCb;
 
   if (eventsJson?.initialState) {
     batchState.applyStateAtFrame(eventsJson.initialState);
