@@ -20,7 +20,7 @@
     "react-devtools-core": "^4.28.5",
     "react-reconciler": "^0.26.2",
     "scheduler": "^0.20.2",
-    "webpack": "^5.99.0",
+    "webpack": "^5.104.1",
     "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^5.2.1"
   },
