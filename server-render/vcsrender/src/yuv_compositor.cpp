@@ -293,6 +293,54 @@ std::shared_ptr<Yuv420PlanarBuf> YuvCompositor::renderFrame(
   return compBuf_;
 }
 
+// Blends a scaled I420 layer onto the destination with uniform opacity.
+// Uses the same video-range luma blend math as the corner radius mask path.
+static void blendI420LayerWithOpacity_(
+    Yuv420PlanarBuf& dstBuf,
+    const Yuv420PlanarBuf& srcBuf,
+    int minDstX, int minDstY, int maxDstX, int maxDstY,
+    int dstYOffset, int srcCopyXOffset,
+    int srcCopyLen_y, uint32_t alpha)
+{
+  const uint32_t aInv = 255 - alpha;
+
+  // Luma blend
+  for (int y = minDstY; y <= maxDstY; y++) {
+    uint8_t* dst_y = dstBuf.data + y * dstBuf.rowBytes_y + minDstX;
+    const uint8_t* src_y = srcBuf.data + (y - dstYOffset) * srcBuf.rowBytes_y + srcCopyXOffset;
+
+    for (int x = 0; x < srcCopyLen_y; x++) {
+      int yOver = src_y[x] - 16;
+      int yBase = dst_y[x] - 16;
+      yOver = (yOver > 0) ? yOver : 0;
+      yBase = (yBase > 0) ? yBase : 0;
+
+      const uint32_t yComp_fx = (yOver * alpha) + (yBase * aInv);
+      dst_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
+    }
+  }
+
+  // Chroma blend
+  const int srcCopyLen_ch = std::min((int)srcBuf.w / 2, std::max(0, (maxDstX - minDstX + 1) / 2));
+
+  for (int yy = minDstY; yy < maxDstY; yy += 2) {
+    const size_t dstOff = (yy / 2) * dstBuf.rowBytes_ch + minDstX / 2;
+    uint8_t* dst_Cb = dstBuf.getCbData() + dstOff;
+    uint8_t* dst_Cr = dstBuf.getCrData() + dstOff;
+
+    const size_t srcOff = (yy - dstYOffset) / 2 * srcBuf.rowBytes_ch + srcCopyXOffset / 2;
+    const uint8_t* src_Cb = srcBuf.getConstCbData() + srcOff;
+    const uint8_t* src_Cr = srcBuf.getConstCrData() + srcOff;
+
+    for (int xx = 0; xx < srcCopyLen_ch; xx++) {
+      // Chroma is in [16, 240] range with 128 as neutral.
+      // Blend toward the destination value.
+      dst_Cb[xx] = (src_Cb[xx] * alpha + dst_Cb[xx] * aInv) / 255;
+      dst_Cr[xx] = (src_Cr[xx] * alpha + dst_Cr[xx] * aInv) / 255;
+    }
+  }
+}
+
 void YuvCompositor::renderLayerInPlace_(
   Yuv420PlanarBuf& dstBuf,
   const Yuv420PlanarBuf& srcBuf,
@@ -432,6 +480,10 @@ void YuvCompositor::renderLayerInPlace_(
     maskBuf = maskCache_.getCachedMask(tempScaledBuf.w, tempScaledBuf.h, cornerRadius);
   }
 
+  const double layerOpacity = layerDesc.attrs.opacity;
+  const bool useBlend = layerOpacity < 1.0 && layerOpacity > 0.0;
+  const uint32_t blendAlpha = useBlend ? lround(layerOpacity * 255) : 255;
+
   const int outW = dstBuf.w;
   const int outH = dstBuf.h;
 
@@ -445,78 +497,87 @@ void YuvCompositor::renderLayerInPlace_(
   srcRowBytes_y = tempScaledBuf.rowBytes_y;
   const int srcCopyLen_y = std::min(scaleBufW, std::max(0, maxDstX - minDstX + 1));
 
-  for (int y = minDstY; y <= maxDstY; y++) {
-    const size_t dstOff = y * dstBuf.rowBytes_y + minDstX;
-    uint8_t *dst_y = dstBuf.data + dstOff;
+  if (useBlend && !useMask) {
+    blendI420LayerWithOpacity_(
+        dstBuf, tempScaledBuf,
+        minDstX, minDstY, maxDstX, maxDstY,
+        dstYOffset, srcCopyXOffset,
+        srcCopyLen_y, blendAlpha);
+  } else {
+    // Original path: full opacity copy, optionally with corner radius mask
+    for (int y = minDstY; y <= maxDstY; y++) {
+      const size_t dstOff = y * dstBuf.rowBytes_y + minDstX;
+      uint8_t *dst_y = dstBuf.data + dstOff;
 
-    const size_t srcOff = (y - dstYOffset) * srcRowBytes_y + srcCopyXOffset;
-    const uint8_t* src_y = tempScaledBuf.data + srcOff;
+      const size_t srcOff = (y - dstYOffset) * srcRowBytes_y + srcCopyXOffset;
+      const uint8_t* src_y = tempScaledBuf.data + srcOff;
 
-    if (!useMask) {
-      memcpy(dst_y, src_y, srcCopyLen_y);
-    } else {
-      const size_t maskSrcOff = (y - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
-      const uint8_t* src_mask = maskBuf->data + maskSrcOff;
-      for (int x = 0; x < srcCopyLen_y; x++) {
-        const int maskV = src_mask[x];
-        if (maskV < 2) {
-          continue;
+      if (!useMask) {
+        memcpy(dst_y, src_y, srcCopyLen_y);
+      } else {
+        const size_t maskSrcOff = (y - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
+        const uint8_t* src_mask = maskBuf->data + maskSrcOff;
+        for (int x = 0; x < srcCopyLen_y; x++) {
+          const int maskV = src_mask[x];
+          if (maskV < 2) {
+            continue;
+          }
+          if (maskV >= 254) {
+            dst_y[x] = src_y[x];
+            continue;
+          }
+
+          // fixed-point blend
+          int yOver = src_y[x];
+          const int yBase = dst_y[x];
+          const uint32_t aInv = 255 - maskV;
+
+          // luma layers should be in video range [16, 235].
+          // convert to [0, 219] range for blending and then back when writing out.
+          // this intermediate result is in 255x fixed point.
+          int yOver_clamped = yOver - 16;
+          int yBase_clamped = yBase - 16;
+          yOver_clamped = (yOver_clamped > 0) ? yOver_clamped : 0;
+          yBase_clamped = (yBase_clamped > 0) ? yBase_clamped : 0;
+
+          const uint32_t yComp_fx = (yOver_clamped * maskV) + (yBase_clamped * aInv);
+
+          // 60945 is the maximum luma value for the fixed point result; anything above is white
+          dst_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
+
         }
-        if (maskV >= 254) {
-          dst_y[x] = src_y[x];
-          continue;
-        }
-
-        // fixed-point blend
-        int yOver = src_y[x];
-        const int yBase = dst_y[x];
-        const uint32_t aInv = 255 - maskV;
-
-        // luma layers should be in video range [16, 235].
-        // convert to [0, 219] range for blending and then back when writing out.
-        // this intermediate result is in 255x fixed point.
-        int yOver_clamped = yOver - 16;
-        int yBase_clamped = yBase - 16;
-        yOver_clamped = (yOver_clamped > 0) ? yOver_clamped : 0;
-        yBase_clamped = (yBase_clamped > 0) ? yBase_clamped : 0;
-
-        const uint32_t yComp_fx = (yOver_clamped * maskV) + (yBase_clamped * aInv);
-
-        // 60945 is the maximum luma value for the fixed point result; anything above is white
-        dst_y[x] = (yComp_fx >= 60945) ? 255 : yComp_fx / 255 + 16;
-
       }
     }
-  }
 
-  srcRowBytes_ch = tempScaledBuf.rowBytes_ch;
-  const int srcCopyLen_ch = std::min((int)tempScaledBuf.w / 2, std::max(0, (maxDstX - minDstX + 1) / 2));
+    srcRowBytes_ch = tempScaledBuf.rowBytes_ch;
+    const int srcCopyLen_ch = std::min((int)tempScaledBuf.w / 2, std::max(0, (maxDstX - minDstX + 1) / 2));
 
-  for (int yy = minDstY; yy < maxDstY; yy += 2) {
-    const size_t dstOff = (yy / 2) * dstBuf.rowBytes_ch + minDstX / 2;
-    uint8_t* dst_Cb = dstBuf.getCbData() + dstOff;
-    uint8_t* dst_Cr = dstBuf.getCrData() + dstOff;
+    for (int yy = minDstY; yy < maxDstY; yy += 2) {
+      const size_t dstOff = (yy / 2) * dstBuf.rowBytes_ch + minDstX / 2;
+      uint8_t* dst_Cb = dstBuf.getCbData() + dstOff;
+      uint8_t* dst_Cr = dstBuf.getCrData() + dstOff;
 
-    const size_t srcOff = (yy - dstYOffset) / 2 * srcRowBytes_ch + srcCopyXOffset / 2;
-    const uint8_t* src_Cb = tempScaledBuf.getCbData() + srcOff;
-    const uint8_t* src_Cr = tempScaledBuf.getCrData() + srcOff;
+      const size_t srcOff = (yy - dstYOffset) / 2 * srcRowBytes_ch + srcCopyXOffset / 2;
+      const uint8_t* src_Cb = tempScaledBuf.getCbData() + srcOff;
+      const uint8_t* src_Cr = tempScaledBuf.getCrData() + srcOff;
 
-    if (!useMask) {
-      memcpy(dst_Cb, src_Cb, srcCopyLen_ch);
-      memcpy(dst_Cr, src_Cr, srcCopyLen_ch);
-    } else {
-      const size_t maskSrcOff = (yy - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
-      const uint8_t* src_mask = maskBuf->data + maskSrcOff;
-      for (int xx = 0; xx < srcCopyLen_y; xx += 2) {
-        const int maskV = src_mask[xx];
-        if (maskV < 2) {
-          continue;
+      if (!useMask) {
+        memcpy(dst_Cb, src_Cb, srcCopyLen_ch);
+        memcpy(dst_Cr, src_Cr, srcCopyLen_ch);
+      } else {
+        const size_t maskSrcOff = (yy - dstYOffset) * maskBuf->rowBytes + srcCopyXOffset;
+        const uint8_t* src_mask = maskBuf->data + maskSrcOff;
+        for (int xx = 0; xx < srcCopyLen_y; xx += 2) {
+          const int maskV = src_mask[xx];
+          if (maskV < 2) {
+            continue;
+          }
+
+          // chroma doesn't need to be blended for these small masks that we use
+          const int xx_half = xx / 2;
+          dst_Cb[xx_half] = src_Cb[xx_half];
+          dst_Cr[xx_half] = src_Cr[xx_half];
         }
-
-        // chroma doesn't need to be blended for these small masks that we use
-        const int xx_half = xx / 2;
-        dst_Cb[xx_half] = src_Cb[xx_half];
-        dst_Cr[xx_half] = src_Cr[xx_half];
       }
     }
   }

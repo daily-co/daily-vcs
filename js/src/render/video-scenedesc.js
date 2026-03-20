@@ -54,19 +54,25 @@ function recurseEncodeNode(sceneDesc, node, comp, imageSources, opts) {
     if (Number.isFinite(node.zoom)) {
       attrs.zoomFactor = node.zoom;
     }
-    if (node.blend) {
-      const { opacity } = node.blend;
-      if (Number.isFinite(opacity)) {
-        attrs.opacity = Math.min(1, Math.max(0, opacity));
-      }
+    // Handle blend opacity: skip fully transparent layers,
+    // pass partial opacity through for compositor blending.
+    let layerOpacity = 1;
+    if (node.blend && Number.isFinite(node.blend.opacity)) {
+      layerOpacity = Math.min(1, Math.max(0, node.blend.opacity));
     }
-
-    sceneDesc.push({
-      type: srcDrawable.vcsSourceType,
-      id: srcDrawable.vcsSourceId,
-      frame,
-      attrs,
-    });
+    if (layerOpacity <= 0) {
+      // Don't emit: fully transparent layer
+    } else {
+      if (layerOpacity < 1) {
+        attrs.opacity = layerOpacity;
+      }
+      sceneDesc.push({
+        type: srcDrawable.vcsSourceType,
+        id: srcDrawable.vcsSourceId,
+        frame,
+        attrs,
+      });
+    }
   }
 
   for (const c of node.children) {

@@ -161,6 +161,9 @@ class VideoLayerListJSONHandler {
         } else if (currKey_ == "zoomFactor") {
           currentLayer().attrs.zoomFactor = d;
           return true;
+        } else if (currKey_ == "opacity") {
+          currentLayer().attrs.opacity = std::min(1.0, std::max(0.0, d));
+          return true;
         }
         break;
     }
