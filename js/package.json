@@ -46,7 +46,8 @@
     "webvtt-parser": "^2.2.0"
   },
   "resolutions": {
-    "react": "17.0.2"
+    "react": "17.0.2",
+    "@peculiar/x509": "1.12.4"
   },
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
