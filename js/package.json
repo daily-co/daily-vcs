@@ -10,19 +10,12 @@
   "license": "BSD-2-Clause",
   "type": "module",
   "devDependencies": {
-    "@babel/core": "^7.26.10",
-    "@babel/preset-env": "^7.26.9",
-    "@babel/preset-react": "^7.26.3",
-    "babel-loader": "^9.2.1",
-    "copy-webpack-plugin": "^12.0.2",
-    "html-webpack-plugin": "^5.6.0",
     "react": "17.0.2",
     "react-devtools-core": "^4.28.5",
     "react-reconciler": "^0.26.2",
     "scheduler": "^0.20.2",
-    "webpack": "^5.99.0",
-    "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.1"
+    "vite": "^6.4.1",
+    "vite-plugin-static-copy": "^4.0.0"
   },
   "dependencies": {
     "@react-pdf/fontkit": "^2.0.7",
@@ -45,11 +38,8 @@
     "uuid": "^8.3.2",
     "webvtt-parser": "^2.2.0"
   },
-  "resolutions": {
-    "react": "17.0.2",
-    "@peculiar/x509": "1.12.4",
-    "serialize-javascript": "7.0.3",
-    "picomatch": "^2.3.2"
+  "overrides": {
+    "react": "17.0.2"
   },
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
@@ -59,11 +49,11 @@
     "#vcs-stdlib/layouts": "./src/stdlib/layouts/index.js"
   },
   "scripts": {
-    "devrig": "wrap () { yarn webpack serve --env target=devrig --env compid=\"$*\" | cat; }; wrap",
-    "open-browser-hello": "yarn webpack serve --open --env compid=example:hello",
-    "open-browser": "wrap () { yarn webpack serve --open --env target=devrig --env compid=\"$*\" | cat; }; wrap",
-    "build-browser": "wrap () { yarn webpack --env target=devrig --env use_comp_filename --env compid=\"$*\" | cat; }; wrap",
-    "build-composition-module-for-web": "wrap () { yarn webpack --env target=module_web --env compid=\"$1\" --env vcsroot=\"$2\" | cat; }; wrap",
+    "devrig": "wrap () { VCS_TARGET=devrig VCS_COMPID=\"$*\" vite serve; }; wrap",
+    "open-browser-hello": "VCS_TARGET=devrig VCS_COMPID=example:hello vite serve --open",
+    "open-browser": "wrap () { VCS_TARGET=devrig VCS_COMPID=\"$*\" vite serve --open; }; wrap",
+    "build-browser": "wrap () { VCS_TARGET=devrig VCS_USE_COMP_FILENAME=1 VCS_COMPID=\"$*\" vite build; }; wrap",
+    "build-composition-module-for-web": "wrap () { VCS_TARGET=module_web VCS_COMPID=\"$1\" VCS_VCSROOT=\"$2\" vite build; }; wrap",
     "benchmark-graphics-test": "node vcs-benchmark.js --comp example/graphics-test.jsx",
     "test-scenario": "node vcs-test-runner.js --scenario",
     "line-protocol": "node vcs-line-protocol-main.js --compid"
