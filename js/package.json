@@ -47,7 +47,9 @@
   },
   "resolutions": {
     "react": "17.0.2",
-    "@peculiar/x509": "1.12.4"
+    "@peculiar/x509": "1.12.4",
+    "serialize-javascript": "^7.0.3",
+    "picomatch": "^2.3.2"
   },
   "imports": {
     "#vcs-react/components": "./src/react/components/index.js",
