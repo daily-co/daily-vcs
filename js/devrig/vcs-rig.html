@@ -560,6 +560,11 @@ table {
             </div>
             <div id="controls">
 
+              <div class="vc" style="padding: 0.5em 1em; background: var(--bg-color-lighter1);">
+                <h3 style="margin-top: 0.5em;">Test presets</h3>
+                <button id="applySTR1958Btn" style="font-size: 12px;">STR-1958: Zero margin grid labels</button>
+              </div>
+
               <div class="vc">
                 <h3>Media input</h3>
                 <div class="mediaInput">
@@ -2254,6 +2259,57 @@ function sendParam(paramId, value) {
     printApicallRec();
   }
 }
+
+function applyPreset_STR1958() {
+  const params = {
+    "videoSettings.margin.bottom_gu": 0,
+    "videoSettings.margin.top_gu": 0,
+    "videoSettings.margin.left_gu": 0,
+    "videoSettings.margin.right_gu": 0,
+    "videoSettings.omitPausedVideo": false,
+    "videoSettings.omitAudioOnly": false,
+    "videoSettings.showParticipantLabels": true,
+    "videoSettings.labels.fontFamily": "DMSans",
+    "videoSettings.highlight.color": "rgb(34, 176, 125)",
+    "videoSettings.highlight.stroke_gu": 0.2,
+    "showBannerOverlay": false,
+    "showTextOverlay": false,
+    "showTitleSlate": false,
+    "showImageOverlay": true,
+    "mode": "grid",
+    "videoSettings.maxCamStreams": 20,
+    "videoSettings.preferScreenshare": false,
+    "videoSettings.scaleMode": "fill",
+    "videoSettings.grid.preserveAspectRatio": true,
+    "videoSettings.grid.outerPadding_gu": 0,
+    "videoSettings.dominant.followDomFlag": false,
+    "videoSettings.dominant.itemInterval_gu": 0.2,
+    "videoSettings.dominant.outerPadding_gu": 0,
+  };
+  for (const [key, value] of Object.entries(params)) {
+    sendParam(key, value);
+  }
+  // update UI controls to reflect new values
+  document.querySelectorAll('#controls [data-param-id]').forEach(el => {
+    const paramId = el.dataset.paramId;
+    if (!(paramId in params)) return;
+    const value = params[paramId];
+    if (el.tagName === 'INPUT' && el.type === 'checkbox') {
+      el.checked = !!value;
+    } else if (el.tagName === 'INPUT') {
+      el.value = value;
+    } else if (el.tagName === 'SELECT') {
+      for (let i = 0; i < el.options.length; i++) {
+        if (el.options[i].value === String(value)) {
+          el.selectedIndex = i;
+          break;
+        }
+      }
+    }
+  });
+}
+
+document.getElementById('applySTR1958Btn').addEventListener('click', applyPreset_STR1958);
 
 function sendStandardSource(sourceId, data) {
   if (!g_vcsApi) return;
