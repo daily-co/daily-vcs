@@ -40,7 +40,9 @@
   },
   "overrides": {
     "react": "17.0.2",
+    "@peculiar/x509": "1.12.4",
     "serialize-javascript": "^7.0.5",
+    "picomatch": "^2.3.2",
     "lodash": "^4.18.0",
     "path-to-regexp": "^0.1.13"
   },
