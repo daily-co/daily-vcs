@@ -678,6 +678,8 @@ table {
     </div>
   </body>
 
+<script type="module" src="/devrig/devrig-entry.js"></script>
+
 <script>
 
 // the VCS composition bundle will be loaded here
@@ -1627,13 +1629,12 @@ async function start() {
 }
 
 window.addEventListener('load', function(ev) {
-  const compLibName = Object.keys(window).find(s => s.indexOf('VCSComposition') === 0);
-  if (!compLibName) {
-    alert("Couldn't find a Daily VCS composition using the standard naming pattern.");
+  g_vcsCompLib = window['__VCS_DEVRIG_LIB__'];
+  if (!g_vcsCompLib) {
+    alert("Couldn't find the Daily VCS composition library.");
     return; // --
   }
-  g_vcsCompLib = window[compLibName];
-  console.log("Using VCS library: ", compLibName, g_vcsCompLib);
+  console.log("Using VCS library: ", g_vcsCompLib);
 
   start();
 });
