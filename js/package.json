@@ -10,14 +10,14 @@
   "license": "BSD-2-Clause",
   "type": "module",
   "devDependencies": {
-    "react": "17.0.2",
     "react-devtools-core": "^4.28.5",
-    "react-reconciler": "^0.26.2",
-    "scheduler": "^0.20.2",
     "vite": "^6.4.1",
     "vite-plugin-static-copy": "^4.0.0"
   },
   "dependencies": {
+    "react": "17.0.2",
+    "react-reconciler": "^0.26.2",
+    "scheduler": "^0.20.2",
     "@react-pdf/fontkit": "^2.0.7",
     "@react-pdf/textkit": "^2.0.7",
     "@swc/core": "^1.3.49",
