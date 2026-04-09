@@ -168,7 +168,7 @@ class VideoLayerListJSONHandler {
         break;
     }
     std::stringstream ss;
-    ss << "Unexpected double value: " << d;
+    ss << "Unexpected double value: " << d << ", currKey = " << currKey_;
     return throwErr(ss.str());
   }
 

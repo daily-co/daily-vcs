@@ -193,6 +193,7 @@ bool YuvCompositor::setVideoLayersJSON(const std::string& jsonStr, double layerS
     videoLayers_ = ParseVCSVideoLayerListJSON(jsonStr, {layerScale});
   } catch (std::exception& e) {
     std::cerr << "** Error parsing VCS video layers JSON: " << e.what() << std::endl;
+    std::cerr << "   Input JSON (" << jsonStr.length() << " chars): " << jsonStr.substr(0, 500) << std::endl;
     return false;
   }
   return true;
