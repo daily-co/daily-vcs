@@ -73,9 +73,13 @@ export function gridLabel(parentFrame, params) {
   const { textH = 20, offsets = {} } = params;
   let { x, y, w, h } = offset(parentFrame, offsets);
 
-  y += parentFrame.h + Math.round(textH * 0.1);
-
   h = Math.ceil(textH * 1.6); // enough room for one line of text
+  y += parentFrame.h - h; // bottom-aligned inside the tile
+
+  // ensure x and y are never exactly 0, which would be treated as falsy
+  // by the canvas text renderer and cause the label to not render
+  if (x === 0) x = 0.5;
+  if (y === 0) y = 0.5;
 
   return { x, y, w, h };
 }
