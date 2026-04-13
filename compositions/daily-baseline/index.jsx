@@ -201,6 +201,7 @@ export default function DailyBaselineVCS() {
       dominantVideoId,
       preferScreenshare,
       showLabels: params['videoSettings.showParticipantLabels'],
+      showMicStatus: params['videoSettings.showMicStatus'],
       scaleMode: params['videoSettings.scaleMode'],
       scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
       zoomFactors: parseCommaSeparatedList(

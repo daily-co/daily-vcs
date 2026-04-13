@@ -567,6 +567,7 @@ table {
                     <div>Active video inputs</div>
                     <div>Make dominant</div>
                     <div>Paused</div>
+                    <div>Mute mic</div>
                     <div>Toggle screenshare</div>
                     <div>Randomize name</div>
                   </div>
@@ -716,11 +717,12 @@ function getVideoInputIdForSlotIndex(idx, isScreenshare) {
   else return 'devinput' + idx + suffix;
 }
 
-function setActiveVideoInput(idx, active, paused, isScreenshare) {
+function setActiveVideoInput(idx, active, paused, isScreenshare, audioPaused) {
   g_activeVideoInputSlots[idx] = {
     id: getVideoInputIdForSlotIndex(idx, isScreenshare),
     active: !!active,
     paused: !!paused,
+    audioPaused: !!audioPaused,
     type: isScreenshare ? 'screenshare' : 'camera',
     displayName: 'Participant ' + (idx+1)
   };
@@ -1004,6 +1006,18 @@ function pauseToggled(ev) {
   createVideoInputsUI();
 }
 
+function audioMuteToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  g_activeVideoInputSlots[idx].audioPaused = !g_activeVideoInputSlots[idx].audioPaused;
+
+  updateRoomPeers();
+  sendRoomPeers();
+
+  createVideoInputsUI();
+}
+
 function makeCurrentImageSources() {
   let sources = {...g_defaultSources};
 
@@ -1037,7 +1051,7 @@ function screenshareToggled(ev) {
 
   const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
 
-  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
+  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s, g_activeVideoInputSlots[idx].audioPaused);
 
   if (g_attachScreenshareToAudioOnlyPeer) {
     updateRoomPeers();
@@ -1479,6 +1493,19 @@ function createVideoInputsUI() {
     pauseBtn.className = cls;
 
     pauseBtn.addEventListener('click', pauseToggled);
+
+    // --
+    const muteBtn = document.createElement('button');
+    muteBtn.setAttribute('data-index', i);
+    muteBtn.innerText = "";
+    box.appendChild(muteBtn);
+
+    cls = 'pause';
+    if (g_activeVideoInputSlots[i].audioPaused) cls += ' selected checkboxOn';
+    else cls += ' checkboxOff';
+    muteBtn.className = cls;
+
+    muteBtn.addEventListener('click', audioMuteToggled);
 
     // --
     const sBtn = document.createElement('button');
@@ -2174,7 +2201,9 @@ function updateRoomPeers() {
           id: obj.id,
           paused: obj.paused
         },
-        audio: {}
+        audio: {
+          paused: !!obj.audioPaused
+        }
       };
       if (screenshareIndexes.length > 0) {
         const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];

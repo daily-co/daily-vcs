@@ -2,12 +2,14 @@ import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import decorateVideoSingleItem from './overrides/decorateVideoSingleItem.js';
 import { DEFAULT_OFFSET_VIDEO_SINGLE_PX } from '../constants.js';
 
 export default function VideoSingle(props) {
   let {
     showLabels,
+    showMicStatus,
     scaleMode,
     scaleModeForScreenshare,
     videoStyle,
@@ -41,7 +43,7 @@ export default function VideoSingle(props) {
     : participantDescs.length > 0
     ? participantDescs[0]
     : null;
-  const { videoId, paused, isScreenshare, displayName = '' } = d || {};
+  const { videoId, paused, isScreenshare, displayName = '', audioPaused } = d || {};
 
   if (disableRoundedCorners) {
     if (videoStyle && videoStyle.cornerRadius_px > 0) {
@@ -130,6 +132,7 @@ export default function VideoSingle(props) {
 
   const arr = [content];
   if (participantLabel) arr.push(participantLabel);
+  if (showMicStatus) arr.push(<MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />);
   if (customDecoratorComponent) arr.push(customDecoratorComponent);
 
   return clipItem ? (

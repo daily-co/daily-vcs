@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import decorateVideoGridItem from './overrides/decorateVideoGridItem.js';
 import { DEFAULT_OFFSET_VIDEO_SINGLE_PX } from '../constants.js';
 
@@ -18,6 +19,7 @@ function VideoGridItem({
 }) {
   const {
     showLabels,
+    showMicStatus,
     scaleMode,
     scaleModeForScreenshare,
     videoStyle,
@@ -34,6 +36,7 @@ function VideoGridItem({
     displayName,
     highlighted,
     paused,
+    audioPaused,
   } = itemProps;
 
   const key = 'videogriditem_' + index;
@@ -166,6 +169,9 @@ function VideoGridItem({
       {video}
       {participantLabel}
       {highlight}
+      {showMicStatus && (
+        <MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />
+      )}
       {customDecoratorComponent}
     </Box>
   );

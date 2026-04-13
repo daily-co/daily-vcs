@@ -4,6 +4,7 @@ import * as layoutFuncs from '../layouts.js';
 import { PositionEdge } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import VideoSingle from './VideoSingle.js';
 import decorateVideoDominantItem from './overrides/decorateVideoDominantItem.js';
 
@@ -15,6 +16,7 @@ function DominantChiclet({
   participant,
   layout,
   showLabels,
+  showMicStatus,
   scaleMode,
   videoStyle,
   videoLabelStyle,
@@ -23,7 +25,7 @@ function DominantChiclet({
   enableLayoutAnims,
   dominantProps,
 }) {
-  const { videoId, paused, displayName } = participant;
+  const { videoId, paused, displayName, audioPaused } = participant;
   const key = `videochiclet_${index}_${participant.key}`;
 
   // override point for custom decorations on chiclet items
@@ -63,6 +65,11 @@ function DominantChiclet({
       />
     );
   }
+  if (showMicStatus) {
+    childItems.push(
+      <MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />
+    );
+  }
   if (customDecoratorComponent) childItems.push(customDecoratorComponent);
 
   const containerStyle = clipItem
@@ -86,6 +93,7 @@ function DominantChiclet({
 export default function VideoDominant(props) {
   let {
     showLabels,
+    showMicStatus,
     scaleMode,
     videoStyle,
     videoLabelStyle,
@@ -272,6 +280,7 @@ export default function VideoDominant(props) {
           participant={participant}
           layout={layout}
           showLabels={showLabels}
+          showMicStatus={showMicStatus}
           scaleMode={scaleMode}
           videoStyle={videoStyle}
           videoLabelStyle={videoLabelStyle}
