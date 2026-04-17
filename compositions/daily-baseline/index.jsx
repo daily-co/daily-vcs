@@ -144,8 +144,11 @@ export default function DailyBaselineVCS() {
   participantDescs = React.useMemo(() => {
     let arr = participantDescs.slice();
     const pref = [];
-    for (const videoId of preferredVideoIds) {
-      const idx = arr.findIndex((d) => d.videoId === videoId);
+    for (const entry of preferredVideoIds) {
+      const idx =
+        entry.videoId != null
+          ? arr.findIndex((d) => d.videoId === entry.videoId)
+          : arr.findIndex((d) => d.peerId === entry.peerId);
       if (idx >= 0) {
         const d = arr[idx];
         pref.push(d);

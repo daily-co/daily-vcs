@@ -110,6 +110,7 @@ export function useActiveVideoAndAudio({
             isAudioOnly: true,
             isScreenshare: false,
             videoId: null,
+            peerId: peer.id,
             displayName: peer.displayName || 'Audio participant',
             highlighted: peer.audio.dominant,
             paused: peer.audio.paused,
