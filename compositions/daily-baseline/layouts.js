@@ -155,6 +155,21 @@ export function pausedPlaceholderIcon(parentFrame) {
   return { x, y, w, h };
 }
 
+export function micStatusIcon(parentFrame, params, layoutCtx) {
+  const { margin_gu = 0.5 } = params || {};
+  const pxPerGu = layoutCtx.pixelsPerGridUnit;
+  const margin = margin_gu * pxPerGu;
+
+  let { x, y, w, h } = parentFrame;
+  w = h = 24; // Fixed size
+
+  // Bottom-left corner
+  x += margin;
+  y += parentFrame.h - h - margin;
+
+  return { x, y, w, h };
+}
+
 export function toast(parentFrame, params, layoutCtx) {
   const { viewport, pixelsPerGridUnit: pxPerGu } = layoutCtx;
   const asp = viewport.w / viewport.h;
