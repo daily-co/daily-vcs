@@ -28,9 +28,21 @@ export const RenderingEnvironmentType = {
   PASSIVE_VIEWER_CLIENT: 'passive-viewer-client',
 };
 
+// Identifies which backend is consuming VCS render output.
+// Compositions can read this to gate features that require a specific renderer
+// (e.g. layout animations require VCSRENDER)
+export const RenderEngineType = {
+  UNKNOWN: '',
+  LEGACY_GST: 'legacy-gst',
+  VCSRENDER: 'vcsrender',
+};
+
 export const RoomContext = React.createContext({
   // our role within this room (e.g. "media server").
   renderingEnvironment: RenderingEnvironmentType.UNKNOWN,
+
+  // which render backend is consuming our output.
+  renderEngine: RenderEngineType.UNKNOWN,
 
   // a list of Peer objects.
   // this may not be an exhaustive list of participants on a video call.
