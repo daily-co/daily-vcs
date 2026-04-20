@@ -260,6 +260,7 @@ export default function DailyBaselineVCS() {
             fullScreenHighlightItemIndex={
               params['videoSettings.grid.fullScreenHighlightItemIndex']
             }
+            labelPlacement={params['videoSettings.grid.labelPlacement']}
             enableLayoutAnims={enableLayoutAnims}
           />
         );

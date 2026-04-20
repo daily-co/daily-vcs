@@ -202,6 +202,12 @@ export const compositionParams = [
     defaultValue: -1,
     step: 1,
   },
+  {
+    id: 'videoSettings.grid.labelPlacement',
+    type: 'enum',
+    defaultValue: 'below',
+    values: ['below', 'inside-at-bottom'],
+  },
 
   {
     id: 'videoSettings.dominant.position',

@@ -70,12 +70,22 @@ export function placeText(parentFrame, params, layoutCtx) {
 }
 
 export function gridLabel(parentFrame, params) {
-  const { textH = 20, offsets = {} } = params;
+  const { textH = 20, offsets = {}, placement = 'below' } = params;
   let { x, y, w, h } = offset(parentFrame, offsets);
 
-  y += parentFrame.h + Math.round(textH * 0.1);
-
   h = Math.ceil(textH * 1.6); // enough room for one line of text
+
+  if (placement === 'inside-at-bottom') {
+    const margin = Math.round(textH * 0.35);
+    // the text glyphs sit near the top of the h=textH*1.6 box (the rest is
+    // font leading/descender space), so offset y down by textH*0.5 to make
+    // the visible text align with the intended bottom margin.
+    x += margin;
+    y += parentFrame.h - h - margin + Math.round(textH * 0.5);
+    w = Math.max(0, w - margin * 2);
+  } else {
+    y += parentFrame.h + Math.round(textH * 0.1);
+  }
 
   return { x, y, w, h };
 }

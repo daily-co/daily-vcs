@@ -26,6 +26,7 @@ function VideoGridItem({
     videoLabelStyle,
     placeholderStyle,
     labelsOffset_px = 0,
+    labelPlacement = 'below',
     highlightDominant = true,
   } = gridProps;
 
@@ -90,7 +91,14 @@ function VideoGridItem({
       <Text
         key={'label_' + displayName}
         style={videoLabelStyle}
-        layout={[labelLayout, { textH: videoLabelStyle.fontSize_px, offsets }]}
+        layout={[
+          labelLayout,
+          {
+            textH: videoLabelStyle.fontSize_px,
+            offsets,
+            placement: isGrid ? labelPlacement : undefined,
+          },
+        ]}
         clip
       >
         {displayName}
