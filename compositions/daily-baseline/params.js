@@ -15,6 +15,12 @@ export const compositionParams = [
     values: ['single', 'split', 'grid', 'dominant', 'pip'],
   },
   {
+    id: 'currentLayout',
+    type: 'enum',
+    defaultValue: '2x2',
+    values: ['1x1', '2x1', '2x2', '2x1withPIP', '1x1withPIP']
+  },
+  {
     id: 'showTextOverlay',
     type: 'boolean',
     defaultValue: false,
