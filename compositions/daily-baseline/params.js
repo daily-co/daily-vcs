@@ -93,6 +93,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.omitPausedNotScreensharing',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.filterForUnpausedMediaTypes',
     type: 'text',
     defaultValue: '',
