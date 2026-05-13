@@ -8,6 +8,7 @@ import {
   useVideoPlaybackState,
   PlaybackStateType,
 } from '#vcs-react/hooks';
+import { RoomContext, RenderEngineType } from '#vcs-react/contexts';
 
 import {
   DEFAULT_FONT,
@@ -83,6 +84,13 @@ export default function DailyBaselineVCS() {
   const pxPerGu = useGrid().pixelsPerGridUnit;
   const guPerVh = viewportSize.h / pxPerGu;
   const guPerVw = viewportSize.w / pxPerGu;
+  const { renderEngine } = React.useContext(RoomContext);
+
+  // The legacy GStreamer compositor can't render layout animations correctly,
+  // so ignore enableLayoutAnims unless we know we're running in vcsrender.
+  const enableLayoutAnims =
+    !!params['enableLayoutAnims'] &&
+    renderEngine !== RenderEngineType.LEGACY_GST;
 
   // style applied to video elements.
   // placeholder is used if no video is available.
@@ -144,8 +152,11 @@ export default function DailyBaselineVCS() {
   participantDescs = React.useMemo(() => {
     let arr = participantDescs.slice();
     const pref = [];
-    for (const videoId of preferredVideoIds) {
-      const idx = arr.findIndex((d) => d.videoId === videoId);
+    for (const entry of preferredVideoIds) {
+      const idx =
+        entry.videoId != null
+          ? arr.findIndex((d) => d.videoId === entry.videoId)
+          : arr.findIndex((d) => d.peerId === entry.peerId);
       if (idx >= 0) {
         const d = arr[idx];
         pref.push(d);
@@ -201,6 +212,7 @@ export default function DailyBaselineVCS() {
       dominantVideoId,
       preferScreenshare,
       showLabels: params['videoSettings.showParticipantLabels'],
+      showMicStatus: params['videoSettings.showMicStatus'],
       scaleMode: params['videoSettings.scaleMode'],
       scaleModeForScreenshare: params['videoSettings.scaleModeForScreenshare'],
       zoomFactors: parseCommaSeparatedList(
@@ -248,7 +260,8 @@ export default function DailyBaselineVCS() {
             fullScreenHighlightItemIndex={
               params['videoSettings.grid.fullScreenHighlightItemIndex']
             }
-            enableLayoutAnims={params['enableLayoutAnims']}
+            labelPlacement={params['videoSettings.grid.labelPlacement']}
+            enableLayoutAnims={enableLayoutAnims}
           />
         );
         break;
@@ -345,7 +358,7 @@ export default function DailyBaselineVCS() {
             }
             includeWebFrame={webFrameInVideoLayout}
             webFrameProps={webFrameProps}
-            enableLayoutAnims={params['enableLayoutAnims']}
+            enableLayoutAnims={enableLayoutAnims}
           />
         );
         break;

@@ -567,6 +567,7 @@ table {
                     <div>Active video inputs</div>
                     <div>Make dominant</div>
                     <div>Paused</div>
+                    <div>Mute mic</div>
                     <div>Toggle screenshare</div>
                     <div>Randomize name</div>
                   </div>
@@ -678,6 +679,8 @@ table {
     </div>
   </body>
 
+<script type="module" src="/devrig/devrig-entry.js"></script>
+
 <script>
 
 // the VCS composition bundle will be loaded here
@@ -714,11 +717,12 @@ function getVideoInputIdForSlotIndex(idx, isScreenshare) {
   else return 'devinput' + idx + suffix;
 }
 
-function setActiveVideoInput(idx, active, paused, isScreenshare) {
+function setActiveVideoInput(idx, active, paused, isScreenshare, audioPaused) {
   g_activeVideoInputSlots[idx] = {
     id: getVideoInputIdForSlotIndex(idx, isScreenshare),
     active: !!active,
     paused: !!paused,
+    audioPaused: !!audioPaused,
     type: isScreenshare ? 'screenshare' : 'camera',
     displayName: 'Participant ' + (idx+1)
   };
@@ -1002,6 +1006,18 @@ function pauseToggled(ev) {
   createVideoInputsUI();
 }
 
+function audioMuteToggled(ev) {
+  const btn = ev.target;
+  const idx = parseInt(btn.dataset.index, 10);
+
+  g_activeVideoInputSlots[idx].audioPaused = !g_activeVideoInputSlots[idx].audioPaused;
+
+  updateRoomPeers();
+  sendRoomPeers();
+
+  createVideoInputsUI();
+}
+
 function makeCurrentImageSources() {
   let sources = {...g_defaultSources};
 
@@ -1035,7 +1051,7 @@ function screenshareToggled(ev) {
 
   const s = g_activeVideoInputSlots[idx].type !== 'screenshare';
 
-  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s);
+  setActiveVideoInput(idx, g_activeVideoInputSlots[idx].active, g_activeVideoInputSlots[idx].paused, s, g_activeVideoInputSlots[idx].audioPaused);
 
   if (g_attachScreenshareToAudioOnlyPeer) {
     updateRoomPeers();
@@ -1479,6 +1495,19 @@ function createVideoInputsUI() {
     pauseBtn.addEventListener('click', pauseToggled);
 
     // --
+    const muteBtn = document.createElement('button');
+    muteBtn.setAttribute('data-index', i);
+    muteBtn.innerText = "";
+    box.appendChild(muteBtn);
+
+    cls = 'pause';
+    if (g_activeVideoInputSlots[i].audioPaused) cls += ' selected checkboxOn';
+    else cls += ' checkboxOff';
+    muteBtn.className = cls;
+
+    muteBtn.addEventListener('click', audioMuteToggled);
+
+    // --
     const sBtn = document.createElement('button');
     sBtn.setAttribute('data-index', i);
     sBtn.setAttribute('data-video-screenshare', true);
@@ -1627,13 +1656,12 @@ async function start() {
 }
 
 window.addEventListener('load', function(ev) {
-  const compLibName = Object.keys(window).find(s => s.indexOf('VCSComposition') === 0);
-  if (!compLibName) {
-    alert("Couldn't find a Daily VCS composition using the standard naming pattern.");
+  g_vcsCompLib = window['__VCS_DEVRIG_LIB__'];
+  if (!g_vcsCompLib) {
+    alert("Couldn't find the Daily VCS composition library.");
     return; // --
   }
-  g_vcsCompLib = window[compLibName];
-  console.log("Using VCS library: ", compLibName, g_vcsCompLib);
+  console.log("Using VCS library: ", g_vcsCompLib);
 
   start();
 });
@@ -2173,7 +2201,9 @@ function updateRoomPeers() {
           id: obj.id,
           paused: obj.paused
         },
-        audio: {}
+        audio: {
+          paused: !!obj.audioPaused
+        }
       };
       if (screenshareIndexes.length > 0) {
         const ssobj = g_activeVideoInputSlots[screenshareIndexes[0]];

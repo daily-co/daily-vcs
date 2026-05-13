@@ -13,6 +13,7 @@ export function makeVCSRootContainer(
     viewportSize = { w: 1280, h: 720 },
     pixelsPerGridUnit = 20,
     renderingEnvironment = ViewContexts.RenderingEnvironmentType.UNKNOWN,
+    renderEngine = ViewContexts.RenderEngineType.UNKNOWN,
   } = displayOpts;
 
   // a root component that wraps the view we loaded from the external JSX source,
@@ -43,6 +44,7 @@ export function makeVCSRootContainer(
         },
         room: {
           renderingEnvironment,
+          renderEngine,
           availablePeers: [],
         },
       };

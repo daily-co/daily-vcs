@@ -4,6 +4,7 @@ import * as layoutFuncs from '../layouts.js';
 import { PositionCorner } from '../constants.js';
 import { ParticipantLabelPipStyle } from './ParticipantLabelPipStyle.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import VideoSingle from './VideoSingle.js';
 import decorateVideoPipItem from './overrides/decorateVideoPipItem.js';
 
@@ -14,6 +15,7 @@ export default function VideoPip(props) {
     videoLabelStyle,
     placeholderStyle,
     showLabels,
+    showMicStatus,
     positionCorner = PositionCorner.TOP_RIGHT,
     aspectRatio = 1,
     height_gu = 12,
@@ -116,7 +118,7 @@ export default function VideoPip(props) {
   if (otherParticipants.length > 0) {
     // render second video inside PiP window
     const pipParticipant = otherParticipants[0];
-    const { videoId, displayName = '', paused } = pipParticipant;
+    const { videoId, displayName = '', paused, audioPaused } = pipParticipant;
     const key = 'pipwindow_' + videoId;
 
     const layoutProps = {
@@ -164,6 +166,10 @@ export default function VideoPip(props) {
           labelsOffset_px={labelsOffset_px}
         />
       );
+    }
+
+    if (showMicStatus) {
+      pipItems.push(<MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />);
     }
 
     if (customDecoratorComponent) {

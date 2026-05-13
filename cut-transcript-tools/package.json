@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "@deepgram/sdk": "^3.1.9",
-    "zx": "^7.2.3"
+    "zx": "^8.8.5"
   }
 }

@@ -103,6 +103,11 @@ export const compositionParams = [
     defaultValue: false,
   },
   {
+    id: 'videoSettings.showMicStatus',
+    type: 'boolean',
+    defaultValue: false,
+  },
+  {
     id: 'videoSettings.roundedCorners',
     type: 'boolean',
     defaultValue: false,
@@ -196,6 +201,12 @@ export const compositionParams = [
     type: 'number',
     defaultValue: -1,
     step: 1,
+  },
+  {
+    id: 'videoSettings.grid.labelPlacement',
+    type: 'enum',
+    defaultValue: 'below',
+    values: ['below', 'inside-at-bottom'],
   },
 
   {

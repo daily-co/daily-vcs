@@ -22,13 +22,13 @@ export function usePreferredParticipantIdsParam(
     for (const wantedId of wantedIds) {
       const p = availablePeers.find((p) => p.id === wantedId);
       if (!p) continue;
-      if (!p.video && !p.screenshareVideo) continue;
 
-      arr.push(
-        preferScreenshare && p.screenshareVideo && p.screenshareVideo.id
+      const videoId =
+        preferScreenshare && p.screenshareVideo?.id
           ? p.screenshareVideo.id
-          : p.video.id
-      );
+          : p.video?.id ?? null;
+
+      arr.push({ videoId, peerId: wantedId });
     }
     return arr;
   }, [availablePeers, preferredParticipantIdsStr, preferScreenshare]);

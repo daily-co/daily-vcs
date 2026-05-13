@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box, Video, Text } from '#vcs-react/components';
 import * as layoutFuncs from '../layouts.js';
 import { PausedPlaceholder } from './PausedPlaceholder.js';
+import { MicStatusIndicator } from './MicStatusIndicator.js';
 import decorateVideoGridItem from './overrides/decorateVideoGridItem.js';
 import { DEFAULT_OFFSET_VIDEO_SINGLE_PX } from '../constants.js';
 
@@ -18,12 +19,14 @@ function VideoGridItem({
 }) {
   const {
     showLabels,
+    showMicStatus,
     scaleMode,
     scaleModeForScreenshare,
     videoStyle,
     videoLabelStyle,
     placeholderStyle,
     labelsOffset_px = 0,
+    labelPlacement = 'below',
     highlightDominant = true,
   } = gridProps;
 
@@ -34,6 +37,7 @@ function VideoGridItem({
     displayName,
     highlighted,
     paused,
+    audioPaused,
   } = itemProps;
 
   const key = 'videogriditem_' + index;
@@ -87,7 +91,14 @@ function VideoGridItem({
       <Text
         key={'label_' + displayName}
         style={videoLabelStyle}
-        layout={[labelLayout, { textH: videoLabelStyle.fontSize_px, offsets }]}
+        layout={[
+          labelLayout,
+          {
+            textH: videoLabelStyle.fontSize_px,
+            offsets,
+            placement: isGrid ? labelPlacement : undefined,
+          },
+        ]}
         clip
       >
         {displayName}
@@ -166,6 +177,9 @@ function VideoGridItem({
       {video}
       {participantLabel}
       {highlight}
+      {showMicStatus && (
+        <MicStatusIndicator key="micStatus" audioPaused={audioPaused ?? false} />
+      )}
       {customDecoratorComponent}
     </Box>
   );

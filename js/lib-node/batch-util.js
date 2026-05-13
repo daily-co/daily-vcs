@@ -11,6 +11,10 @@ export class BatchState {
     // this will receive the instance of our root container component
     this.rootContainerRef = React.createRef();
 
+    // set by caller to enable layout animation support
+    this.composition = null;
+    this.compUpdatedCb = null;
+
     // optionally take a list of WebVtt cues to be processed
     if (Array.isArray(opts?.webVttCues) && opts.webVttCues.length > 0) {
       this.webVttCues = opts.webVttCues;
@@ -86,10 +90,26 @@ export class BatchState {
       this.applyNextWebVttCueIfNeeded();
     }
 
-    this.rootContainerRef.current.setVideoTime(this.getVideoTime());
+    const videoTime = this.getVideoTime();
+
+    // Update composition's video time for layout animation interpolation
+    if (this.composition) {
+      this.composition.videoTime = videoTime;
+    }
+
+    this.rootContainerRef.current.setVideoTime(videoTime);
 
     // wait for a tick to allow any React async work to finish that might have been triggered by the above set
     await setTimeout(0);
+
+    // If there are active layout animations, force a layout update
+    // and notify the callback so the scene description gets written
+    if (this.composition?.needsLayoutForAnimation()) {
+      this.composition._performLayout();
+      if (this.compUpdatedCb) {
+        this.compUpdatedCb(this.composition);
+      }
+    }
   }
 
   applyStateToComp(s) {
@@ -107,6 +127,14 @@ export class BatchState {
     if (params) {
       for (const key in params) {
         this.rootContainerRef.current.setParamValue(key, params[key]);
+      }
+    }
+
+    const { standardSourceMessage } = s;
+    if (standardSourceMessage) {
+      const { sourceId, data } = standardSourceMessage;
+      if (sourceId && data) {
+        this.rootContainerRef.current.addStandardSourceMessage(sourceId, data);
       }
     }
   }
