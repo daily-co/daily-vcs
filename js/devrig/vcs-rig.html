@@ -997,7 +997,16 @@ function pauseToggled(ev) {
   const btn = ev.target;
   const idx = parseInt(btn.dataset.index, 10);
 
-  g_activeVideoInputSlots[idx].paused = !g_activeVideoInputSlots[idx].paused;
+  const paused = !g_activeVideoInputSlots[idx].paused;
+  g_activeVideoInputSlots[idx].paused = paused;
+
+  // Freeze/resume the underlying mp4 element so the placeholder doesn't keep
+  // animating while the slot is shown as paused.
+  const slot = g_defaultSources.videoSlots && g_defaultSources.videoSlots[idx];
+  const el = slot && slot.element;
+  if (el && el.nodeName === 'VIDEO' && el !== g_liveVideoEl) {
+    if (paused) el.pause(); else el.play().catch(() => {});
+  }
 
   updateRoomPeers();
 
@@ -1602,14 +1611,78 @@ const demoPeople = [
   document.getElementById('demoperson_moongirl_square'),
 ];
 
+// Bundled mp4 placeholder samples, used when the page is loaded with
+// ?placeholderVideos=1 (or =true). Drop matching files into
+// devrig/example-assets/ for them to appear.
+const PLACEHOLDER_VIDEO_FILES = [
+  'example-assets/demoperson_1.mp4',
+  'example-assets/demoperson_2.mp4',
+  'example-assets/demoperson_3.mp4',
+  'example-assets/demoperson_4.mp4',
+];
+
+function placeholderVideosEnabled() {
+  const v = new URLSearchParams(window.location.search).get('placeholderVideos');
+  return v === '1' || v === 'true';
+}
+
+function createPlaceholderVideoEl(src) {
+  const el = document.createElement('video');
+  el.setAttribute('muted', '');
+  el.setAttribute('playsinline', '');
+  el.setAttribute('autoplay', '');
+  el.setAttribute('loop', '');
+  el.muted = true;
+  el.loop = true;
+  el.autoplay = true;
+  el.playsInline = true;
+  el.preload = 'auto';
+  el.style.display = 'none';
+  g_outputContainer.parentElement.appendChild(el);
+
+  el.addEventListener('error', () => {
+    const me = el.error;
+    console.error(`placeholder video failed to load (${src}): code=${me && me.code} message=${me && me.message}`);
+  });
+
+  el.src = src;
+  const tryPlay = () => {
+    const p = el.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch((e) => {
+        console.error(`[placeholder mp4] ${src} play() failed: `, e);
+      });
+    }
+  };
+  el.addEventListener('loadeddata', tryPlay, { once: true });
+  el.addEventListener('canplay', tryPlay, { once: true });
+  tryPlay();
+  return el;
+}
+
+function loadPlaceholderVideos() {
+  return PLACEHOLDER_VIDEO_FILES.map(createPlaceholderVideoEl);
+}
+
 let g_defaultSources = {}; // initialized in start
+let g_liveVideoEl = null;
 
 async function start() {
   const liveVideoEl = await setupLiveVideo();
+  g_liveVideoEl = liveVideoEl;
   const testImages = await loadTestImages();
 
   // build the video sources map.
-  // live video goes in the first slot, rest are public domain images.
+  // live video goes in the first slot, rest are public domain images
+  // (or mp4 placeholders when ?placeholderVideos=1).
+  const usePlaceholderVideos = placeholderVideosEnabled();
+  const placeholderPool = usePlaceholderVideos ? loadPlaceholderVideos() : demoPeople;
+  console.log(
+    usePlaceholderVideos
+      ? `Using ${placeholderPool.length} mp4 placeholder videos for non-webcam slots.`
+      : 'Using static image placeholders for non-webcam slots.'
+  );
+
   const videoInputElements = [];
   videoInputElements[0] = {
     id: getVideoInputIdForSlotIndex(0),
@@ -1618,7 +1691,7 @@ async function start() {
   for (let i = 1; i < MAX_VIDEO_INPUTS; i++) {
     videoInputElements.push({
       id: getVideoInputIdForSlotIndex(i),
-      element: demoPeople[ (i - 1) % demoPeople.length ]
+      element: placeholderPool[ (i - 1) % placeholderPool.length ]
     });
   }
 

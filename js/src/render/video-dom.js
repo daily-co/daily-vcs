@@ -137,9 +137,25 @@ function recurseRenderNode(
         contentEl.src = srcDOM.src;
       } else {
         contentEl = document.createElement('video');
-        contentEl.srcObject = srcDOM.srcObject;
-        contentEl.setAttribute('muted', true);
-        contentEl.setAttribute('autoPlay', true);
+        // Attributes must be set before assigning the source for autoplay
+        // policies to consider the element eligible.
+        contentEl.setAttribute('muted', '');
+        contentEl.setAttribute('autoplay', '');
+        contentEl.setAttribute('playsinline', '');
+        contentEl.muted = true;
+        contentEl.autoplay = true;
+        contentEl.playsInline = true;
+        if (srcDOM.srcObject) {
+          // Live MediaStream source (webcam, peer track).
+          contentEl.srcObject = srcDOM.srcObject;
+        } else if (srcDOM.currentSrc || srcDOM.src) {
+          // File-backed source (e.g. mp4 placeholder in devrig).
+          contentEl.setAttribute('loop', '');
+          contentEl.loop = true;
+          contentEl.src = srcDOM.currentSrc || srcDOM.src;
+          const p = contentEl.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
       }
       el.appendChild(contentEl);
 
@@ -155,8 +171,10 @@ function recurseRenderNode(
     style += `top: ${frame.y}px; left: ${frame.x}px; `;
     style += `width: ${frame.w}px; height: ${frame.h}px; `;
 
-    // clip the container so inner video element can be zoomed
-    style += `clip-path: content-box; `;
+    // Clip the inner video element to the wrapper. overflow:hidden (rather
+    // than clip-path: content-box) is what propagates border-radius to the
+    // child, so rounded-corner participant tiles actually look rounded.
+    style += `overflow: hidden; `;
 
     if (
       node.style &&
