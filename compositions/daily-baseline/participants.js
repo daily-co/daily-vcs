@@ -20,6 +20,7 @@ export function useActiveVideoAndAudio({
   omitPausedVideo = false,
   omitAudioOnly = false,
   omitExtraScreenshares = false,
+  omitPausedNotScreensharing = false,
   filterForUnpausedMediaTypes = '',
 }) {
   const activeVideoObj = useActiveVideo({
@@ -27,6 +28,7 @@ export function useActiveVideoAndAudio({
     preferScreenshare,
     omitPaused: omitPausedVideo,
     omitExtraScreenshares,
+    omitPausedNotScreensharing
   });
 
   const audioOnlyPeers = useAudioOnlyPeers();
@@ -88,6 +90,15 @@ export function useActiveVideoAndAudio({
         }
       }
     }
+
+    //   if (!omitPausedNotScreensharing) {
+    //     // check if the filter allows paused video participants with unpaused screenshare
+    //     const allowedTypes = filterForUnpausedMediaTypes
+    //       .split(',')
+    //       .map((s) => s.trim());
+    //     omitPausedNotScreensharing = !allowedTypes.includes('screenshare');
+    //   }
+    // }
 
     let items = filteredActiveIds.map((videoId, i) => {
       // Find the peer with matching video.id or screenshareVideo.id
