@@ -169,6 +169,10 @@ export const standardFontFamilies = [
     variants: RobotoCondensed,
   },
   {
+    family: 'Roboto Condensed',
+    variants: RobotoCondensed,
+  },
+  {
     family: 'Anton',
     variants: Anton,
   },
@@ -185,6 +189,10 @@ export const standardFontFamilies = [
     variants: DMSans,
   },
   {
+    family: 'DM Sans',
+    variants: DMSans,
+  },
+  {
     family: 'Exo',
     variants: Exo,
   },
@@ -197,7 +205,15 @@ export const standardFontFamilies = [
     variants: PermanentMarker,
   },
   {
+    family: 'Permanent Marker',
+    variants: PermanentMarker,
+  },
+  {
     family: 'SuezOne',
+    variants: SuezOne,
+  },
+  {
+    family: 'Suez One',
     variants: SuezOne,
   },
   {
