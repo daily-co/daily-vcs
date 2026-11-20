@@ -103,6 +103,14 @@ export function useActiveVideoAndAudio({
         videoId,
         displayName: displayNamesById[videoId] || '',
         highlighted: videoId === dominantId,
+        // True only for the active speaker's camera. The server sets `dominant`
+        // on every video of the active speaker (camera and screenshare), and
+        // `highlighted` above follows whichever of those inputs has the lowest
+        // id. For a speaker whose screenshare was created before their camera,
+        // that's the screenshare, so their camera looks like any other tile.
+        // The room peer's `video` is always the camera, so this marks exactly
+        // that one tile. Peer data without the flag gives false (old behavior).
+        isDominantCamera: peer?.video?.id === videoId && !!peer.video.dominant,
         paused: pausedById[videoId],
         frameSize: frameSizesById[videoId] || { w: 0, h: 0 },
         audioPaused: peer?.audio?.paused ?? false,

@@ -227,6 +227,19 @@ export default function VideoDominant(props) {
         (d.videoId == null || d.videoId !== dominantVideoId)
     );
 
+    if (followDominantFlag) {
+      // Keep the active speaker's camera in view when it isn't the main video,
+      // e.g. a host who is screensharing and talking: the screenshare takes the
+      // main area and their camera can sit anywhere in the list. This must run
+      // before the slice to maxItems below; otherwise a camera past maxItems is
+      // cut and the `highlighted` sort further down can't bring it back.
+      // A stable move to the front, matching where index.jsx already puts the
+      // speaker's video when it is flagged first.
+      pArr = pArr
+        .filter((d) => d.isDominantCamera)
+        .concat(pArr.filter((d) => !d.isDominantCamera));
+    }
+
     if (pArr.length > maxItems) {
       pArr = pArr.slice(0, maxItems);
     }
